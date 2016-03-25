@@ -100,7 +100,7 @@ public class OsmandRenderer {
 //		paintIcon.setStyle(Style.STROKE);
 //
 //
-//		textRenderer = new TextRenderer();
+		textRenderer = new TextRenderer();
 //		paint = new Paint();
 //		paint.setAntiAlias(true);
 //
@@ -555,7 +555,7 @@ public class OsmandRenderer {
 			if (updatePaint(render, pGraphics2d, 1, false, rc)) {
 				pGraphics2d.drawPolygon(path);
 			}
-			textRenderer.renderText(obj, render, rc, pair, xText / len, yText / len, null, null);
+			textRenderer.renderText(obj, render, pGraphics2d, rc, pair, xText / len, yText / len, null, null);
 		}
 	}
 	
@@ -726,7 +726,7 @@ public class OsmandRenderer {
 			rc.iconsToDraw.add(ico);
 		}
 		if (renderText) {
-			textRenderer.renderText(obj, render, rc, pair, ps.getX(), ps.getY(), null, null);
+			textRenderer.renderText(obj, render, pGraphics2d, rc, pair, ps.getX(), ps.getY(), null, null);
 		}
 
 	}
@@ -878,7 +878,7 @@ public class OsmandRenderer {
 //				}
 			}
 			if (textPoints != null) {
-				textRenderer.renderText(obj, render, rc, pair, xMid, yMid, path, textPoints);
+				textRenderer.renderText(obj, render, pGraphics2d, rc, pair, xMid, yMid, path, textPoints);
 			}
 		}
 	}

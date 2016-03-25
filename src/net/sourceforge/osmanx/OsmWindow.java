@@ -9,6 +9,7 @@ import java.awt.Point;
 import java.awt.Stroke;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
@@ -28,6 +29,7 @@ import org.xmlpull.v1.XmlPullParserException;
 import net.osmand.IProgress;
 import net.osmand.PlatformUtil;
 import net.osmand.binary.BinaryMapIndexReader;
+import net.osmand.data.QuadPoint;
 import net.osmand.data.RotatedTileBox;
 import net.osmand.data.RotatedTileBox.RotatedTileBoxBuilder;
 import net.osmand.plus.render.MapRenderRepositories;
@@ -41,6 +43,7 @@ public class OsmWindow {
 		STMouseAdapter mAdapter = new STMouseAdapter(drawPanel);
 		drawPanel.addMouseListener(mAdapter);
 		drawPanel.addMouseMotionListener(mAdapter);
+		drawPanel.addMouseWheelListener(mAdapter);
 
 		JFrame frame = new JFrame("Drawing");
 		frame.getContentPane().add(drawPanel);
@@ -53,8 +56,8 @@ public class OsmWindow {
 
 	@SuppressWarnings("serial")
 	public static class STDrawPanel extends JPanel {
-		private static final int ST_WIDTH = 700;
-		private static final int ST_HEIGHT = 500;
+		private static final int ST_WIDTH = 1400;
+		private static final int ST_HEIGHT = 1000;
 		private static final Color BACKGROUND_COLOR = Color.white;
 		private static final float STROKE_WIDTH = 6f;
 		private static final Stroke STROKE = new BasicStroke(STROKE_WIDTH, BasicStroke.CAP_ROUND,
@@ -67,9 +70,16 @@ public class OsmWindow {
 		private ArrayList<Point> points = new ArrayList<Point>();
 		private int colorIndex = 0;
 		private OsmWindow mWin;
+		private RotatedTileBox mTileBox;
 
 		public STDrawPanel(OsmWindow pWin) {
 			mWin = pWin;
+			clear();
+			mTileBox = new RotatedTileBoxBuilder().setLocation(49.2082,7.0285).setZoom(11)
+					.setPixelDimensions(bImage.getWidth(), bImage.getHeight()).setRotate(0).build();
+		}
+
+		private void clear() {
 			Graphics g = bImage.getGraphics();
 			g.setColor(BACKGROUND_COLOR);
 			g.fillRect(0, 0, ST_WIDTH, ST_HEIGHT);
@@ -82,14 +92,10 @@ public class OsmWindow {
 			g.drawImage(bImage, 0, 0, null);
 		}
 
-		private void addCurveToBufferedImage() {
+		private void generateImage() {
+			clear();
 			Graphics2D g2 = bImage.createGraphics();
-			// g2.setColor(Color.black);
-			// g2.drawString("bla", 10, 10);
-			//geo:49.2082,7.0285?z=11
-			RotatedTileBox tileBox = new RotatedTileBoxBuilder().setLocation(49.2082,7.0285).setZoom(11)
-					.setPixelDimensions(1, 1).setRotate(0).build();
-			mWin.loadMGap(g2, tileBox);
+			mWin.loadMGap(g2, mTileBox);
 			g2.dispose();
 			repaint();
 		}
@@ -102,10 +108,23 @@ public class OsmWindow {
 		public void setColor(Color color) {
 			this.color = color;
 		}
+
+
+		public void zoomChange(int pWheelRotation) {
+			mTileBox.setZoom(mTileBox.getZoom()+pWheelRotation);
+			generateImage();
+		}
+
+		public void moveImage(float pDeltaX, float pDeltaY) {
+			QuadPoint center = mTileBox.getCenterPixelPoint();
+			mTileBox.setLatLonCenter(mTileBox.getLatFromPixel(center.x + pDeltaX, center.y+pDeltaY),mTileBox.getLonFromPixel(center.x + pDeltaX, center.y+pDeltaY));
+			generateImage();
+		}
 	}
 
 	public static class STMouseAdapter extends MouseAdapter {
 		private STDrawPanel drawPanel;
+		private Point startPoint;
 
 		public STMouseAdapter(STDrawPanel drawPanel) {
 			this.drawPanel = drawPanel;
@@ -113,15 +132,23 @@ public class OsmWindow {
 
 		@Override
 		public void mousePressed(MouseEvent e) {
+			startPoint = e.getPoint();
 		}
 
 		@Override
 		public void mouseReleased(MouseEvent e) {
-			drawPanel.addCurveToBufferedImage();
+			double delx = e.getX()-startPoint.getX();
+			double dely = e.getY()-startPoint.getY();
+			drawPanel.moveImage(-(float)delx, -(float)dely);
 		}
 
 		@Override
 		public void mouseDragged(MouseEvent e) {
+		}
+		
+		@Override
+		public void mouseWheelMoved(MouseWheelEvent pE) {
+			drawPanel.zoomChange(pE.getWheelRotation());
 		}
 	}
 

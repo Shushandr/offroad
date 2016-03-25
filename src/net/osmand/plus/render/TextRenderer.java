@@ -2,10 +2,13 @@ package net.osmand.plus.render;
 
 import java.awt.Canvas;
 import java.awt.Color;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Polygon;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -331,7 +334,7 @@ public class TextRenderer {
 		}
 	}
 	
-	private void createTextDrawInfo(final BinaryMapDataObject o, RenderingRuleSearchRequest render, RenderingContext rc, TagValuePair pair, final double xMid, double yMid,
+	private void createTextDrawInfo(final BinaryMapDataObject o, RenderingRuleSearchRequest render, Graphics2D pGraphics2d, RenderingContext rc, TagValuePair pair, final double xMid, double yMid,
 			Polygon path, final Point2D[] points, String name, String tagName) {
 		render.setInitialTagValueZoom(pair.tag, pair.value, rc.zoom, o);
 		render.setIntFilter(render.ALL.R_TEXT_LENGTH, name.length());
@@ -358,10 +361,12 @@ public class TextRenderer {
 
 				}
 //				paintText.setTextSize(text.textSize);
-				Rectangle2D bs = new Rectangle2D.Double();
+				FontMetrics metr = pGraphics2d.getFontMetrics();
+				int stringWidth = metr.stringWidth(name);
+				int stringHeight = metr.getHeight();
 //				paintText.getTextBounds(name, 0, name.length(), bs);
-//				text.bounds = new QuadRect(bs.left, bs.top, bs.right, bs.bottom);
-//				text.bounds.inset(-rc.getDensityValue(3), -rc.getDensityValue(10));
+				text.bounds = new QuadRect(0, 0, stringWidth, stringHeight);
+				text.bounds.inset(-rc.getDensityValue(3), -rc.getDensityValue(10));
 				boolean display = true;
 				if(path != null) {
 					text.drawOnPath = path;
@@ -382,7 +387,7 @@ public class TextRenderer {
 		}
 	}
 	
-	public void renderText(final BinaryMapDataObject obj, final RenderingRuleSearchRequest render, final RenderingContext rc, 
+	public void renderText(final BinaryMapDataObject obj, final RenderingRuleSearchRequest render, final Graphics2D pGraphics2d, final RenderingContext rc, 
 			final TagValuePair pair, final double xMid, final double yMid, final Polygon path, final Point2D[] points) {
 		final TIntObjectHashMap<String> map = obj.getObjectNames();
 		if (map != null) {
@@ -402,7 +407,7 @@ public class TextRenderer {
 //							skip = true;
 //						}
 						if(!skip) {
-							createTextDrawInfo(obj, render, rc, pair, xMid, yMid, path, points, name, nameTag);
+							createTextDrawInfo(obj, render, pGraphics2d, rc, pair, xMid, yMid, path, points, name, nameTag);
 						}
 					}
 					return true;
