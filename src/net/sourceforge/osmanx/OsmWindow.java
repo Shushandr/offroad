@@ -17,6 +17,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -183,14 +187,17 @@ public class OsmWindow {
 
 	private MapRenderRepositories getMapRenderRepositories() throws FileNotFoundException, IOException {
 		MapRenderRepositories mapRenderRepositories = new MapRenderRepositories();
-		String[] files = new String[] { "/home/foltin/programming/java/osmand/maps/Germany_berlin_europe_2.obf",
-				"/home/foltin/programming/java/osmand/maps/Germany_saarland_europe_2.obf",
-				"/home/foltin/programming/java/osmand/maps/World_basemap_2.obf" };
-		for (int i = 0; i < files.length; i++) {
-			String file = files[i];
-			BinaryMapIndexReader reader = getReader(file);
-			mapRenderRepositories.initializeNewResource(IProgress.EMPTY_PROGRESS, reader.getFile(), reader);
-
+		Path dir = Paths.get("/home/foltin/programming/java/osmand/maps/");
+		try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "*.{obf}")) {
+			for (Path entry : stream) {
+				System.out.println(entry.getFileName());
+				BinaryMapIndexReader reader = getReader(entry.toString());
+				mapRenderRepositories.initializeNewResource(IProgress.EMPTY_PROGRESS, reader.getFile(), reader);
+			}
+		} catch (IOException x) {
+			// IOException can never be thrown by the iteration.
+			// In this snippet, it can // only be thrown by newDirectoryStream.
+			System.err.println(x);
 		}
 		return mapRenderRepositories;
 	}

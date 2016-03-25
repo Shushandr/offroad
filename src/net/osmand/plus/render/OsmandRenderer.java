@@ -539,9 +539,11 @@ public class OsmandRenderer {
 				path.addPoint((int)p.getX(), (int)p.getY());
 			}
 		}
+		boolean fill = false;
 		int[][] polygonInnerCoordinates = obj.getPolygonInnerCoordinates();
 		if (polygonInnerCoordinates != null && path != null) {
 //			path.setFillType(FillType.EVEN_ODD);
+			fill = true;
 			for (int j = 0; j < polygonInnerCoordinates.length; j++) {
 				for (int i = 0; i < polygonInnerCoordinates[j].length; i += 2) {
 					Point2D p = calcPoint(polygonInnerCoordinates[j][i], polygonInnerCoordinates[j][i + 1], rc);
@@ -551,9 +553,9 @@ public class OsmandRenderer {
 		}
 
 		if (path != null && len > 0) {
-			drawPath(pGraphics2d, path);
+			drawPath(pGraphics2d, path, fill);
 			if (updatePaint(render, pGraphics2d, 1, false, rc)) {
-				drawPath(pGraphics2d, path);
+				drawPath(pGraphics2d, path, fill);
 			}
 			textRenderer.renderText(obj, render, pGraphics2d, rc, pair, xText / len, yText / len, null, null);
 		}
@@ -876,7 +878,14 @@ public class OsmandRenderer {
 	}
 
 	private void drawPath(Graphics2D pGraphics2d, Polygon path) {
-		pGraphics2d.drawPolyline(path.xpoints, path.ypoints, path.npoints);
+		drawPath(pGraphics2d, path, false);
+	}
+	private void drawPath(Graphics2D pGraphics2d, Polygon path, boolean pFill) {
+		if (pFill) {
+			pGraphics2d.fillPolygon(path);
+		} else {
+			pGraphics2d.drawPolyline(path.xpoints, path.ypoints, path.npoints);
+		}
 	}
 
 		
