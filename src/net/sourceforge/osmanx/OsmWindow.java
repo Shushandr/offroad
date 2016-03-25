@@ -7,6 +7,8 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Stroke;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
@@ -53,7 +55,8 @@ public class OsmWindow {
 		JFrame frame = new JFrame("Drawing");
 		frame.getContentPane().add(drawPanel);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setResizable(false);
+		frame.setResizable(true);
+		frame.addComponentListener(mAdapter);
 		frame.pack();
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
@@ -84,10 +87,11 @@ public class OsmWindow {
 					.setPixelDimensions(bImage.getWidth(), bImage.getHeight()).setRotate(0).build();
 		}
 
+		
 		private void clear() {
 			Graphics g = bImage.getGraphics();
 			g.setColor(BACKGROUND_COLOR);
-			g.fillRect(0, 0, ST_WIDTH, ST_HEIGHT);
+			g.fillRect(0, 0, bImage.getWidth(), bImage.getHeight());
 			g.dispose();
 		}
 
@@ -107,7 +111,7 @@ public class OsmWindow {
 
 		@Override
 		public Dimension getPreferredSize() {
-			return new Dimension(ST_WIDTH, ST_HEIGHT);
+			return new Dimension(bImage.getWidth(), bImage.getHeight());
 		}
 
 		public void setColor(Color color) {
@@ -130,9 +134,16 @@ public class OsmWindow {
 					mTileBox.getLonFromPixel(center.x + pDeltaX, center.y + pDeltaY));
 			generateImage();
 		}
+
+		public void newBitmap() {
+			bImage = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
+			mTileBox.setPixelDimensions(getWidth(), getHeight());
+			generateImage();
+			
+		}
 	}
 
-	public static class STMouseAdapter extends MouseAdapter {
+	public static class STMouseAdapter extends MouseAdapter implements ComponentListener {
 		private STDrawPanel drawPanel;
 		private Point startPoint;
 
@@ -154,11 +165,36 @@ public class OsmWindow {
 
 		@Override
 		public void mouseDragged(MouseEvent e) {
+			mouseReleased(e);
+			startPoint = e.getPoint();
 		}
 
 		@Override
 		public void mouseWheelMoved(MouseWheelEvent pE) {
 			drawPanel.zoomChange(-pE.getWheelRotation(), pE.getPoint());
+		}
+
+		@Override
+		public void componentResized(ComponentEvent pE) {
+			drawPanel.newBitmap();
+		}
+
+		@Override
+		public void componentMoved(ComponentEvent pE) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void componentShown(ComponentEvent pE) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void componentHidden(ComponentEvent pE) {
+			// TODO Auto-generated method stub
+			
 		}
 	}
 
