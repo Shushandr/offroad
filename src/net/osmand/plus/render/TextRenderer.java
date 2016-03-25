@@ -157,6 +157,7 @@ public class TextRenderer {
 		pGraphics2d.drawRect((int)rs.getX(), (int)rs.getY(), (int)rs.getWidth(), (int)rs.getHeight());
 		if (text != null) {
 //			paintText.setTextSize(paintText.getTextSize() - 4);
+//			System.out.println("Text " + text+ "; c=( " + rs.getCenterX() + ", " + rs.getCenterY() + ")");
 			pGraphics2d.drawString(text, (int)rs.getCenterX(), (int)rs.getCenterY());
 //			paintText.setTextSize(paintText.getTextSize() + 4);
 		}
@@ -194,15 +195,16 @@ public class TextRenderer {
 
 	private void drawTextOnCanvas(Graphics2D pGraphics2d, String text, float centerX, float centerY, int shadowColor, float textShadow) {
 		if (textShadow > 0) {
-//			int c = paintText.getColor();
+			Color c = pGraphics2d.getColor();
 //			paintText.setStyle(Style.STROKE);
-//			paintText.setColor(shadowColor);
+			pGraphics2d.setColor(new Color(shadowColor));
 //			paintText.setStrokeWidth(2 + textShadow);
 			pGraphics2d.drawString(text, centerX, centerY);
 			// reset
 //			paintText.setStrokeWidth(2);
 //			paintText.setStyle(Style.FILL);
 //			paintText.setColor(c);
+			pGraphics2d.setColor(c);
 		}
 		pGraphics2d.drawString(text, centerX, centerY);
 	}
@@ -256,6 +258,8 @@ public class TextRenderer {
 //							paintText.setStrokeWidth(2 + text.textShadow);
 //							cv.drawTextOnPath(text.text, text.drawOnPath, 0, 
 //									text.vOffset - ( paintText.ascent()/2 + paintText.descent()), paintText);
+							pGraphics2d.drawString(text.text, text.centerX, text.centerY);
+//							System.out.println("Text " + text.text + "; c=( " + text.centerX + ", " + text.centerY + ")");
 //							// reset
 //							paintText.setStyle(Style.FILL);
 //							paintText.setStrokeWidth(2);
@@ -342,7 +346,7 @@ public class TextRenderer {
 		if(render.search(RenderingRulesStorage.TEXT_RULES)){
 			if(render.getFloatPropertyValue(render.ALL.R_TEXT_SIZE) > 0){
 				final TextDrawInfo text = new TextDrawInfo(name);
-//				text.fillProperties(rc, render, xMid, yMid);
+				text.fillProperties(rc, render, (float)xMid, (float)yMid);
 				final String tagName2 = render.getStringPropertyValue(render.ALL.R_NAME_TAG2);
 				if (!Algorithms.isEmpty(tagName2)) {
 					o.getObjectNames().forEachEntry(new TIntObjectProcedure<String>() {
@@ -371,7 +375,7 @@ public class TextRenderer {
 				if(path != null) {
 					text.drawOnPath = path;
 					display = calculatePathToRotate(rc, text, points, 
-							render.getIntPropertyValue(render.ALL.R_TEXT_ON_PATH, 0) != 0);
+					render.getIntPropertyValue(render.ALL.R_TEXT_ON_PATH, 0) != 0);
 				}
 				if(text.drawOnPath == null) {
 					text.bounds.offset(text.centerX, text.centerY);

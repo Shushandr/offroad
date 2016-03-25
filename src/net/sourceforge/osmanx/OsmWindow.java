@@ -13,6 +13,7 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
@@ -75,7 +76,7 @@ public class OsmWindow {
 		public STDrawPanel(OsmWindow pWin) {
 			mWin = pWin;
 			clear();
-			mTileBox = new RotatedTileBoxBuilder().setLocation(49.2082,7.0285).setZoom(11)
+			mTileBox = new RotatedTileBoxBuilder().setLocation(49.2082, 7.0285).setZoom(11)
 					.setPixelDimensions(bImage.getWidth(), bImage.getHeight()).setRotate(0).build();
 		}
 
@@ -109,15 +110,20 @@ public class OsmWindow {
 			this.color = color;
 		}
 
-
-		public void zoomChange(int pWheelRotation) {
-			mTileBox.setZoom(mTileBox.getZoom()+pWheelRotation);
-			generateImage();
+		public void zoomChange(int pWheelRotation, Point pNewCenter) {
+			int newZoom = mTileBox.getZoom() + pWheelRotation;
+			if (newZoom >= 1) {
+				mTileBox.setZoom(newZoom);
+				mTileBox.setLatLonCenter(mTileBox.getLatFromPixel(pNewCenter.x, pNewCenter.y),
+						mTileBox.getLonFromPixel(pNewCenter.x, pNewCenter.y));
+				generateImage();
+			}
 		}
 
 		public void moveImage(float pDeltaX, float pDeltaY) {
 			QuadPoint center = mTileBox.getCenterPixelPoint();
-			mTileBox.setLatLonCenter(mTileBox.getLatFromPixel(center.x + pDeltaX, center.y+pDeltaY),mTileBox.getLonFromPixel(center.x + pDeltaX, center.y+pDeltaY));
+			mTileBox.setLatLonCenter(mTileBox.getLatFromPixel(center.x + pDeltaX, center.y + pDeltaY),
+					mTileBox.getLonFromPixel(center.x + pDeltaX, center.y + pDeltaY));
 			generateImage();
 		}
 	}
@@ -137,23 +143,22 @@ public class OsmWindow {
 
 		@Override
 		public void mouseReleased(MouseEvent e) {
-			double delx = e.getX()-startPoint.getX();
-			double dely = e.getY()-startPoint.getY();
-			drawPanel.moveImage(-(float)delx, -(float)dely);
+			double delx = e.getX() - startPoint.getX();
+			double dely = e.getY() - startPoint.getY();
+			drawPanel.moveImage(-(float) delx, -(float) dely);
 		}
 
 		@Override
 		public void mouseDragged(MouseEvent e) {
 		}
-		
+
 		@Override
 		public void mouseWheelMoved(MouseWheelEvent pE) {
-			drawPanel.zoomChange(pE.getWheelRotation());
+			drawPanel.zoomChange(-pE.getWheelRotation(), pE.getPoint());
 		}
 	}
 
 	private RenderingRulesStorage mRenderingRulesStorage;
-	private BinaryMapIndexReader mBinaryMapIndexReader;
 	private MapRenderRepositories mMapRenderRepositories;
 
 	public static void main(String[] args) throws XmlPullParserException, IOException {
@@ -173,23 +178,29 @@ public class OsmWindow {
 
 	private void init() throws XmlPullParserException, IOException {
 		mRenderingRulesStorage = getRenderingRulesStorage();
-		mBinaryMapIndexReader = getBinaryMapIndexReader();
-		mMapRenderRepositories = getMapRenderRepositories(mBinaryMapIndexReader);
+		mMapRenderRepositories = getMapRenderRepositories();
 	}
 
-	private MapRenderRepositories getMapRenderRepositories(BinaryMapIndexReader pBinaryMapIndexReader) {
+	private MapRenderRepositories getMapRenderRepositories() throws FileNotFoundException, IOException {
 		MapRenderRepositories mapRenderRepositories = new MapRenderRepositories();
-		mapRenderRepositories.initializeNewResource(IProgress.EMPTY_PROGRESS, pBinaryMapIndexReader.getFile(), pBinaryMapIndexReader);
+		String[] files = new String[] { "/home/foltin/programming/java/osmand/maps/Germany_berlin_europe_2.obf",
+				"/home/foltin/programming/java/osmand/maps/Germany_saarland_europe_2.obf",
+				"/home/foltin/programming/java/osmand/maps/World_basemap_2.obf" };
+		for (int i = 0; i < files.length; i++) {
+			String file = files[i];
+			BinaryMapIndexReader reader = getReader(file);
+			mapRenderRepositories.initializeNewResource(IProgress.EMPTY_PROGRESS, reader.getFile(), reader);
+
+		}
 		return mapRenderRepositories;
 	}
 
-	public BinaryMapIndexReader getBinaryMapIndexReader() throws IOException {
-		File fl = new File("/home/foltin/programming/java/osmand/maps/Germany_saarland_europe_2.obf");
+	private BinaryMapIndexReader getReader(String path) throws FileNotFoundException, IOException {
+		File fl = new File(path);
 		RandomAccessFile raf = new RandomAccessFile(fl, "r");
 
 		BinaryMapIndexReader reader = new BinaryMapIndexReader(raf, fl);
 		System.out.println("VERSION " + reader.getVersion()); //$NON-NLS-1$
-		long time = System.currentTimeMillis();
 		return reader;
 	}
 
