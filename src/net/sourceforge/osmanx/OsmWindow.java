@@ -43,6 +43,19 @@ import net.osmand.plus.render.MapRenderRepositories;
 import net.osmand.render.RenderingRulesStorage;
 import net.osmand.render.RenderingRulesStorage.RenderingRulesStorageResolver;
 
+/**
+ * cosmos
+ * macrocosmos
+ * cosmopolitain
+ * cosmetic
+ * cosmic
+ * osmosis
+ * osmium
+ * 
+ * 
+ * @author foltin
+ * @date 26.03.2016
+ */
 public class OsmWindow {
 
 	private static void createAndShowUI(OsmWindow pWin) {
@@ -83,7 +96,7 @@ public class OsmWindow {
 		public STDrawPanel(OsmWindow pWin) {
 			mWin = pWin;
 			clear();
-			mTileBox = new RotatedTileBoxBuilder().setLocation(49.2082, 7.0285).setZoom(11)
+			mTileBox = new RotatedTileBoxBuilder().setLocation(51.03325,13.64656).setZoom(17)
 					.setPixelDimensions(bImage.getWidth(), bImage.getHeight()).setRotate(0).build();
 		}
 
@@ -252,7 +265,8 @@ public class OsmWindow {
 		// InputStream is =
 		// RenderingRulesStorage.class.getResourceAsStream("default.render.xml");
 		final String loc = "/home/foltin/programming/java/osmand/OsmAnd-resources/rendering_styles/";
-		String defaultFile = loc + "UniRS.render.xml";
+//		String defaultFile = loc + "UniRS.render.xml";
+		String defaultFile = loc + "default.render.xml";
 		final Map<String, String> renderingConstants = new LinkedHashMap<String, String>();
 		InputStream is = new FileInputStream(loc + "default.render.xml");
 		try {

@@ -3,7 +3,6 @@ package net.osmand.plus.render;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.Paint;
 import java.awt.Polygon;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
@@ -71,8 +70,8 @@ public class OsmandRenderer {
 	public static class RenderingContext extends net.osmand.RenderingContext {
 		List<TextDrawInfo> textToDraw = new ArrayList<TextDrawInfo>();
 		List<IconDrawInfo> iconsToDraw = new ArrayList<IconDrawInfo>();
-		Paint[] oneWay ;
-		Paint[] reverseOneWay ;
+		Polygon[] oneWay ;
+		Polygon[] reverseOneWay ;
 
 		public RenderingContext() {
 		}
@@ -96,12 +95,12 @@ public class OsmandRenderer {
 	}
 
 	public OsmandRenderer() {
-//		paintIcon = new Paint();
+//		paintIcon = new Polygon();
 //		paintIcon.setStyle(Style.STROKE);
 //
 //
 		textRenderer = new TextRenderer();
-//		paint = new Paint();
+//		paint = new Polygon();
 //		paint.setAntiAlias(true);
 //
 //		dm = new DisplayMetrics();
@@ -865,11 +864,10 @@ public class OsmandRenderer {
 			}
 			
 			if(oneway != 0 && !drawOnlyShadow){
-//				Paint[] paints = oneway == -1? getReverseOneWayPaints(rc) :  getOneWayPaints(rc);
-//				for (int i = 0; i < paints.length; i++) {
-//					pGraphics2d.drawPolygon(path);
-//					pGraphics2d.drawPath(path, paints[i]);
-//				}
+				Polygon[] paints = oneway == -1? getReverseOneWayPaints(rc) :  getOneWayPaints(rc);
+				for (int i = 0; i < paints.length; i++) {
+					drawPath(pGraphics2d, paints[i], false);
+				}
 			}
 			if (textPoints != null) {
 				textRenderer.renderText(obj, render, pGraphics2d, rc, pair, xMid, yMid, path, textPoints);
@@ -889,73 +887,73 @@ public class OsmandRenderer {
 	}
 
 		
-//	private static Paint oneWayPaint(){
-//		Paint oneWay = new Paint();
+	private static Polygon oneWayPaint(){
+		Polygon oneWay = new Polygon();
 //		oneWay.setStyle(Style.STROKE);
 //		oneWay.setColor(0xff6c70d5);
 //		oneWay.setAntiAlias(true);
-//		return oneWay; 
-//	}
-//	
-//	public Paint[] getReverseOneWayPaints(RenderingContext rc){
-//		if(rc.reverseOneWay == null){
-//			int rmin = (int)rc.getDensityValue(1);
-//			if(rmin > 2) {
-//				rmin = rmin / 2;
-//			}
+		return oneWay; 
+	}
+	
+	public Polygon[] getReverseOneWayPaints(RenderingContext rc){
+		if(rc.reverseOneWay == null){
+			int rmin = (int)rc.getDensityValue(1);
+			if(rmin > 2) {
+				rmin = rmin / 2;
+			}
 //			PathEffect arrowDashEffect1 = new DashPathEffect(new float[] { 0, 12, 10 * rmin, 152 }, 0);
 //			PathEffect arrowDashEffect2 = new DashPathEffect(new float[] { 0, 12 + rmin, 9 * rmin, 152 }, 1);
 //			PathEffect arrowDashEffect3 = new DashPathEffect(new float[] { 0, 12 + 2 * rmin, 2 * rmin, 152 + 6 * rmin }, 1);
 //			PathEffect arrowDashEffect4 = new DashPathEffect(new float[] { 0, 12 + 3 * rmin, 1 * rmin, 152 + 6 * rmin }, 1);
-//			rc.reverseOneWay = new Paint[4];
-//			rc.reverseOneWay[0] = oneWayPaint();
+			rc.reverseOneWay = new Polygon[4];
+			rc.reverseOneWay[0] = oneWayPaint();
 //			rc.reverseOneWay[0].setStrokeWidth(rmin * 2);
 //			rc.reverseOneWay[0].setPathEffect(arrowDashEffect1);
-//			
-//			rc.reverseOneWay[1] = oneWayPaint();
+			
+			rc.reverseOneWay[1] = oneWayPaint();
 //			rc.reverseOneWay[1].setStrokeWidth(rmin);
 //			rc.reverseOneWay[1].setPathEffect(arrowDashEffect2);
-//
-//			rc.reverseOneWay[2] = oneWayPaint();
+
+			rc.reverseOneWay[2] = oneWayPaint();
 //			rc.reverseOneWay[2].setStrokeWidth(rmin * 3);
 //			rc.reverseOneWay[2].setPathEffect(arrowDashEffect3);
-//			
-//			rc.reverseOneWay[3] = oneWayPaint();			
+			
+			rc.reverseOneWay[3] = oneWayPaint();			
 //			rc.reverseOneWay[3].setStrokeWidth(rmin * 4);
 //			rc.reverseOneWay[3].setPathEffect(arrowDashEffect4);
-//			
-//		}
-//		return rc.reverseOneWay;
-//	}
-//	
-//	public Paint[] getOneWayPaints(RenderingContext rc){
-//		if(rc.oneWay == null){
-//			float rmin = rc.getDensityValue(1);
-//			if(rmin > 1) {
-//				rmin = rmin * 2 / 3;
-//			}
+			
+		}
+		return rc.reverseOneWay;
+	}
+	
+	public Polygon[] getOneWayPaints(RenderingContext rc){
+		if(rc.oneWay == null){
+			float rmin = rc.getDensityValue(1);
+			if(rmin > 1) {
+				rmin = rmin * 2 / 3;
+			}
 //			PathEffect arrowDashEffect1 = new DashPathEffect(new float[] { 0, 12, 10 * rmin, 152 }, 0);
 //			PathEffect arrowDashEffect2 = new DashPathEffect(new float[] { 0, 12, 9 * rmin, 152 + rmin }, 1);
 //			PathEffect arrowDashEffect3 = new DashPathEffect(new float[] { 0, 12 + 6 * rmin, 2 * rmin, 152 + 2 * rmin}, 1);
 //			PathEffect arrowDashEffect4 = new DashPathEffect(new float[] { 0, 12 + 6 * rmin, 1 * rmin, 152 + 3 * rmin}, 1);
-//			rc.oneWay = new Paint[4];
-//			rc.oneWay[0] = oneWayPaint();
+			rc.oneWay = new Polygon[4];
+			rc.oneWay[0] = oneWayPaint();
 //			rc.oneWay[0].setStrokeWidth(rmin);
 //			rc.oneWay[0].setPathEffect(arrowDashEffect1);
-//			
-//			rc.oneWay[1] = oneWayPaint();
+			
+			rc.oneWay[1] = oneWayPaint();
 //			rc.oneWay[1].setStrokeWidth(rmin * 2);
 //			rc.oneWay[1].setPathEffect(arrowDashEffect2);
-//
-//			rc.oneWay[2] = oneWayPaint();
+
+			rc.oneWay[2] = oneWayPaint();
 //			rc.oneWay[2].setStrokeWidth(rmin * 3);
 //			rc.oneWay[2].setPathEffect(arrowDashEffect3);
-//			
-//			rc.oneWay[3] = oneWayPaint();			
+			
+			rc.oneWay[3] = oneWayPaint();			
 //			rc.oneWay[3].setStrokeWidth(rmin * 4);
 //			rc.oneWay[3].setPathEffect(arrowDashEffect4);
-//			
-//		}
-//		return rc.oneWay;
-//	}
+			
+		}
+		return rc.oneWay;
+	}
 }
