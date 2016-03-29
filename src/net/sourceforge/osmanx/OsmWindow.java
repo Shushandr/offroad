@@ -44,6 +44,7 @@ import net.osmand.render.RenderingRulesStorage;
 import net.osmand.render.RenderingRulesStorage.RenderingRulesStorageResolver;
 
 /**
+ * OffRoad
  * cosmos
  * macrocosmos
  * cosmopolitain
@@ -65,7 +66,7 @@ public class OsmWindow {
 		drawPanel.addMouseMotionListener(mAdapter);
 		drawPanel.addMouseWheelListener(mAdapter);
 
-		JFrame frame = new JFrame("Drawing");
+		JFrame frame = new JFrame("OffRoad");
 		frame.getContentPane().add(drawPanel);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setResizable(true);
@@ -265,8 +266,7 @@ public class OsmWindow {
 		// InputStream is =
 		// RenderingRulesStorage.class.getResourceAsStream("default.render.xml");
 		final String loc = "/home/foltin/programming/java/osmand/OsmAnd-resources/rendering_styles/";
-//		String defaultFile = loc + "UniRS.render.xml";
-		String defaultFile = loc + "default.render.xml";
+		String defaultFile = loc + "UniRS.render.xml";
 		final Map<String, String> renderingConstants = new LinkedHashMap<String, String>();
 		InputStream is = new FileInputStream(loc + "default.render.xml");
 		try {
