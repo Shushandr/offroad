@@ -48,7 +48,7 @@ import net.osmand.render.RenderingRulesStorage;
 import net.osmand.render.RenderingRulesStorage.RenderingRulesStorageResolver;
 
 /**
- * OffRoad cosmos macrocosmos cosmopolitain cosmetic cosmic osmosis osmium
+ * OffRoad 
  * 
  * 
  * @author foltin
@@ -75,6 +75,41 @@ public class OsmWindow {
 
 	@SuppressWarnings("serial")
 	public static class STDrawPanel extends JPanel {
+		private class GenerationThread extends Thread {
+			private final RotatedTileBox mTileCopy;
+			private BufferedImage mNewBitmap;
+			private Thread mWaitForThread;
+
+			private GenerationThread(RotatedTileBox pTileCopy, Thread pWaitForThread) {
+				mTileCopy = pTileCopy;
+				mWaitForThread = pWaitForThread;
+			}
+
+			@Override
+			public void run() {
+				// generate in background
+				mTileBox = mTileCopy;
+				mNewBitmap = newBitmap();
+				// wait
+				if(mWaitForThread != null && mWaitForThread.isAlive()){
+					try {
+						mWaitForThread.join();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+				// activate in foreground
+				SwingUtilities.invokeLater(new Runnable() {
+					
+					@Override
+					public void run() {
+						setImage(mNewBitmap);
+					}
+				});
+			}
+		}
+
+
 		private static final int ST_WIDTH = 1400;
 		private static final int ST_HEIGHT = 1000;
 		private static final Color BACKGROUND_COLOR = Color.white;
@@ -94,18 +129,19 @@ public class OsmWindow {
 		private int originX = 0;
 		private int originY = 0;
 		private Thread mAnimationThread;
+		private GenerationThread mGenerationThread;
 
 		public STDrawPanel(OsmWindow pWin) {
 			mWin = pWin;
-			clear();
+			clear(bImage);
 			mTileBox = new RotatedTileBoxBuilder().setLocation(51.03325, 13.64656).setZoom(17)
 					.setPixelDimensions(bImage.getWidth(), bImage.getHeight()).setRotate(0).build();
 		}
 
-		private void clear() {
-			Graphics g = bImage.getGraphics();
+		private void clear(BufferedImage pImage) {
+			Graphics g = pImage.getGraphics();
 			g.setColor(BACKGROUND_COLOR);
-			g.fillRect(0, 0, bImage.getWidth(), bImage.getHeight());
+			g.fillRect(0, 0, pImage.getWidth(), pImage.getHeight());
 			g.dispose();
 		}
 
@@ -121,15 +157,19 @@ public class OsmWindow {
 			g2.setTransform(oldTransform);
 		}
 
-		private void generateImage() {
+		private void setImage(BufferedImage pImage) {
 			scale = 1.0d;
 			originX = 0;
 			originY = 0;
-			clear();
-			Graphics2D g2 = bImage.createGraphics();
+			bImage = pImage;
+			repaint();
+		}
+
+		private void drawImage(BufferedImage pImage) {
+			clear(pImage);
+			Graphics2D g2 = pImage.createGraphics();
 			mWin.loadMGap(g2, mTileBox);
 			g2.dispose();
-			repaint();
 		}
 
 		@Override
@@ -147,6 +187,9 @@ public class OsmWindow {
 				return;
 			}
 			if(mAnimationThread != null && mAnimationThread.isAlive()){
+				return;
+			}
+			if(mGenerationThread != null && mGenerationThread.isAlive()){
 				return;
 			}
 			LatLon latLonNewCenter = mTileBox.getLatLonFromPixel(pNewCenter.x, pNewCenter.y);
@@ -171,7 +214,7 @@ public class OsmWindow {
 						// this is not correct. involve the size of the image.
 						originX = (int) (pNewCenter.x-(pNewCenter.x)*scale); 
 						originY = (int) (pNewCenter.y-(pNewCenter.y)*scale); 
-						System.out.println("Wheel= " + pWheelRotation + ", Setting scale to " + scale + ", delta = " + delta + ", dest=" + dest);
+//						System.out.println("Wheel= " + pWheelRotation + ", Setting scale to " + scale + ", delta = " + delta + ", dest=" + dest);
 						try {
 							SwingUtilities.invokeAndWait(new Runnable() {
 
@@ -185,39 +228,39 @@ public class OsmWindow {
 							e.printStackTrace();
 						}
 					}
-					SwingUtilities.invokeLater(new Runnable() {
-						
-						@Override
-						public void run() {
-							mTileBox = tileCopy;
-							generateImage();
-						}
-					});
 				}
 
 			};
 			mAnimationThread.start();
-			
+			mGenerationThread = new GenerationThread(tileCopy, mAnimationThread);
+			mGenerationThread.start();
 		}
 
 		public void moveImage(float pDeltaX, float pDeltaY) {
 			QuadPoint center = mTileBox.getCenterPixelPoint();
 			mTileBox.setLatLonCenter(mTileBox.getLatFromPixel(center.x + pDeltaX, center.y + pDeltaY),
 					mTileBox.getLonFromPixel(center.x + pDeltaX, center.y + pDeltaY));
-			generateImage();
+			drawImage(bImage);
+			setImage(bImage);
 		}
 
-		public void newBitmap() {
-			bImage = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
+		public BufferedImage newBitmap() {
+			BufferedImage image = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
 			mTileBox.setPixelDimensions(getWidth(), getHeight());
-			generateImage();
-
+			drawImage(image);
+			return image;
 		}
+
 
 		public void dragImage(Point pTranslate) {
 			originX = pTranslate.x;
 			originY = pTranslate.y;
 			repaint();
+		}
+
+		public void createNewBitmap() {
+			mGenerationThread = new GenerationThread(mTileBox, null);
+			mGenerationThread.start();
 		}
 	}
 
@@ -255,7 +298,7 @@ public class OsmWindow {
 
 		@Override
 		public void componentResized(ComponentEvent pE) {
-			drawPanel.newBitmap();
+			drawPanel.createNewBitmap();
 		}
 
 		@Override
