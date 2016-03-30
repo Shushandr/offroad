@@ -12,6 +12,7 @@ import java.awt.event.ComponentListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,6 +20,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,6 +31,7 @@ import java.util.Map;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -36,6 +39,7 @@ import org.xmlpull.v1.XmlPullParserException;
 import net.osmand.IProgress;
 import net.osmand.PlatformUtil;
 import net.osmand.binary.BinaryMapIndexReader;
+import net.osmand.data.LatLon;
 import net.osmand.data.QuadPoint;
 import net.osmand.data.RotatedTileBox;
 import net.osmand.data.RotatedTileBox.RotatedTileBoxBuilder;
@@ -44,14 +48,7 @@ import net.osmand.render.RenderingRulesStorage;
 import net.osmand.render.RenderingRulesStorage.RenderingRulesStorageResolver;
 
 /**
- * OffRoad
- * cosmos
- * macrocosmos
- * cosmopolitain
- * cosmetic
- * cosmic
- * osmosis
- * osmium
+ * OffRoad cosmos macrocosmos cosmopolitain cosmetic cosmic osmosis osmium
  * 
  * 
  * @author foltin
@@ -93,15 +90,18 @@ public class OsmWindow {
 		private int colorIndex = 0;
 		private OsmWindow mWin;
 		private RotatedTileBox mTileBox;
+		private double scale = 1.0d;
+		private int originX = 0;
+		private int originY = 0;
+		private Thread mAnimationThread;
 
 		public STDrawPanel(OsmWindow pWin) {
 			mWin = pWin;
 			clear();
-			mTileBox = new RotatedTileBoxBuilder().setLocation(51.03325,13.64656).setZoom(17)
+			mTileBox = new RotatedTileBoxBuilder().setLocation(51.03325, 13.64656).setZoom(17)
 					.setPixelDimensions(bImage.getWidth(), bImage.getHeight()).setRotate(0).build();
 		}
 
-		
 		private void clear() {
 			Graphics g = bImage.getGraphics();
 			g.setColor(BACKGROUND_COLOR);
@@ -112,7 +112,13 @@ public class OsmWindow {
 		@Override
 		protected void paintComponent(Graphics g) {
 			super.paintComponent(g);
-			g.drawImage(bImage, 0, 0, null);
+			Graphics2D g2 = (Graphics2D) g;
+			AffineTransform at = g2.getTransform();
+			AffineTransform oldTransform = (AffineTransform) at.clone();
+			at.scale(scale, scale);
+			g2.setTransform(at);
+			g2.drawImage(bImage, (int)(originX/scale), (int)(originY/scale), null);
+			g2.setTransform(oldTransform);
 		}
 
 		private void generateImage() {
@@ -132,14 +138,66 @@ public class OsmWindow {
 			this.color = color;
 		}
 
-		public void zoomChange(int pWheelRotation, Point pNewCenter) {
-			int newZoom = mTileBox.getZoom() + pWheelRotation;
-			if (newZoom >= 1) {
-				mTileBox.setZoom(newZoom);
-				mTileBox.setLatLonCenter(mTileBox.getLatFromPixel(pNewCenter.x, pNewCenter.y),
-						mTileBox.getLonFromPixel(pNewCenter.x, pNewCenter.y));
-				generateImage();
+		public void zoomChange(final int pWheelRotation, final Point pNewCenter) {
+			final int newZoom = mTileBox.getZoom() + pWheelRotation;
+			if ( newZoom < 1 ) {
+				return;
 			}
+			if(mAnimationThread != null && mAnimationThread.isAlive()){
+				return;
+			}
+			LatLon latLonNewCenter = mTileBox.getLatLonFromPixel(pNewCenter.x, pNewCenter.y);
+			final RotatedTileBox tileCopy = mTileBox.copy();
+			tileCopy.setZoom(newZoom);
+			final float deltaX = tileCopy.getPixXFromLatLon(latLonNewCenter.getLatitude(), latLonNewCenter.getLongitude())-pNewCenter.x;
+			final float deltaY = tileCopy.getPixYFromLatLon(latLonNewCenter.getLatitude(), latLonNewCenter.getLongitude())-pNewCenter.y;
+			// now move the tileCopy that latLonNewCenter is at the same pixel position as before.
+			double latFromPixel = tileCopy.getLatFromPixel(tileCopy.getCenterPixelX()+deltaX, tileCopy.getCenterPixelY()+deltaY);
+			double lonFromPixel = tileCopy.getLonFromPixel(tileCopy.getCenterPixelX()+deltaX, tileCopy.getCenterPixelY()+deltaY);
+			tileCopy.setLatLonCenter(latFromPixel, lonFromPixel);
+			mAnimationThread = new Thread() {
+
+				@Override
+				public void run() {
+					double dest = Math.pow(2, pWheelRotation);
+					double start = 1.0d;
+					int it = 10;
+					double delta = (dest - start) / it;
+					for (int i = 0; i < it; ++i) {
+						scale = start + i * delta;
+						// this is not correct. involve the size of the image.
+						originX = (int) (pNewCenter.x-(pNewCenter.x)*scale); 
+						originY = (int) (pNewCenter.y-(pNewCenter.y)*scale); 
+						System.out.println("Wheel= " + pWheelRotation + ", Setting scale to " + scale + ", delta = " + delta + ", dest=" + dest);
+						try {
+							SwingUtilities.invokeAndWait(new Runnable() {
+
+								@Override
+								public void run() {
+									repaint();
+								}
+							});
+							Thread.sleep(50);
+						} catch (InvocationTargetException | InterruptedException e) {
+							e.printStackTrace();
+						}
+					}
+					scale = 1.0d;
+					originX = 0;
+					originY = 0;
+					SwingUtilities.invokeLater(new Runnable() {
+						
+						@Override
+						public void run() {
+							mTileBox = tileCopy;
+							generateImage();
+						}
+					});
+				}
+
+			};
+			mAnimationThread.start();
+			
 		}
 
 		public void moveImage(float pDeltaX, float pDeltaY) {
@@ -153,7 +211,7 @@ public class OsmWindow {
 			bImage = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
 			mTileBox.setPixelDimensions(getWidth(), getHeight());
 			generateImage();
-			
+
 		}
 	}
 
@@ -196,19 +254,19 @@ public class OsmWindow {
 		@Override
 		public void componentMoved(ComponentEvent pE) {
 			// TODO Auto-generated method stub
-			
+
 		}
 
 		@Override
 		public void componentShown(ComponentEvent pE) {
 			// TODO Auto-generated method stub
-			
+
 		}
 
 		@Override
 		public void componentHidden(ComponentEvent pE) {
 			// TODO Auto-generated method stub
-			
+
 		}
 	}
 
