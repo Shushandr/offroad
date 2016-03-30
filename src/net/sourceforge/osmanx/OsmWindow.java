@@ -122,6 +122,9 @@ public class OsmWindow {
 		}
 
 		private void generateImage() {
+			scale = 1.0d;
+			originX = 0;
+			originY = 0;
 			clear();
 			Graphics2D g2 = bImage.createGraphics();
 			mWin.loadMGap(g2, mTileBox);
@@ -182,9 +185,6 @@ public class OsmWindow {
 							e.printStackTrace();
 						}
 					}
-					scale = 1.0d;
-					originX = 0;
-					originY = 0;
 					SwingUtilities.invokeLater(new Runnable() {
 						
 						@Override
@@ -213,6 +213,12 @@ public class OsmWindow {
 			generateImage();
 
 		}
+
+		public void dragImage(Point pTranslate) {
+			originX = pTranslate.x;
+			originY = pTranslate.y;
+			repaint();
+		}
 	}
 
 	public static class STMouseAdapter extends MouseAdapter implements ComponentListener {
@@ -237,8 +243,9 @@ public class OsmWindow {
 
 		@Override
 		public void mouseDragged(MouseEvent e) {
-			mouseReleased(e);
-			startPoint = e.getPoint();
+			Point point = e.getPoint();
+			point.translate(-startPoint.x, -startPoint.y);
+			drawPanel.dragImage(point);
 		}
 
 		@Override
@@ -253,20 +260,14 @@ public class OsmWindow {
 
 		@Override
 		public void componentMoved(ComponentEvent pE) {
-			// TODO Auto-generated method stub
-
 		}
 
 		@Override
 		public void componentShown(ComponentEvent pE) {
-			// TODO Auto-generated method stub
-
 		}
 
 		@Override
 		public void componentHidden(ComponentEvent pE) {
-			// TODO Auto-generated method stub
-
 		}
 	}
 
