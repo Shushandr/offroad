@@ -95,8 +95,7 @@ public class MapRenderRepositories {
 		
 		@Override
 		public String getString(Object pPref, String pKey, String pDefValue) {
-			// TODO Auto-generated method stub
-			return null;
+			return pDefValue;
 		}
 		
 		@Override
@@ -107,26 +106,22 @@ public class MapRenderRepositories {
 		
 		@Override
 		public long getLong(Object pPref, String pKey, long pDefValue) {
-			// TODO Auto-generated method stub
-			return 0;
+			return pDefValue;
 		}
 		
 		@Override
 		public int getInt(Object pPref, String pKey, int pDefValue) {
-			// TODO Auto-generated method stub
-			return 0;
+			return pDefValue;
 		}
 		
 		@Override
 		public float getFloat(Object pPref, String pKey, float pDefValue) {
-			// TODO Auto-generated method stub
-			return 0;
+			return pDefValue;
 		}
 		
 		@Override
 		public boolean getBoolean(Object pPref, String pKey, boolean pDefValue) {
-			// TODO Auto-generated method stub
-			return false;
+			return pDefValue;
 		}
 		
 		@Override

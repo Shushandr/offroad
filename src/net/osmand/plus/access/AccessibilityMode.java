@@ -1,6 +1,6 @@
 package net.osmand.plus.access;
 
-import net.sourceforge.osmanx.R;
+import net.sourceforge.offroad.R;
 
 public enum AccessibilityMode {
 

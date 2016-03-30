@@ -1,4 +1,4 @@
-package net.sourceforge.osmanx;
+package net.sourceforge.offroad;
 
 import java.awt.BasicStroke;
 import java.awt.Color;

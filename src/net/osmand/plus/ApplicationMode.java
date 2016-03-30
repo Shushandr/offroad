@@ -1,7 +1,7 @@
 package net.osmand.plus;
 
 import net.osmand.StateChangedListener;
-import net.sourceforge.osmanx.R;
+import net.sourceforge.offroad.R;
 
 import java.util.ArrayList;
 import java.util.Collections;
