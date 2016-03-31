@@ -512,7 +512,7 @@ public class OsmandRenderer {
 
 
 	public void clearCachedResources(){
-//		shaders.clear();
+		shaders.clear();
 	}
 	
 	private void drawPolygon(BinaryMapDataObject obj, RenderingRuleSearchRequest render, Graphics2D pGraphics2d, RenderingContext rc, TagValuePair pair) {
@@ -524,7 +524,7 @@ public class OsmandRenderer {
 		int zoom = rc.zoom;
 		Polygon path = null;
 		
-		// rc.main.color = Color.rgb(245, 245, 245);
+//		rc.main.color = Color.rgb(245, 245, 245);
 		render.setInitialTagValueZoom(pair.tag, pair.value, zoom, obj);
 		boolean rendered = render.search(RenderingRulesStorage.POLYGON_RULES);
 		if(!rendered || !updatePaint(render, pGraphics2d, 0, true, rc)){
@@ -683,7 +683,6 @@ public class OsmandRenderer {
 				if(req.getIntPropertyValue(rColor) == 0) {
 					pGraphics2d.setColor(Color.WHITE); // set color required by skia
 				}
-				System.out.println("Setting shader " + resId + " to " + getShader(resId));
 				pGraphics2d.setPaint(getShader(resId));
 			}
 			// do not check shadow color here

@@ -1,5 +1,6 @@
 package net.osmand.plus.render;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -7,6 +8,7 @@ import java.awt.Graphics2D;
 import java.awt.Polygon;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -197,9 +199,10 @@ public class TextRenderer {
 			Color c = pGraphics2d.getColor();
 //			paintText.setStyle(Style.STROKE);
 			pGraphics2d.setColor(new Color(shadowColor));
-//			paintText.setStrokeWidth(2 + textShadow);
+			pGraphics2d.setStroke(new BasicStroke(2 + textShadow));
 			pGraphics2d.drawString(text, centerX, centerY);
 			// reset
+			pGraphics2d.setStroke(new BasicStroke(2));
 //			paintText.setStrokeWidth(2);
 //			paintText.setStyle(Style.FILL);
 //			paintText.setColor(c);
@@ -230,7 +233,7 @@ public class TextRenderer {
 				}
 
 				// sest text size before finding intersection (it is used there)
-				float textSize = text.textSize * rc.textScale *2.0f;
+				float textSize = text.textSize * rc.textScale;
 				int fontStyle = 0;
 				if(text.bold && text.italic) {
 					fontStyle = Font.BOLD | Font.ITALIC;
@@ -242,39 +245,41 @@ public class TextRenderer {
 					fontStyle = Font.PLAIN;
 				}
 				Font textFont = pGraphics2d.getFont().deriveFont(fontStyle, textSize);
-//				pGraphics2d.setFont(textFont);
+				pGraphics2d.setFont(textFont);
 //				paintText.setFakeBoldText(text.bold);
 				
 				pGraphics2d.setColor(new Color(text.textColor));
 				// align center y
-//				text.centerY += (-paintText.ascent());
+				FontMetrics metr = pGraphics2d.getFontMetrics();
+				text.centerY += - metr.getAscent();
 
 				// calculate if there is intersection
 				boolean intersects = findTextIntersection(pGraphics2d, rc, nonIntersectedBounds, text);
 				if (!intersects) {
 					if (text.drawOnPath != null) {
+						float vOffset = text.vOffset - ( metr.getAscent()/2 + metr.getDescent());
+						text.drawOnPath.translate(0, (int)vOffset);
 						if (text.textShadow > 0) {
 //							paintText.setColor(text.textShadowColor);
 //							paintText.setStyle(Style.STROKE);
 //							paintText.setStrokeWidth(2 + text.textShadow);
 //							cv.drawTextOnPath(text.text, text.drawOnPath, 0, 
 //									text.vOffset - ( paintText.ascent()/2 + paintText.descent()), paintText);
-//							pGraphics2d.drawString(text.text, text.centerX, text.centerY);
 							pGraphics2d.setColor(new Color(text.textShadowColor));
-							pGraphics2d.setStroke(new TextStroke(text.text, textFont, false));
+							pGraphics2d.setStroke(new TextStroke(text.text, textFont, true));
 							pGraphics2d.draw(text.drawOnPath);
-//							System.out.println("Text " + text.text + "; c=( " + text.centerX + ", " + text.centerY + ")");
 //							// reset
 //							paintText.setStyle(Style.FILL);
 //							paintText.setStrokeWidth(2);
 //							paintText.setColor(text.textColor);
 						}
 						pGraphics2d.setColor(new Color(text.textColor));
-						pGraphics2d.setStroke(new TextStroke(text.text, textFont, false));
+						pGraphics2d.setStroke(new TextStroke(text.text, textFont, true));
 						pGraphics2d.draw(text.drawOnPath);
-//						pGraphics2d.drawString(text.text, text.centerX, text.centerY);
+						text.drawOnPath.translate(0, -(int)vOffset);
 //						cv.drawTextOnPath(text.text, text.drawOnPath, 0, 
 //								text.vOffset - ( paintText.ascent()/2 + paintText.descent()), paintText);
+						pGraphics2d.setStroke(null);
 					} else {
 						drawShieldIcon(rc, pGraphics2d, text, text.shieldRes);
 						drawShieldIcon(rc, pGraphics2d, text, text.shieldResIcon);
@@ -289,20 +294,21 @@ public class TextRenderer {
 	private void drawShieldIcon(RenderingContext rc, Graphics2D pGraphics2d, TextDrawInfo text, String sr) {
 		if (sr != null) {
 			float coef = rc.getDensityValue(rc.screenDensityRatio * rc.textScale);
-//			Bitmap ico = RenderingIcons.getIcon(context, sr, true);
-//			if (ico != null) {
-//				float left = text.centerX - ico.getWidth() / 2 * coef - 0.5f;
-//				float top = text.centerY - ico.getHeight() / 2 * coef -  paintText.descent() - 0.5f;
-//				if(rc.screenDensityRatio != 1f){
-//					Rectangle2D rf = new Rectangle2D(left, top, left + ico.getWidth() * coef, 
-//							top + ico.getHeight() * coef);
-//					Rect src = new Rect(0, 0, ico.getWidth(), ico
-//							.getHeight());
-//					pGraphics2d.drawBitmap(ico, src, rf, paintIcon);
-//				} else {
-//					pGraphics2d.drawBitmap(ico, left, top, paintIcon);
-//				}
-//			}
+			BufferedImage ico = RenderingIcons.getIcon(sr, true);
+			if (ico != null) {
+				float left = text.centerX - ico.getWidth() / 2 * coef - 0.5f;
+				float top = text.centerY - ico.getHeight() / 2 * coef - pGraphics2d.getFontMetrics().getDescent() - 0.5f;
+				if(rc.screenDensityRatio != 1f){
+					Rectangle2D rf = new Rectangle2D.Float(left, top, left + ico.getWidth() * coef, 
+							top + ico.getHeight() * coef);
+					Rectangle2D src = new Rectangle2D.Float(0, 0, ico.getWidth(), ico
+							.getHeight());
+					pGraphics2d.drawImage(ico, (int) rf.getX(), (int) rf.getY(), (int) rf.getMaxX(), (int) rf.getMaxY(),
+							(int) src.getMinX(), (int) src.getMinY(), (int) src.getMaxX(), (int) src.getMaxY(), null);
+				} else {
+					pGraphics2d.drawImage(ico, (int)left, (int)top, null);
+				}
+			}
 		}
 	}
 
