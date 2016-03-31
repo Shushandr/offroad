@@ -373,7 +373,7 @@ public class OsmWindow {
 		// InputStream is =
 		// RenderingRulesStorage.class.getResourceAsStream("default.render.xml");
 		final String loc = RENDERING_STYLES_DIR;
-		String defaultFile = loc + "UniRS.render.xml";
+		String defaultFile = loc + "default.render.xml";
 		final Map<String, String> renderingConstants = new LinkedHashMap<String, String>();
 		InputStream is = new FileInputStream(loc + "default.render.xml");
 		try {
