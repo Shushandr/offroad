@@ -6,6 +6,7 @@ import java.awt.Graphics2D;
 import java.awt.Polygon;
 import java.awt.Stroke;
 import java.awt.TexturePaint;
+import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
@@ -31,6 +32,7 @@ import net.osmand.render.RenderingRuleSearchRequest;
 import net.osmand.render.RenderingRulesStorage;
 import net.osmand.util.Algorithms;
 import net.osmand.util.MapUtils;
+import net.sourceforge.offroad.Cap;
 import net.sourceforge.offroad.DashPathEffect;
 
 public class OsmandRenderer {
@@ -117,12 +119,12 @@ public class OsmandRenderer {
 //		wmgr.getDefaultDisplay().getMetrics(dm);
 	}
 
-	public Stroke getDashEffect(float pWidth, RenderingContext rc, float[] cachedValues, float st){
+	public Stroke getDashEffect(float pWidth, RenderingContext rc, float[] cachedValues, float st, int cap){
 		float[] dashes = new float[cachedValues.length / 2];
 		for (int i = 0; i < dashes.length; i++) {
 			dashes[i] = rc.getDensityValue(cachedValues[i * 2]) + cachedValues[i * 2 + 1];
 		}
-		return new BasicStroke(pWidth, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 1.0f, dashes, st);
+		return new BasicStroke(pWidth, cap, BasicStroke.JOIN_BEVEL, 1.0f, dashes, st);
 //		if(!dashEffect.containsKey(dashes)){
 //			dashEffect.put(dashes,
 //					new BasicStroke(pWidth, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 1.0f, dashes, st));
@@ -522,7 +524,7 @@ public class OsmandRenderer {
 		float xText = 0;
 		float yText = 0;
 		int zoom = rc.zoom;
-		Polygon path = null;
+		Path2D path = null;
 		
 //		rc.main.color = Color.rgb(245, 245, 245);
 		render.setInitialTagValueZoom(pair.tag, pair.value, zoom, obj);
@@ -546,29 +548,31 @@ public class OsmandRenderer {
 			xText += p.getX();
 			yText += p.getY();
 			if (path == null) {
-				path = new Polygon();
-				path.addPoint((int)p.getX(), (int)p.getY());
+				path = new Path2D.Float();
+				path.moveTo(p.getX(), p.getY());
 			} else {
-				path.addPoint((int)p.getX(), (int)p.getY());
+				path.lineTo(p.getX(), p.getY());
 			}
 		}
-		boolean fill = false;
 		int[][] polygonInnerCoordinates = obj.getPolygonInnerCoordinates();
 		if (polygonInnerCoordinates != null && path != null) {
-//			path.setFillType(FillType.EVEN_ODD);
-			fill = true;
+			path.setWindingRule(Path2D.WIND_EVEN_ODD);
 			for (int j = 0; j < polygonInnerCoordinates.length; j++) {
 				for (int i = 0; i < polygonInnerCoordinates[j].length; i += 2) {
 					Point2D p = calcPoint(polygonInnerCoordinates[j][i], polygonInnerCoordinates[j][i + 1], rc);
-					path.addPoint((int)p.getX(), (int)p.getY());
+					if(i==0){
+						path.moveTo(p.getX(), p.getY());
+					} else {
+						path.lineTo(p.getX(), p.getY());
+					}
 				}
 			}
 		}
 
 		if (path != null && len > 0) {
-			drawPath(pGraphics2d, path, fill);
+			pGraphics2d.fill(path);
 			if (updatePaint(render, pGraphics2d, 1, false, rc)) {
-				drawPath(pGraphics2d, path, fill);
+				pGraphics2d.draw(path);
 			}
 			textRenderer.renderText(obj, render, pGraphics2d, rc, pair, xText / len, yText / len, null, null);
 		}
@@ -628,6 +632,7 @@ public class OsmandRenderer {
 //			pGraphics2d.setShader(null);
 //			pGraphics2d.setColorFilter(null);
 //			pGraphics2d.clearShadowLayer();
+//			p.setStyle(Style.FILL_AND_STROKE);
 			pGraphics2d.setStroke(new BasicStroke(0f));
 //			pGraphics2d.setStrokeWidth(0);
 		} else {
@@ -640,12 +645,11 @@ public class OsmandRenderer {
 //			pGraphics2d.setStyle(Style.STROKE);
 			float val = rc.getComplexValue(req, rStrokeW);
 			val = Math.max(0.0f,val);
-//			String cap = req.getStringPropertyValue(rCap);
-//			if(!Algorithms.isEmpty(cap)){
-//				pGraphics2d.setStrokeCap(Cap.valueOf(cap.toUpperCase()));
-//			} else {
-//				pGraphics2d.setStrokeCap(Cap.BUTT);
-//			}
+			int capValue = BasicStroke.CAP_BUTT;
+			String cap = req.getStringPropertyValue(rCap);
+			if(!Algorithms.isEmpty(cap)){
+				capValue = Cap.valueOf(cap.toUpperCase()).getVal();
+			}
 			String pathEffect = req.getStringPropertyValue(rPathEff);
 			if (!Algorithms.isEmpty(pathEffect)) {
 				if(!parsedDashEffects.containsKey(pathEffect)) {
@@ -670,10 +674,9 @@ public class OsmandRenderer {
 				}
 				float[] cachedValues = parsedDashEffects.get(pathEffect);
 				
-				pGraphics2d.setStroke(getDashEffect(val, rc, cachedValues, 0));
+				pGraphics2d.setStroke(getDashEffect(val, rc, cachedValues, 0, capValue));
 			} else {
-				// TODO: Correct?
-				pGraphics2d.setStroke(new BasicStroke(0f));
+				pGraphics2d.setStroke(new BasicStroke(0, capValue, BasicStroke.JOIN_ROUND));
 			}
 		}
 		pGraphics2d.setColor(new Color(req.getIntPropertyValue(rColor)));
@@ -696,7 +699,7 @@ public class OsmandRenderer {
 //					shadowRadius = 0;
 //				}
 //				pGraphics2d.setShadowLayer(shadowRadius, 0, 0, shadowColor);
-				pGraphics2d.setColor(new Color(shadowColor));
+//				pGraphics2d.setColor(new Color(shadowColor));
 			}
 		}
 		

@@ -279,7 +279,7 @@ public class TextRenderer {
 						text.drawOnPath.translate(0, -(int)vOffset);
 //						cv.drawTextOnPath(text.text, text.drawOnPath, 0, 
 //								text.vOffset - ( paintText.ascent()/2 + paintText.descent()), paintText);
-						pGraphics2d.setStroke(null);
+						pGraphics2d.setStroke(new BasicStroke(0f));
 					} else {
 						drawShieldIcon(rc, pGraphics2d, text, text.shieldRes);
 						drawShieldIcon(rc, pGraphics2d, text, text.shieldResIcon);
