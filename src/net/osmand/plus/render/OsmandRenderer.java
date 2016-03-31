@@ -5,8 +5,10 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Polygon;
 import java.awt.Stroke;
+import java.awt.TexturePaint;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -40,7 +42,7 @@ public class OsmandRenderer {
 
 //	private Map<float[], Stroke> dashEffect = new LinkedHashMap<float[], Stroke>();
 	private Map<String, float[]> parsedDashEffects = new LinkedHashMap<String, float[]>();
-//	private Map<String, Shader> shaders = new LinkedHashMap<String, Shader>();
+	private Map<String, TexturePaint> shaders = new LinkedHashMap<String, TexturePaint>();
 
 //	private DisplayMetrics dm;
 
@@ -125,19 +127,19 @@ public class OsmandRenderer {
 //		return dashEffect.get(dashes);
 	}
 
-//	public Shader getShader(String resId){
-//		
-//		if(shaders.get(resId) == null){
-//			Bitmap bmp = RenderingIcons.getIcon(context, resId, true);
-//			if(bmp != null){
-//				Shader sh = new BitmapShader(bmp, TileMode.REPEAT, TileMode.REPEAT);
-//				shaders.put(resId, sh);
-//			} else {
-//				shaders.put(resId, null);
-//			}
-//		}	
-//		return shaders.get(resId);
-//	}
+	public TexturePaint getShader(String resId){
+		
+		if(shaders.get(resId) == null){
+			BufferedImage bmp = RenderingIcons.getIcon(resId, true);
+			if(bmp != null){
+				TexturePaint sh = new TexturePaint(bmp, new Rectangle2D.Float(0f, 0f, bmp.getWidth(), bmp.getHeight()));
+				shaders.put(resId, sh);
+			} else {
+				shaders.put(resId, null);
+			}
+		}	
+		return shaders.get(resId);
+	}
 	
 	private void put(TIntObjectHashMap<TIntArrayList> map, int k, int v){
 		if(!map.containsKey(k)){
@@ -670,14 +672,15 @@ public class OsmandRenderer {
 		}
 		pGraphics2d.setColor(new Color(req.getIntPropertyValue(rColor)));
 		if(ind == 0){
-//			String resId = req.getStringPropertyValue(req.ALL.R_SHADER);
-//			if(resId != null){
-//				if(req.getIntPropertyValue(rColor) == 0) {
-//					pGraphics2d.setColor(Color.WHITE); // set color required by skia
-//				}
-//				pGraphics2d.setShader(getShader(resId));
-//			}
-//			// do not check shadow color here
+			String resId = req.getStringPropertyValue(req.ALL.R_SHADER);
+			if(resId != null){
+				if(req.getIntPropertyValue(rColor) == 0) {
+					pGraphics2d.setColor(Color.WHITE); // set color required by skia
+				}
+				System.out.println("Setting shader " + resId + " to " + getShader(resId));
+				pGraphics2d.setPaint(getShader(resId));
+			}
+			// do not check shadow color here
 //			if(rc.shadowRenderingMode == 1) {
 //				int shadowColor = req.getIntPropertyValue(req.ALL.R_SHADOW_COLOR);
 //				if(shadowColor == 0) {

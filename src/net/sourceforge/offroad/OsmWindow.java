@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URI;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -55,6 +56,10 @@ import net.osmand.render.RenderingRulesStorage.RenderingRulesStorageResolver;
  * @date 26.03.2016
  */
 public class OsmWindow {
+
+	public static final String RENDERING_STYLES_DIR = "/home/foltin/programming/java/osmand/OsmAnd-resources/rendering_styles/";
+	public static final String OSMAND_MAPS_DIR = "/home/foltin/programming/java/osmand/maps/";
+	public static final String OSMAND_ICONS_DIR = "/home/foltin/programming/java/osmand/OsmAnd-resources/rendering_styles/style-icons/drawable-xxhdpi/";
 
 	private static void createAndShowUI(OsmWindow pWin) {
 		STDrawPanel drawPanel = new STDrawPanel(pWin);
@@ -339,7 +344,7 @@ public class OsmWindow {
 
 	private MapRenderRepositories getMapRenderRepositories() throws FileNotFoundException, IOException {
 		MapRenderRepositories mapRenderRepositories = new MapRenderRepositories();
-		Path dir = Paths.get("/home/foltin/programming/java/osmand/maps/");
+		Path dir = Paths.get(OSMAND_MAPS_DIR);
 		try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "*.{obf}")) {
 			for (Path entry : stream) {
 				System.out.println(entry.getFileName());
@@ -367,7 +372,7 @@ public class OsmWindow {
 		// RenderingRulesStorage.STORE_ATTTRIBUTES = true;
 		// InputStream is =
 		// RenderingRulesStorage.class.getResourceAsStream("default.render.xml");
-		final String loc = "/home/foltin/programming/java/osmand/OsmAnd-resources/rendering_styles/";
+		final String loc = RENDERING_STYLES_DIR;
 		String defaultFile = loc + "UniRS.render.xml";
 		final Map<String, String> renderingConstants = new LinkedHashMap<String, String>();
 		InputStream is = new FileInputStream(loc + "default.render.xml");
