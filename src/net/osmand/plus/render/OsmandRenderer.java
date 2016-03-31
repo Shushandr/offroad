@@ -23,6 +23,8 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 import net.osmand.PlatformUtil;
 import net.osmand.binary.BinaryMapDataObject;
 import net.osmand.binary.BinaryMapIndexReader.TagValuePair;
+import net.osmand.data.QuadRect;
+import net.osmand.data.QuadTree;
 import net.osmand.plus.render.TextRenderer.TextDrawInfo;
 import net.osmand.render.RenderingRuleProperty;
 import net.osmand.render.RenderingRuleSearchRequest;
@@ -225,95 +227,98 @@ public class OsmandRenderer {
 //	}
 
 	private void drawIconsOverCanvas(RenderingContext rc, Graphics2D pGraphics2d) {
-//		// 1. Sort text using text order
-//		Collections.sort(rc.iconsToDraw, new Comparator<IconDrawInfo>() {
-//			@Override
-//			public int compare(IconDrawInfo object1, IconDrawInfo object2) {
-//				return object1.iconOrder - object2.iconOrder;
-//			}
-//		});
-//		QuadRect bounds = new QuadRect(0, 0, rc.width, rc.height);
-//		bounds.inset(-bounds.width()/4, -bounds.height()/4);
-//		QuadTree<RectF> boundIntersections = new QuadTree<RectF>(bounds, 4, 0.6f);
-//		List<RectF> result = new ArrayList<RectF>();
-//		
-//		for (IconDrawInfo icon : rc.iconsToDraw) {
-//			if (icon.resId != null) {
-//				Bitmap ico = RenderingIcons.getIcon(context, icon.resId, true);
-//				if (ico != null) {
-//					if (icon.y >= 0 && icon.y < rc.height && icon.x >= 0 && icon.x < rc.width) {
-//						int visbleWidth = icon.iconSize >= 0 ? (int) icon.iconSize : ico.getWidth();
-//						int visbleHeight = icon.iconSize >= 0 ? (int) icon.iconSize : ico.getHeight();
-//						boolean intersects = false;
-//						float coeff = rc.getDensityValue(rc.screenDensityRatio * rc.textScale);
-//						RectF rf = calculateRect(rc, icon, ico.getWidth(), ico.getHeight());
-//						RectF visibleRect = null;
-//						if (visbleHeight > 0 && visbleWidth > 0) {
-//							visibleRect = calculateRect(rc, icon, visbleWidth, visbleHeight);
-//							boundIntersections.queryInBox(new QuadRect(visibleRect.left, visibleRect.top, visibleRect.right, visibleRect.bottom), result);
-//							for (RectF r : result) {
-//								if (r.intersects(visibleRect.left, visibleRect.top, visibleRect.right, visibleRect.bottom)) {
-//									intersects = true;
-//									break;
-//								}
-//							}
-//						}
-//						
-//						if (!intersects) {
-//							Bitmap shield = icon.shieldId == null ? null : RenderingIcons.getIcon(context, icon.shieldId, true);
-//							if(shield != null) {
-//								RectF shieldRf = calculateRect(rc, icon, shield.getWidth(), shield.getHeight());
-//								if (coeff != 1f) {
-//									Rect src = new Rect(0, 0, shield.getWidth(), shield.getHeight());
-//									drawBitmap(pGraphics2d, shield, shieldRf, src);
-//								} else {
-//									drawBitmap(pGraphics2d, shield, shieldRf);
-//								}	
-//							}
-//							if (coeff != 1f) {
-//								Rect src = new Rect(0, 0, ico.getWidth(), ico.getHeight());
-//								drawBitmap(pGraphics2d, RenderingIcons.getIcon(context, icon.resId_1, true), rf, src);
-//								drawBitmap(pGraphics2d, ico, rf, src);
-//								drawBitmap(pGraphics2d, RenderingIcons.getIcon(context, icon.resId2, true), rf, src);
-//								drawBitmap(pGraphics2d, RenderingIcons.getIcon(context, icon.resId3, true), rf, src);
-//								drawBitmap(pGraphics2d, RenderingIcons.getIcon(context, icon.resId4, true), rf, src);
-//								drawBitmap(pGraphics2d, RenderingIcons.getIcon(context, icon.resId5, true), rf, src);
-//							} else {
-//								drawBitmap(pGraphics2d, RenderingIcons.getIcon(context, icon.resId_1, true), rf);
-//								drawBitmap(pGraphics2d, ico, rf);
-//								drawBitmap(pGraphics2d, RenderingIcons.getIcon(context, icon.resId2, true), rf);
-//								drawBitmap(pGraphics2d, RenderingIcons.getIcon(context, icon.resId3, true), rf);
-//								drawBitmap(pGraphics2d, RenderingIcons.getIcon(context, icon.resId4, true), rf);
-//								drawBitmap(pGraphics2d, RenderingIcons.getIcon(context, icon.resId5, true), rf);
-//							}
-//							if(visibleRect != null) {
-//								visibleRect.inset(-visibleRect.width() / 4, -visibleRect.height() / 4);
-//								boundIntersections.insert(visibleRect, 
-//										new QuadRect(visibleRect.left, visibleRect.top, visibleRect.right, visibleRect.bottom));
-//							}
-//						}
-//					}
-//				}
-//			}
-//			if (rc.interrupted) {
-//				return;
-//			}
-//		}
+		// 1. Sort text using text order
+		Collections.sort(rc.iconsToDraw, new Comparator<IconDrawInfo>() {
+			@Override
+			public int compare(IconDrawInfo object1, IconDrawInfo object2) {
+				return object1.iconOrder - object2.iconOrder;
+			}
+		});
+		QuadRect bounds = new QuadRect(0, 0, rc.width, rc.height);
+		bounds.inset(-bounds.width()/4, -bounds.height()/4);
+		QuadTree<Rectangle2D> boundIntersections = new QuadTree<Rectangle2D>(bounds, 4, 0.6f);
+		List<Rectangle2D> result = new ArrayList<Rectangle2D>();
+		
+		for (IconDrawInfo icon : rc.iconsToDraw) {
+			if (icon.resId != null) {
+				BufferedImage ico = RenderingIcons.getIcon(icon.resId, true);
+				if (ico != null) {
+					if (icon.y >= 0 && icon.y < rc.height && icon.x >= 0 && icon.x < rc.width) {
+						int visbleWidth = icon.iconSize >= 0 ? (int) icon.iconSize : ico.getWidth();
+						int visbleHeight = icon.iconSize >= 0 ? (int) icon.iconSize : ico.getHeight();
+						boolean intersects = false;
+						float coeff = rc.getDensityValue(rc.screenDensityRatio * rc.textScale);
+						Rectangle2D rf = calculateRect(rc, icon, ico.getWidth(), ico.getHeight());
+						Rectangle2D visibleRect = null;
+						if (visbleHeight > 0 && visbleWidth > 0) {
+							visibleRect = calculateRect(rc, icon, visbleWidth, visbleHeight);
+							boundIntersections.queryInBox(new QuadRect(visibleRect.getMinX(), visibleRect.getMinY(), visibleRect.getMaxX(), visibleRect.getMaxY()), result);
+							for (Rectangle2D r : result) {
+								if (r.intersects(visibleRect.getMinX(), visibleRect.getMinY(), visibleRect.getMaxX(), visibleRect.getMaxY())) {
+									intersects = true;
+									break;
+								}
+							}
+						}
+						
+						if (!intersects) {
+							BufferedImage shield = icon.shieldId == null ? null : RenderingIcons.getIcon(icon.shieldId, true);
+							if(shield != null) {
+								Rectangle2D shieldRf = calculateRect(rc, icon, shield.getWidth(), shield.getHeight());
+								if (coeff != 1f) {
+									Rectangle2D src = new Rectangle2D.Float(0, 0, shield.getWidth(), shield.getHeight());
+									drawBitmap(pGraphics2d, shield, shieldRf, src);
+								} else {
+									drawBitmap(pGraphics2d, shield, shieldRf);
+								}	
+							}
+							if (coeff != 1f) {
+								Rectangle2D src = new Rectangle2D.Float(0, 0, ico.getWidth(), ico.getHeight());
+								drawBitmap(pGraphics2d, RenderingIcons.getIcon(icon.resId_1, true), rf, src);
+								drawBitmap(pGraphics2d, ico, rf, src);
+								drawBitmap(pGraphics2d, RenderingIcons.getIcon(icon.resId2, true), rf, src);
+								drawBitmap(pGraphics2d, RenderingIcons.getIcon(icon.resId3, true), rf, src);
+								drawBitmap(pGraphics2d, RenderingIcons.getIcon(icon.resId4, true), rf, src);
+								drawBitmap(pGraphics2d, RenderingIcons.getIcon(icon.resId5, true), rf, src);
+							} else {
+								drawBitmap(pGraphics2d, RenderingIcons.getIcon(icon.resId_1, true), rf);
+								drawBitmap(pGraphics2d, ico, rf);
+								drawBitmap(pGraphics2d, RenderingIcons.getIcon(icon.resId2, true), rf);
+								drawBitmap(pGraphics2d, RenderingIcons.getIcon(icon.resId3, true), rf);
+								drawBitmap(pGraphics2d, RenderingIcons.getIcon(icon.resId4, true), rf);
+								drawBitmap(pGraphics2d, RenderingIcons.getIcon(icon.resId5, true), rf);
+							}
+							if(visibleRect != null) {
+								visibleRect.add(-visibleRect.getWidth() / 4, -visibleRect.getHeight() / 4);
+								boundIntersections.insert(visibleRect, 
+										new QuadRect(visibleRect.getMinX(), visibleRect.getMinY(), visibleRect.getMaxX(), visibleRect.getMaxY()));
+							}
+						}
+					}
+				}
+			}
+			if (rc.interrupted) {
+				return;
+			}
+		}
 	}
 
-//	protected void drawBitmap(Canvas cv, Bitmap ico, RectF rf) {
-//		if(ico == null) {
-//			return;
-//		}
+	protected void drawBitmap(Graphics2D pGraphics2d, BufferedImage ico, Rectangle2D rf) {
+		if(ico == null) {
+			return;
+		}
+		pGraphics2d.drawImage(ico, (int)rf.getX(), (int)rf.getY(), null);
 //		cv.drawBitmap(ico, rf.left, rf.top, paintIcon);
-//	}
-//
-//	protected void drawBitmap(Canvas cv, Bitmap ico, RectF rf, Rect src) {
-//		if(ico == null) {
-//			return;
-//		}
-//		cv.drawBitmap(ico, src, rf, paintIcon);
-//	}
+	}
+
+	protected void drawBitmap(Graphics2D pGraphics2d, BufferedImage ico, Rectangle2D rf, Rectangle2D src) {
+		if(ico == null) {
+			return;
+		}
+		pGraphics2d.drawImage(ico, (int) rf.getX(), (int) rf.getY(), (int) rf.getMaxX(), (int) rf.getMaxY(),
+				(int) src.getMinX(), (int) src.getMinY(), (int) src.getMaxX(), (int) src.getMaxY(), null);
+		//		cv.drawBitmap(ico, src, rf, paintIcon);
+	}
 
 	private Rectangle2D calculateRect(RenderingContext rc, IconDrawInfo icon, int visbleWidth, int visbleHeight) {
 		Rectangle2D rf;
