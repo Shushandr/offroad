@@ -4,12 +4,15 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Polygon;
+import java.awt.Stroke;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 
@@ -22,6 +25,7 @@ import net.osmand.plus.render.TextRenderer.TextDrawInfo;
 import net.osmand.render.RenderingRuleProperty;
 import net.osmand.render.RenderingRuleSearchRequest;
 import net.osmand.render.RenderingRulesStorage;
+import net.osmand.util.Algorithms;
 import net.osmand.util.MapUtils;
 
 public class OsmandRenderer {
@@ -34,8 +38,8 @@ public class OsmandRenderer {
 	public static final int TILE_SIZE = 256; 
 	private static final int MAX_V = 75;
 
-//	private Map<float[], PathEffect> dashEffect = new LinkedHashMap<float[], PathEffect>();
-//	private Map<String, float[]> parsedDashEffects = new LinkedHashMap<String, float[]>();
+//	private Map<float[], Stroke> dashEffect = new LinkedHashMap<float[], Stroke>();
+	private Map<String, float[]> parsedDashEffects = new LinkedHashMap<String, float[]>();
 //	private Map<String, Shader> shaders = new LinkedHashMap<String, Shader>();
 
 //	private DisplayMetrics dm;
@@ -108,17 +112,19 @@ public class OsmandRenderer {
 //		wmgr.getDefaultDisplay().getMetrics(dm);
 	}
 
-//	public PathEffect getDashEffect(RenderingContext rc, float[] cachedValues, float st){
-//		float[] dashes = new float[cachedValues.length / 2];
-//		for (int i = 0; i < dashes.length; i++) {
-//			dashes[i] = rc.getDensityValue(cachedValues[i * 2]) + cachedValues[i * 2 + 1];
-//		}
+	public Stroke getDashEffect(float pWidth, RenderingContext rc, float[] cachedValues, float st){
+		float[] dashes = new float[cachedValues.length / 2];
+		for (int i = 0; i < dashes.length; i++) {
+			dashes[i] = rc.getDensityValue(cachedValues[i * 2]) + cachedValues[i * 2 + 1];
+		}
+		return new BasicStroke(pWidth, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 1.0f, dashes, st);
 //		if(!dashEffect.containsKey(dashes)){
-//			dashEffect.put(dashes, new DashPathEffect(dashes, st));
+//			dashEffect.put(dashes,
+//					new BasicStroke(pWidth, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 1.0f, dashes, st));
 //		}
 //		return dashEffect.get(dashes);
-//	}
-//
+	}
+
 //	public Shader getShader(String resId){
 //		
 //		if(shaders.get(resId) == null){
@@ -625,43 +631,42 @@ public class OsmandRenderer {
 //			pGraphics2d.clearShadowLayer();
 //			pGraphics2d.setStyle(Style.STROKE);
 			float val = rc.getComplexValue(req, rStrokeW);
-			val = (val < 0)?0.0f:val;
-			BasicStroke stroke = new BasicStroke(val);
-			pGraphics2d.setStroke(stroke);
+			val = Math.max(0.0f,val);
 //			String cap = req.getStringPropertyValue(rCap);
 //			if(!Algorithms.isEmpty(cap)){
 //				pGraphics2d.setStrokeCap(Cap.valueOf(cap.toUpperCase()));
 //			} else {
 //				pGraphics2d.setStrokeCap(Cap.BUTT);
 //			}
-//			String pathEffect = req.getStringPropertyValue(rPathEff);
-//			if (!Algorithms.isEmpty(pathEffect)) {
-//				if(!parsedDashEffects.containsKey(pathEffect)) {
-//					String[] vls = pathEffect.split("_");
-//					float[] vs = new float[vls.length * 2];
-//					for(int i = 0; i < vls.length; i++) {
-//						int s = vls[i].indexOf(':');
-//						String pre = vls[i];
-//						String post = "";
-//						if(s != -1) {
-//							pre = vls[i].substring(0, i);
-//							post = vls[i].substring(i + 1);
-//						}
-//						if(pre.length() > 0) {
-//							vs[i*2 ] = Float.parseFloat(pre);
-//						}
-//						if(post.length() > 0) {
-//							vs[i*2 +1] = Float.parseFloat(post);
-//						}
-//					}
-//					parsedDashEffects.put(pathEffect, vs);
-//				}
-//				float[] cachedValues = parsedDashEffects.get(pathEffect);
-//				
-//				pGraphics2d.setPathEffect(getDashEffect(rc, cachedValues, 0));
-//			} else {
-//				pGraphics2d.setPathEffect(null);
-//			}
+			String pathEffect = req.getStringPropertyValue(rPathEff);
+			if (!Algorithms.isEmpty(pathEffect)) {
+				if(!parsedDashEffects.containsKey(pathEffect)) {
+					String[] vls = pathEffect.split("_");
+					float[] vs = new float[vls.length * 2];
+					for(int i = 0; i < vls.length; i++) {
+						int s = vls[i].indexOf(':');
+						String pre = vls[i];
+						String post = "";
+						if(s != -1) {
+							pre = vls[i].substring(0, i);
+							post = vls[i].substring(i + 1);
+						}
+						if(pre.length() > 0) {
+							vs[i*2 ] = Float.parseFloat(pre);
+						}
+						if(post.length() > 0) {
+							vs[i*2 +1] = Float.parseFloat(post);
+						}
+					}
+					parsedDashEffects.put(pathEffect, vs);
+				}
+				float[] cachedValues = parsedDashEffects.get(pathEffect);
+				
+				pGraphics2d.setStroke(getDashEffect(val, rc, cachedValues, 0));
+			} else {
+				// TODO: Correct?
+				pGraphics2d.setStroke(new BasicStroke(1.0f));
+			}
 		}
 		pGraphics2d.setColor(new Color(req.getIntPropertyValue(rColor)));
 		if(ind == 0){
