@@ -7,6 +7,8 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Stroke;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.event.MouseAdapter;
@@ -21,7 +23,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.lang.reflect.InvocationTargetException;
-import java.net.URI;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,6 +34,7 @@ import java.util.Map;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -49,7 +51,7 @@ import net.osmand.render.RenderingRulesStorage;
 import net.osmand.render.RenderingRulesStorage.RenderingRulesStorageResolver;
 
 /**
- * OffRoad 
+ * OffRoad
  * 
  * 
  * @author foltin
@@ -96,7 +98,7 @@ public class OsmWindow {
 				mTileBox = mTileCopy;
 				mNewBitmap = newBitmap();
 				// wait
-				if(mWaitForThread != null && mWaitForThread.isAlive()){
+				if (mWaitForThread != null && mWaitForThread.isAlive()) {
 					try {
 						mWaitForThread.join();
 					} catch (InterruptedException e) {
@@ -105,7 +107,7 @@ public class OsmWindow {
 				}
 				// activate in foreground
 				SwingUtilities.invokeLater(new Runnable() {
-					
+
 					@Override
 					public void run() {
 						setImage(mNewBitmap);
@@ -113,7 +115,6 @@ public class OsmWindow {
 				});
 			}
 		}
-
 
 		private static final int ST_WIDTH = 1400;
 		private static final int ST_HEIGHT = 1000;
@@ -158,7 +159,7 @@ public class OsmWindow {
 			AffineTransform oldTransform = (AffineTransform) at.clone();
 			at.scale(scale, scale);
 			g2.setTransform(at);
-			g2.drawImage(bImage, (int)(originX/scale), (int)(originY/scale), null);
+			g2.drawImage(bImage, (int) (originX / scale), (int) (originY / scale), null);
 			g2.setTransform(oldTransform);
 		}
 
@@ -188,23 +189,28 @@ public class OsmWindow {
 
 		public void zoomChange(final int pWheelRotation, final Point pNewCenter) {
 			final int newZoom = mTileBox.getZoom() + pWheelRotation;
-			if ( newZoom < 1 ) {
+			if (newZoom < 1) {
 				return;
 			}
-			if(mAnimationThread != null && mAnimationThread.isAlive()){
+			if (mAnimationThread != null && mAnimationThread.isAlive()) {
 				return;
 			}
-			if(mGenerationThread != null && mGenerationThread.isAlive()){
+			if (mGenerationThread != null && mGenerationThread.isAlive()) {
 				return;
 			}
 			LatLon latLonNewCenter = mTileBox.getLatLonFromPixel(pNewCenter.x, pNewCenter.y);
 			final RotatedTileBox tileCopy = mTileBox.copy();
 			tileCopy.setZoom(newZoom);
-			final float deltaX = tileCopy.getPixXFromLatLon(latLonNewCenter.getLatitude(), latLonNewCenter.getLongitude())-pNewCenter.x;
-			final float deltaY = tileCopy.getPixYFromLatLon(latLonNewCenter.getLatitude(), latLonNewCenter.getLongitude())-pNewCenter.y;
-			// now move the tileCopy that latLonNewCenter is at the same pixel position as before.
-			double latFromPixel = tileCopy.getLatFromPixel(tileCopy.getCenterPixelX()+deltaX, tileCopy.getCenterPixelY()+deltaY);
-			double lonFromPixel = tileCopy.getLonFromPixel(tileCopy.getCenterPixelX()+deltaX, tileCopy.getCenterPixelY()+deltaY);
+			final float deltaX = tileCopy.getPixXFromLatLon(latLonNewCenter.getLatitude(),
+					latLonNewCenter.getLongitude()) - pNewCenter.x;
+			final float deltaY = tileCopy.getPixYFromLatLon(latLonNewCenter.getLatitude(),
+					latLonNewCenter.getLongitude()) - pNewCenter.y;
+			// now move the tileCopy that latLonNewCenter is at the same pixel
+			// position as before.
+			double latFromPixel = tileCopy.getLatFromPixel(tileCopy.getCenterPixelX() + deltaX,
+					tileCopy.getCenterPixelY() + deltaY);
+			double lonFromPixel = tileCopy.getLonFromPixel(tileCopy.getCenterPixelX() + deltaX,
+					tileCopy.getCenterPixelY() + deltaY);
 			tileCopy.setLatLonCenter(latFromPixel, lonFromPixel);
 			mAnimationThread = new Thread() {
 
@@ -217,9 +223,11 @@ public class OsmWindow {
 					for (int i = 0; i < it; ++i) {
 						scale = start + i * delta;
 						// this is not correct. involve the size of the image.
-						originX = (int) (pNewCenter.x-(pNewCenter.x)*scale); 
-						originY = (int) (pNewCenter.y-(pNewCenter.y)*scale); 
-//						System.out.println("Wheel= " + pWheelRotation + ", Setting scale to " + scale + ", delta = " + delta + ", dest=" + dest);
+						originX = (int) (pNewCenter.x - (pNewCenter.x) * scale);
+						originY = (int) (pNewCenter.y - (pNewCenter.y) * scale);
+						// System.out.println("Wheel= " + pWheelRotation + ",
+						// Setting scale to " + scale + ", delta = " + delta +
+						// ", dest=" + dest);
 						try {
 							SwingUtilities.invokeAndWait(new Runnable() {
 
@@ -256,7 +264,6 @@ public class OsmWindow {
 			return image;
 		}
 
-
 		public void dragImage(Point pTranslate) {
 			originX = pTranslate.x;
 			originY = pTranslate.y;
@@ -270,11 +277,33 @@ public class OsmWindow {
 	}
 
 	public static class STMouseAdapter extends MouseAdapter implements ComponentListener {
+		private class ZoomPerformer implements ActionListener {
+			private int mCounter;
+			private Point mPoint;
+
+			public void addWheelEvent(MouseWheelEvent pE){
+				mCounter += pE.getWheelRotation();
+				System.out.println("Setting counter to " + mCounter);
+				mPoint = pE.getPoint();
+			}
+			
+			public void actionPerformed(ActionEvent evt) {
+				drawPanel.zoomChange(-mCounter, mPoint);
+				mCounter = 0;
+			}
+		}
+
 		private STDrawPanel drawPanel;
 		private Point startPoint;
+		private Timer mZoomTimer;
+		private ZoomPerformer mZoomPerformer;
 
 		public STMouseAdapter(STDrawPanel drawPanel) {
 			this.drawPanel = drawPanel;
+			int delay = 100; // milliseconds
+			mZoomPerformer = new ZoomPerformer();
+			mZoomTimer = new Timer(delay, mZoomPerformer);
+			mZoomTimer.setRepeats(false);
 		}
 
 		@Override
@@ -298,7 +327,9 @@ public class OsmWindow {
 
 		@Override
 		public void mouseWheelMoved(MouseWheelEvent pE) {
-			drawPanel.zoomChange(-pE.getWheelRotation(), pE.getPoint());
+			pE.consume();
+			mZoomPerformer.addWheelEvent(pE);
+			mZoomTimer.restart();
 		}
 
 		@Override

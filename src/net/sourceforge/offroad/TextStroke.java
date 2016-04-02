@@ -17,6 +17,8 @@ limitations under the License.
 */
 
 /*
+ * Take from http://grepcode.com/file_/repo1.maven.org/maven2/com.googlecode.blaisemath/blaise-graphics/2.0.9/com/googlecode/blaisemath/graphics/swing/TextStroke.java/?v=source
+ * 
 * #%L
 * BlaiseGraphics
 * --
