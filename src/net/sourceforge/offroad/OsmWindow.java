@@ -18,15 +18,9 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.RandomAccessFile;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -41,8 +35,6 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import net.osmand.IProgress;
 import net.osmand.PlatformUtil;
-import net.osmand.binary.BinaryMapIndexReader;
-import net.osmand.binary.CachedOsmandIndexes;
 import net.osmand.binary.OsmandIndex;
 import net.osmand.binary.OsmandIndex.MapLevel;
 import net.osmand.data.LatLon;
@@ -51,7 +43,6 @@ import net.osmand.data.RotatedTileBox;
 import net.osmand.data.RotatedTileBox.RotatedTileBoxBuilder;
 import net.osmand.plus.OsmandSettings;
 import net.osmand.plus.api.SettingsAPI;
-import net.osmand.plus.api.SettingsAPI.SettingsEditor;
 import net.osmand.plus.render.MapRenderRepositories;
 import net.osmand.plus.resources.ResourceManager;
 import net.osmand.render.RenderingRulesStorage;
@@ -366,7 +357,6 @@ public class OsmWindow {
 	}
 
 	private RenderingRulesStorage mRenderingRulesStorage;
-	private MapRenderRepositories mMapRenderRepositories;
 	private ResourceManager mResourceManager;
 
 	public static void main(String[] args) throws XmlPullParserException, IOException {
@@ -386,38 +376,15 @@ public class OsmWindow {
 	}
 	
 	public void loadMGap(Graphics2D pG2, RotatedTileBox pTileRect) {
-		mMapRenderRepositories.loadMGap(pG2, pTileRect, mRenderingRulesStorage);
+		getRenderer().loadMGap(pG2, pTileRect, mRenderingRulesStorage);
+	}
+
+	public MapRenderRepositories getRenderer() {
+		return mResourceManager.getRenderer();
 	}
 
 	private void init() throws XmlPullParserException, IOException {
 		mRenderingRulesStorage = getRenderingRulesStorage();
-		mMapRenderRepositories = getMapRenderRepositories();
-	}
-
-	private MapRenderRepositories getMapRenderRepositories() throws FileNotFoundException, IOException {
-		MapRenderRepositories mapRenderRepositories = mResourceManager.getRenderer();
-//		Path dir = Paths.get(OSMAND_MAPS_DIR);
-//		try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "*.{obf}")) {
-//			for (Path entry : stream) {
-//				System.out.println(entry.getFileName());
-//				BinaryMapIndexReader reader = getReader(entry.toString());
-//				mapRenderRepositories.initializeNewResource(IProgress.EMPTY_PROGRESS, reader.getFile(), reader);
-//			}
-//		} catch (IOException x) {
-//			// IOException can never be thrown by the iteration.
-//			// In this snippet, it can // only be thrown by newDirectoryStream.
-//			System.err.println(x);
-//		}
-		return mapRenderRepositories;
-	}
-
-	private BinaryMapIndexReader getReader(String path) throws FileNotFoundException, IOException {
-		File fl = new File(path);
-		RandomAccessFile raf = new RandomAccessFile(fl, "r");
-
-		BinaryMapIndexReader reader = new BinaryMapIndexReader(raf, fl);
-		System.out.println("VERSION " + reader.getVersion()); //$NON-NLS-1$
-		return reader;
 	}
 
 	public RenderingRulesStorage getRenderingRulesStorage() throws XmlPullParserException, IOException {

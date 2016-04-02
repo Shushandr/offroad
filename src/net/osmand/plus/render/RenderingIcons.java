@@ -126,7 +126,7 @@ public class RenderingIcons {
 		try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "*.{png}")) {
 			for (Path entry : stream) {
 				String f = entry.getFileName().toString().replaceFirst("\\.png", "");
-				System.out.println(f);
+//				System.out.println(f);
 				if (f.startsWith("h_")) {
 					shaderIcons.put(f.substring(2), entry);
 				} else if( f.startsWith("mm_")) {
