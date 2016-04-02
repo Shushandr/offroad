@@ -266,31 +266,14 @@ public class TextRenderer {
 				if (!intersects) {
 					if (text.drawOnPath != null) {
 						float vOffset = text.vOffset - ( metr.getAscent()/2 + metr.getDescent());
-						AffineTransform transf = new AffineTransform();
-						transf.translate(0, vOffset);
-						text.drawOnPath.transform(transf);
 						if (text.textShadow > 0) {
-//							paintText.setColor(text.textShadowColor);
-//							paintText.setStyle(Style.STROKE);
-//							paintText.setStrokeWidth(2 + text.textShadow);
-//							cv.drawTextOnPath(text.text, text.drawOnPath, 0, 
-//									text.vOffset - ( paintText.ascent()/2 + paintText.descent()), paintText);
 							newGraphics.setColor(createColor(text.textShadowColor));
-							newGraphics.setStroke(new TextStroke(text.text, textFont, false, false));
+							newGraphics.setStroke(new TextStroke(text.text, textFont, false, false, -vOffset));
 							newGraphics.draw(text.drawOnPath);
-//							// reset
-//							paintText.setStyle(Style.FILL);
-//							paintText.setStrokeWidth(2);
-//							paintText.setColor(text.textColor);
 						}
 						newGraphics.setColor(createColor(text.textColor));
-						newGraphics.setStroke(new TextStroke(text.text, textFont, false, false));
+						newGraphics.setStroke(new TextStroke(text.text, textFont, false, false, -vOffset));
 						newGraphics.draw(text.drawOnPath);
-						AffineTransform transf2 = new AffineTransform();
-						transf2.translate(0, -vOffset);
-						text.drawOnPath.transform(transf2);
-//						cv.drawTextOnPath(text.text, text.drawOnPath, 0, 
-//								text.vOffset - ( paintText.ascent()/2 + paintText.descent()), paintText);
 						newGraphics.setStroke(new BasicStroke(0f));
 					} else {
 						drawShieldIcon(rc, newGraphics, text, text.shieldRes);
