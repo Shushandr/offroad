@@ -26,6 +26,10 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
@@ -35,10 +39,13 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import net.osmand.IProgress;
 import net.osmand.PlatformUtil;
+import net.osmand.ResultMatcher;
 import net.osmand.binary.OsmandIndex;
 import net.osmand.binary.OsmandIndex.MapLevel;
+import net.osmand.data.Amenity;
 import net.osmand.data.LatLon;
 import net.osmand.data.QuadPoint;
+import net.osmand.data.QuadRect;
 import net.osmand.data.RotatedTileBox;
 import net.osmand.data.RotatedTileBox.RotatedTileBoxBuilder;
 import net.osmand.plus.OsmandSettings;
@@ -63,8 +70,8 @@ public class OsmWindow {
 	public static final String OSMAND_ICONS_DIR = BASE_DIR
 			+ "rendering_styles/style-icons/drawable-xxhdpi/";
 
-	private static void createAndShowUI(OsmWindow pWin) {
-		STDrawPanel drawPanel = new STDrawPanel(pWin);
+	private static void createAndShowUI(final OsmWindow pWin) {
+		final STDrawPanel drawPanel = new STDrawPanel(pWin);
 		STMouseAdapter mAdapter = new STMouseAdapter(drawPanel);
 		drawPanel.addMouseListener(mAdapter);
 		drawPanel.addMouseMotionListener(mAdapter);
@@ -75,6 +82,31 @@ public class OsmWindow {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setResizable(true);
 		frame.addComponentListener(mAdapter);
+		JMenuBar menubar = new JMenuBar();
+		JMenu jSearchMenu = new JMenu("Search");
+		JMenuItem findItem = new JMenuItem("Find...");
+		findItem.addActionListener(new ActionListener(){
+
+			@Override
+			public void actionPerformed(ActionEvent pE) {
+				String search= JOptionPane.showInputDialog("Search item");
+				QuadRect bounds = drawPanel.mTileBox.getLatLonBounds();
+				pWin.mResourceManager.searchAmenitiesByName(search, bounds.top, bounds.left, bounds.bottom, bounds.right, drawPanel.mTileBox.getLatitude(), drawPanel.mTileBox.getLongitude(), new ResultMatcher<Amenity>(){
+
+					@Override
+					public boolean publish(Amenity pObject) {
+						System.out.println("found: " + pObject);
+						return true;
+					}
+
+					@Override
+					public boolean isCancelled() {
+						return false;
+					}});
+			}});
+		jSearchMenu.add(findItem);
+		menubar.add(jSearchMenu);
+		frame.setJMenuBar(menubar);
 		frame.pack();
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
@@ -194,7 +226,8 @@ public class OsmWindow {
 			if (newZoom < minZoom) {
 				newZoom = minZoom;
 			}
-			int maxZoom = mapInstance.hasMaxzoom() ? mapInstance.getMaxzoom() : Integer.MAX_VALUE;
+			// FIXME: Magic number
+			int maxZoom = mapInstance.hasMaxzoom() ? mapInstance.getMaxzoom() : 21;
 			if (newZoom > maxZoom) {
 				newZoom = maxZoom;
 			}
