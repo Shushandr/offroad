@@ -51,14 +51,14 @@ public class TextStroke implements Stroke {
 			newString += s.charAt(i);
 		}
 
-		System.out.println("Inverted string: " + newString);
+//		System.out.println("Inverted string: " + newString);
 		return newString;
 	}
 
 	public Shape createStrokedShape(Shape shape) {
 		Rectangle2D rect = shape.getBounds2D();
 		int end = (int) (rect.getX() + rect.getWidth());
-		System.out.println("Start r: " + rect.getX() + ", end r: " + end);
+//		System.out.println("Start r: " + rect.getX() + ", end r: " + end);
 		FontRenderContext frc = new FontRenderContext(null, true, true);
 		GlyphVector glyphVector = font.createGlyphVector(frc, text);
 

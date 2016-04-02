@@ -409,12 +409,6 @@ public class OsmWindow {
 		is = new FileInputStream(defaultFile);
 		storage.parseRulesFromXmlInputStream(is, resolver);
 
-		// storage = new RenderingRulesStorage("", null);
-		// new DefaultRenderingRulesStorage().createStyle(storage);
-		// for (RenderingRuleProperty p : storage.PROPS.getCustomRules()) {
-		// System.out.println(p.getCategory() + " " + p.getName() + " " +
-		// p.getAttrName());
-		// }
 		return storage;
 	}
 }

@@ -1,7 +1,9 @@
 package net.osmand.plus.render;
 
+import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Polygon;
 import java.awt.Stroke;
@@ -9,6 +11,7 @@ import java.awt.TexturePaint;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.geom.RectangularShape;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -106,17 +109,7 @@ public class OsmandRenderer {
 	}
 
 	public OsmandRenderer() {
-//		paintIcon = new Polygon();
-//		paintIcon.setStyle(Style.STROKE);
-//
-//
 		textRenderer = new TextRenderer();
-//		paint = new Polygon();
-//		paint.setAntiAlias(true);
-//
-//		dm = new DisplayMetrics();
-//		WindowManager wmgr = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-//		wmgr.getDefaultDisplay().getMetrics(dm);
 	}
 
 	public Stroke getDashEffect(float pWidth, RenderingContext rc, float[] cachedValues, float st, int cap){
@@ -185,7 +178,7 @@ public class OsmandRenderer {
 		long now = System.currentTimeMillis();
 		// fill area
 		if (rc.defaultColor != 0) {
-			pGraphics2d.setColor(new Color(rc.defaultColor));
+			pGraphics2d.setColor(createColor(rc.defaultColor));
 		}
 		if (objects != null && !objects.isEmpty() && rc.width > 0 && rc.height > 0) {
 			rc.cosRotateTileSize = (float) (Math.cos((float) Math.toRadians(rc.rotate)) * TILE_SIZE);
@@ -525,11 +518,13 @@ public class OsmandRenderer {
 		float yText = 0;
 		int zoom = rc.zoom;
 		Path2D path = null;
+		Graphics2D newGraphics = (Graphics2D) pGraphics2d.create();
 		
 //		rc.main.color = Color.rgb(245, 245, 245);
 		render.setInitialTagValueZoom(pair.tag, pair.value, zoom, obj);
 		boolean rendered = render.search(RenderingRulesStorage.POLYGON_RULES);
-		if(!rendered || !updatePaint(render, pGraphics2d, 0, true, rc)){
+		if(!rendered || !updatePaint(render, newGraphics, 0, true, rc)){
+			newGraphics.dispose();
 			return;
 		}
 		rc.visible++;
@@ -570,12 +565,11 @@ public class OsmandRenderer {
 		}
 
 		if (path != null && len > 0) {
-			pGraphics2d.fill(path);
-			if (updatePaint(render, pGraphics2d, 1, false, rc)) {
-				pGraphics2d.draw(path);
-			}
+			newGraphics.fill(path);
+			updateAndDraw(render, newGraphics, rc, path, true, false, 1);
 			textRenderer.renderText(obj, render, pGraphics2d, rc, pair, xText / len, yText / len, null, null);
 		}
+		newGraphics.dispose();
 	}
 	
 	public boolean updatePaint(RenderingRuleSearchRequest req, Graphics2D pGraphics2d, int ind, boolean area, RenderingContext rc){
@@ -643,8 +637,8 @@ public class OsmandRenderer {
 //			pGraphics2d.setColorFilter(null);
 //			pGraphics2d.clearShadowLayer();
 //			pGraphics2d.setStyle(Style.STROKE);
-			float val = rc.getComplexValue(req, rStrokeW);
-			val = Math.max(0.0f,val);
+			float width = rc.getComplexValue(req, rStrokeW);
+			width = Math.max(0f, width);
 			int capValue = BasicStroke.CAP_BUTT;
 			String cap = req.getStringPropertyValue(rCap);
 			if(!Algorithms.isEmpty(cap)){
@@ -674,12 +668,12 @@ public class OsmandRenderer {
 				}
 				float[] cachedValues = parsedDashEffects.get(pathEffect);
 				
-				pGraphics2d.setStroke(getDashEffect(val, rc, cachedValues, 0, capValue));
+				pGraphics2d.setStroke(getDashEffect(width, rc, cachedValues, 0, capValue));
 			} else {
-				pGraphics2d.setStroke(new BasicStroke(0, capValue, BasicStroke.JOIN_ROUND));
+				pGraphics2d.setStroke(new BasicStroke(width, capValue, BasicStroke.JOIN_ROUND));
 			}
 		}
-		pGraphics2d.setColor(new Color(req.getIntPropertyValue(rColor)));
+		pGraphics2d.setColor(createColor(req.getIntPropertyValue(rColor)));
 		if(ind == 0){
 			String resId = req.getStringPropertyValue(req.ALL.R_SHADER);
 			if(resId != null){
@@ -694,17 +688,22 @@ public class OsmandRenderer {
 				if(shadowColor == 0) {
 					shadowColor = rc.shadowRenderingColor;
 				}
+				throw new IllegalArgumentException("Shadow not implemented here");
 //				int shadowRadius = (int) rc.getComplexValue(req, req.ALL.R_SHADOW_RADIUS);
 //				if (shadowColor == 0) {
 //					shadowRadius = 0;
 //				}
 //				pGraphics2d.setShadowLayer(shadowRadius, 0, 0, shadowColor);
-//				pGraphics2d.setColor(new Color(shadowColor));
+//				pGraphics2d.setColor(createColor(shadowColor));
 			}
 		}
 		
 		return true;
 		
+	}
+
+	public Color createColor(int colorInt) {
+		return new Color(colorInt, true);
 	}
 	
 
@@ -751,15 +750,24 @@ public class OsmandRenderer {
 
 	}
 
-	private void drawPolylineShadow(Graphics2D pGraphics2d, RenderingContext rc, Polygon path, int shadowColor, int shadowRadius) {
+	private void drawPolylineShadow(Graphics2D pGraphics2d, RenderingContext rc, Path2D pPath, int shadowColor, int shadowRadius) {
 		// blurred shadows
 		if (rc.shadowRenderingMode == 2 && shadowRadius > 0) {
-			drawPath(pGraphics2d, path);
+			drawPath(pGraphics2d, pPath);
+			throw new IllegalArgumentException("Shadow type not implemented");
 		}
 
 		// option shadow = 3 with solid border
 		if (rc.shadowRenderingMode == 3 && shadowRadius > 0) {
-			drawPath(pGraphics2d, path);
+			Graphics2D newGraphics = (Graphics2D) pGraphics2d.create();
+			if (newGraphics.getStroke() instanceof BasicStroke) {
+				BasicStroke bs = (BasicStroke) newGraphics.getStroke();
+				newGraphics.setStroke(new BasicStroke(bs.getLineWidth() + shadowRadius * 2));
+			}
+			newGraphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_IN));
+			newGraphics.setColor(createColor(shadowColor));
+			drawPath(newGraphics, pPath);
+			newGraphics.dispose();
 		}
 	}
 
@@ -790,7 +798,7 @@ public class OsmandRenderer {
 
 		rc.visible++;
 
-		Polygon path = null;
+		Path2D path = null;
 		float xMid = 0;
 		float yMid = 0;
 		int middle = obj.getPointsLength() / 2;
@@ -821,14 +829,14 @@ public class OsmandRenderer {
 				}
 			}
 			if (path == null) {
-				path = new Polygon();
-				path.addPoint((int)p.getX(), (int)p.getY());
+				path = new Path2D.Float();
+				path.moveTo(p.getX(), p.getY());
 			} else {
 				if(i == middle){
 					xMid = (float) p.getX();
 					yMid = (float) p.getY();
 				}
-				path.addPoint((int)p.getX(), (int)p.getY());
+				path.lineTo(p.getX(), p.getY());
 			}
 			prev = p;
 		}
@@ -850,43 +858,25 @@ public class OsmandRenderer {
 				drawPolylineShadow(pGraphics2d, rc, path, shadowColor, shadowRadius);
 			} else {
 				boolean update = false;
-				if (updatePaint(render, pGraphics2d, -3, false, rc)) {
-					update = true;
-					drawPath(pGraphics2d, path);
-				}
-				if (updatePaint(render, pGraphics2d, -2, false, rc)) {
-					update = true;
-					drawPath(pGraphics2d, path);
-				}
-				if (updatePaint(render, pGraphics2d, -1, false, rc)) {
-					update = true;
-					drawPath(pGraphics2d, path);
-				}
-				if(update) {
-					updatePaint(render, pGraphics2d, 0, false, rc);
-				}
-				drawPath(pGraphics2d, path);
-				if (updatePaint(render, pGraphics2d, 1, false, rc)) {
-					drawPath(pGraphics2d, path);
-				}
-				if (updatePaint(render, pGraphics2d, 2, false, rc)) {
-					drawPath(pGraphics2d, path);
-				}
-				if (updatePaint(render, pGraphics2d, 3, false, rc)) {
-					drawPath(pGraphics2d, path);
-				}
-				if (updatePaint(render, pGraphics2d, 4, false, rc)) {
-					drawPath(pGraphics2d, path);
-				}
+				update = updateAndDraw(render, pGraphics2d, rc, path, true, false, -3);
+				update = updateAndDraw(render, pGraphics2d, rc, path, true, false, -2);
+				update = updateAndDraw(render, pGraphics2d, rc, path, true, false, -1);
+				update = updateAndDraw(render, pGraphics2d, rc, path, update, true, 0);
+				updateAndDraw(render, pGraphics2d, rc, path, true, false, 1);
+				updateAndDraw(render, pGraphics2d, rc, path, true, false, 2);
+				updateAndDraw(render, pGraphics2d, rc, path, true, false, 3);
+				updateAndDraw(render, pGraphics2d, rc, path, true, false, 4);
 			}
 			
 			if(oneway != 0 && !drawOnlyShadow){
+				Stroke oldStroke = pGraphics2d.getStroke();
 				Stroke[] strokes = oneway == -1? getReverseOneWayPaints(rc) :  getOneWayPaints(rc);
 				for (int i = 0; i < strokes.length; i++) {
-					pGraphics2d.setColor(new Color(0xff6c70d5));
+					pGraphics2d.setColor(createColor(0xff6c70d5));
 					pGraphics2d.setStroke(strokes[i]);
-					drawPath(pGraphics2d, path, false);
+					drawPath(pGraphics2d, path);
 				}
+				pGraphics2d.setStroke(oldStroke);
 			}
 			if (textPoints != null) {
 				textRenderer.renderText(obj, render, pGraphics2d, rc, pair, xMid, yMid, path, textPoints);
@@ -894,15 +884,22 @@ public class OsmandRenderer {
 		}
 	}
 
-	private void drawPath(Graphics2D pGraphics2d, Polygon path) {
-		drawPath(pGraphics2d, path, false);
-	}
-	private void drawPath(Graphics2D pGraphics2d, Polygon path, boolean pFill) {
-		if (pFill) {
-			pGraphics2d.fillPolygon(path);
-		} else {
-			pGraphics2d.drawPolyline(path.xpoints, path.ypoints, path.npoints);
+	private boolean updateAndDraw(RenderingRuleSearchRequest render, Graphics2D pGraphics2d, RenderingContext rc,
+			Path2D path, boolean doUpdate, boolean pDontCheckUpdateResult, int pInd) {
+		boolean update = false;
+		Graphics2D newGraphics = (Graphics2D) pGraphics2d.create();
+		if (doUpdate){
+			update = updatePaint(render, newGraphics, pInd, false, rc);
 		}
+		if(pDontCheckUpdateResult || update){
+			drawPath(newGraphics, path);
+		}
+		newGraphics.dispose();
+		return update;
+	}
+
+	private void drawPath(Graphics2D pGraphics2d, Path2D pPath) {
+		pGraphics2d.draw(pPath);
 	}
 
 		

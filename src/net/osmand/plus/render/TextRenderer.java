@@ -5,7 +5,9 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
-import java.awt.Polygon;
+import java.awt.Stroke;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
@@ -43,7 +45,7 @@ public class TextRenderer {
 		}
 
 		String text = null;
-		Polygon drawOnPath = null;
+		Path2D drawOnPath = null;
 		QuadRect bounds = null;
 		float vOffset = 0;
 		float centerX = 0;
@@ -151,18 +153,21 @@ public class TextRenderer {
 	}
 
 	void drawTestBox(Graphics2D pGraphics2d, Rectangle2D r, float rot, String text) {
+		Graphics2D newGraphics = (Graphics2D) pGraphics2d.create();
+
 //		cv.save();
-		pGraphics2d.translate(r.getCenterX(), r.getCenterY());
-		pGraphics2d.rotate((float) (rot * 180 / Math.PI));
+		newGraphics.translate(r.getCenterX(), r.getCenterY());
+		newGraphics.rotate((float) (rot * 180 / Math.PI));
 		Rectangle2D rs = new Rectangle2D.Double(-r.getWidth() / 2, -r.getHeight() / 2, r.getWidth() / 2, r.getHeight() / 2);
-		pGraphics2d.drawRect((int)rs.getX(), (int)rs.getY(), (int)rs.getWidth(), (int)rs.getHeight());
+		newGraphics.drawRect((int)rs.getX(), (int)rs.getY(), (int)rs.getWidth(), (int)rs.getHeight());
 		if (text != null) {
 //			paintText.setTextSize(paintText.getTextSize() - 4);
 //			System.out.println("Text " + text+ "; c=( " + rs.getCenterX() + ", " + rs.getCenterY() + ")");
-			pGraphics2d.drawString(text, (int)rs.getCenterX(), (int)rs.getCenterY());
+			newGraphics.drawString(text, (int)rs.getCenterX(), (int)rs.getCenterY());
 //			paintText.setTextSize(paintText.getTextSize() + 4);
 		}
 //		cv.restore();
+		newGraphics.dispose();
 	}
 
 	List<TextDrawInfo> tempSearch = new ArrayList<TextDrawInfo>();
@@ -195,24 +200,27 @@ public class TextRenderer {
 	}
 
 	private void drawTextOnCanvas(Graphics2D pGraphics2d, String text, float centerX, float centerY, int shadowColor, float textShadow) {
+		Graphics2D newGraphics = (Graphics2D) pGraphics2d.create();
 		if (textShadow > 0) {
-			Color c = pGraphics2d.getColor();
+			Color c = newGraphics.getColor();
 //			paintText.setStyle(Style.STROKE);
-			pGraphics2d.setColor(new Color(shadowColor));
-			pGraphics2d.setStroke(new BasicStroke(2 + textShadow));
-			pGraphics2d.drawString(text, centerX, centerY);
+			newGraphics.setColor(createColor(shadowColor));
+			newGraphics.setStroke(new BasicStroke(2 + textShadow));
+			newGraphics.drawString(text, centerX, centerY);
 			// reset
-			pGraphics2d.setStroke(new BasicStroke(2));
+			newGraphics.setStroke(new BasicStroke(2f));
 //			paintText.setStrokeWidth(2);
 //			paintText.setStyle(Style.FILL);
 //			paintText.setColor(c);
-			pGraphics2d.setColor(c);
+			newGraphics.setColor(c);
 		}
-		pGraphics2d.drawString(text, centerX, centerY);
+		newGraphics.drawString(text, centerX, centerY);
+		newGraphics.dispose();
 	}
 
 	public void drawTextOverCanvas(RenderingContext rc, Graphics2D pGraphics2d, String preferredLocale) {
 		int size = rc.textToDraw.size();
+		Graphics2D newGraphics = (Graphics2D) pGraphics2d.create();
 
 		// 1. Sort text using text order
 		Collections.sort(rc.textToDraw, new Comparator<TextDrawInfo>() {
@@ -244,51 +252,60 @@ public class TextRenderer {
 				} else {
 					fontStyle = Font.PLAIN;
 				}
-				Font textFont = pGraphics2d.getFont().deriveFont(fontStyle, textSize);
-				pGraphics2d.setFont(textFont);
+				Font textFont = newGraphics.getFont().deriveFont(fontStyle, textSize);
+				newGraphics.setFont(textFont);
 //				paintText.setFakeBoldText(text.bold);
 				
-				pGraphics2d.setColor(new Color(text.textColor));
+				newGraphics.setColor(createColor(text.textColor));
 				// align center y
-				FontMetrics metr = pGraphics2d.getFontMetrics();
+				FontMetrics metr = newGraphics.getFontMetrics();
 				text.centerY += - metr.getAscent();
 
 				// calculate if there is intersection
-				boolean intersects = findTextIntersection(pGraphics2d, rc, nonIntersectedBounds, text);
+				boolean intersects = findTextIntersection(newGraphics, rc, nonIntersectedBounds, text);
 				if (!intersects) {
 					if (text.drawOnPath != null) {
 						float vOffset = text.vOffset - ( metr.getAscent()/2 + metr.getDescent());
-						text.drawOnPath.translate(0, (int)vOffset);
+						AffineTransform transf = new AffineTransform();
+						transf.translate(0, vOffset);
+						text.drawOnPath.transform(transf);
 						if (text.textShadow > 0) {
 //							paintText.setColor(text.textShadowColor);
 //							paintText.setStyle(Style.STROKE);
 //							paintText.setStrokeWidth(2 + text.textShadow);
 //							cv.drawTextOnPath(text.text, text.drawOnPath, 0, 
 //									text.vOffset - ( paintText.ascent()/2 + paintText.descent()), paintText);
-							pGraphics2d.setColor(new Color(text.textShadowColor));
-							pGraphics2d.setStroke(new TextStroke(text.text, textFont, true));
-							pGraphics2d.draw(text.drawOnPath);
+							newGraphics.setColor(createColor(text.textShadowColor));
+							newGraphics.setStroke(new TextStroke(text.text, textFont, true));
+							newGraphics.draw(text.drawOnPath);
 //							// reset
 //							paintText.setStyle(Style.FILL);
 //							paintText.setStrokeWidth(2);
 //							paintText.setColor(text.textColor);
 						}
-						pGraphics2d.setColor(new Color(text.textColor));
-						pGraphics2d.setStroke(new TextStroke(text.text, textFont, true));
-						pGraphics2d.draw(text.drawOnPath);
-						text.drawOnPath.translate(0, -(int)vOffset);
+						newGraphics.setColor(createColor(text.textColor));
+						newGraphics.setStroke(new TextStroke(text.text, textFont, true));
+						newGraphics.draw(text.drawOnPath);
+						AffineTransform transf2 = new AffineTransform();
+						transf2.translate(0, -vOffset);
+						text.drawOnPath.transform(transf2);
 //						cv.drawTextOnPath(text.text, text.drawOnPath, 0, 
 //								text.vOffset - ( paintText.ascent()/2 + paintText.descent()), paintText);
-						pGraphics2d.setStroke(new BasicStroke(0f));
+						newGraphics.setStroke(new BasicStroke(0f));
 					} else {
-						drawShieldIcon(rc, pGraphics2d, text, text.shieldRes);
-						drawShieldIcon(rc, pGraphics2d, text, text.shieldResIcon);
+						drawShieldIcon(rc, newGraphics, text, text.shieldRes);
+						drawShieldIcon(rc, newGraphics, text, text.shieldResIcon);
 
-						drawWrappedText(pGraphics2d, text, textSize);
+						drawWrappedText(newGraphics, text, textSize);
 					}
 				}
 			}
 		}
+		newGraphics.dispose();
+	}
+
+	public Color createColor(int colorInt) {
+		return new Color(colorInt, true);
 	}
 
 	private void drawShieldIcon(RenderingContext rc, Graphics2D pGraphics2d, TextDrawInfo text, String sr) {
@@ -353,7 +370,7 @@ public class TextRenderer {
 	}
 	
 	private void createTextDrawInfo(final BinaryMapDataObject o, RenderingRuleSearchRequest render, Graphics2D pGraphics2d, RenderingContext rc, TagValuePair pair, final double xMid, double yMid,
-			Polygon path, final Point2D[] points, String name, String tagName) {
+			Path2D pPath, final Point2D[] points, String name, String tagName) {
 		render.setInitialTagValueZoom(pair.tag, pair.value, rc.zoom, o);
 		render.setIntFilter(render.ALL.R_TEXT_LENGTH, name.length());
 		render.setStringFilter(render.ALL.R_NAME_TAG, tagName);
@@ -386,8 +403,8 @@ public class TextRenderer {
 				text.bounds = new QuadRect(0, 0, stringWidth, stringHeight);
 				text.bounds.inset(-rc.getDensityValue(3), -rc.getDensityValue(10));
 				boolean display = true;
-				if(path != null) {
-					text.drawOnPath = path;
+				if(pPath != null) {
+					text.drawOnPath = pPath;
 					display = calculatePathToRotate(rc, text, points, 
 					render.getIntPropertyValue(render.ALL.R_TEXT_ON_PATH, 0) != 0);
 				}
@@ -406,7 +423,7 @@ public class TextRenderer {
 	}
 	
 	public void renderText(final BinaryMapDataObject obj, final RenderingRuleSearchRequest render, final Graphics2D pGraphics2d, final RenderingContext rc, 
-			final TagValuePair pair, final double xMid, final double yMid, final Polygon path, final Point2D[] points) {
+			final TagValuePair pair, final double xMid, final double yMid, final Path2D pPath, final Point2D[] points) {
 		final TIntObjectHashMap<String> map = obj.getObjectNames();
 		if (map != null) {
 			map.forEachEntry(new TIntObjectProcedure<String>() {
@@ -425,7 +442,7 @@ public class TextRenderer {
 //							skip = true;
 //						}
 						if(!skip) {
-							createTextDrawInfo(obj, render, pGraphics2d, rc, pair, xMid, yMid, path, points, name, nameTag);
+							createTextDrawInfo(obj, render, pGraphics2d, rc, pair, xMid, yMid, pPath, points, name, nameTag);
 						}
 					}
 					return true;
@@ -515,12 +532,12 @@ public class TextRenderer {
 		// shrink path to display more text
 		if (startInd > 0 || endInd < len) {
 			// find subpath
-			Polygon path = new Polygon(); 
+			Path2D path = new Path2D.Double(); 
 			for (int i = startInd; i < endInd; i++) {
 				if (i == startInd) {
-					path.addPoint((int)points[i].getX(), (int)points[i].getY());
+					path.moveTo(points[i].getX(), points[i].getY());
 				} else {
-					path.addPoint((int)points[i].getX(), (int)points[i].getY());
+					path.lineTo(points[i].getX(), points[i].getY());
 				}
 			}
 			p.drawOnPath = path;
@@ -556,12 +573,12 @@ public class TextRenderer {
 //		p.hOffset = 0;
 
 		if (inverse) {
-			Polygon path = new Polygon();
+			Path2D path = new Path2D.Double();
 			for (int i = endInd - 1; i >= startInd; i--) {
 				if (i == endInd - 1) {
-					path.addPoint((int)points[i].getX(), (int)points[i].getY());
+					path.moveTo(points[i].getX(), points[i].getY());
 				} else {
-					path.addPoint((int)points[i].getX(), (int)points[i].getY());
+					path.lineTo(points[i].getX(), points[i].getY());
 				}
 			}
 			p.drawOnPath = path;
