@@ -1,5 +1,41 @@
 package net.sourceforge.offroad;
 
+/*
+Copyright 2006 Jerry Huxtable
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+/*
+* #%L
+* BlaiseGraphics
+* --
+* Copyright (C) 2009 - 2015 Elisha Peterson
+* --
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+* 
+*      http://www.apache.org/licenses/LICENSE-2.0
+* 
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+* #L%
+*/
+
 import java.awt.Font;
 import java.awt.Shape;
 import java.awt.Stroke;
@@ -10,236 +46,153 @@ import java.awt.geom.FlatteningPathIterator;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
 
 /**
- * Taken from http://www.coderanch.com/t/507855/GUI/java/Drawing-text-line
- * 
- * @date 31.03.2016
- */
+* Stroke that renders text along a path.
+* 
+* @author Jerry Huxtable
+* @author Elisha Peterson
+*/
 public class TextStroke implements Stroke {
-	private String text;
-	private Font font;
-	private boolean stretchToFit = false;
-	private boolean repeat = false;
-	private AffineTransform t = new AffineTransform();
-	private boolean rotate = false;
 
-	private static final float FLATNESS = 1;
+   private String text;
+   private Font font;
+   private boolean stretchToFit = false;
+   private boolean repeat = false;
+   private final AffineTransform transform = new AffineTransform();
+   private static final float FLATNESS = 1;
 
-	public TextStroke(String text, Font font, boolean rotate) {
-		this(text, font, false, false, rotate);
-	}
+   public TextStroke(String text, Font font) {
+       this(text, font, true, false);
+   }
 
-	public TextStroke(String text, Font font, boolean stretchToFit, boolean repeat, boolean rotate) {
-		this.font = font;
-		this.stretchToFit = stretchToFit;
-		this.repeat = repeat;
-		this.rotate = rotate;
-		if (rotate) {
-			this.text = inverseString(text);
-		} else {
-			this.text = text;
-		}
-	}
+   public TextStroke(String text, Font font, boolean stretchToFit, boolean repeat) {
+       this.text = text;
+       this.font = font;
+       this.stretchToFit = stretchToFit;
+       this.repeat = repeat;
+   }
 
-	private String inverseString(String s) {
-		String newString = "";
-		int l = s.length();
+   @Override
+   public Shape createStrokedShape(Shape shape) {
+       FontRenderContext frc = new FontRenderContext(null, true, true);
+       GlyphVector glyphVector = font.createGlyphVector(frc, text);
 
-		for (int i = l - 1; i >= 0; i--) {
-			newString += s.charAt(i);
-		}
+       GeneralPath result = new GeneralPath();
+       PathIterator it = new FlatteningPathIterator(shape.getPathIterator(null), FLATNESS);
+       float[] points = new float[6];
+       float moveX = 0, moveY = 0;
+       float lastX = 0, lastY = 0;
+       float thisX = 0, thisY = 0;
+       int type = 0;
+       float next = 0;
+       int currentChar = 0;
+       int length = glyphVector.getNumGlyphs();
 
-//		System.out.println("Inverted string: " + newString);
-		return newString;
-	}
+       if (length == 0) {
+           return result;
+       }
 
-	public Shape createStrokedShape(Shape shape) {
-		Rectangle2D rect = shape.getBounds2D();
-		int end = (int) (rect.getX() + rect.getWidth());
-//		System.out.println("Start r: " + rect.getX() + ", end r: " + end);
-		FontRenderContext frc = new FontRenderContext(null, true, true);
-		GlyphVector glyphVector = font.createGlyphVector(frc, text);
+       float factor = stretchToFit ? measurePathLength(shape) / (float) glyphVector.getLogicalBounds().getWidth() : 1.0f;
+       float nextAdvance = 0;
 
-		GeneralPath result = new GeneralPath();
-		PathIterator it = new FlatteningPathIterator(shape.getPathIterator(null), FLATNESS);
-		float points[] = new float[6];
-		float moveX = 0, moveY = 0;
-		float lastX = 0, lastY = 0;
-		float thisX = 0, thisY = 0;
-		int type = 0;
-		boolean first = false;
-		float next = 0; // next character's advance along baseline
-		int currentChar = 0;
-		int glyphCount = glyphVector.getNumGlyphs();
+       while (currentChar < length && !it.isDone()) {
+           type = it.currentSegment(points);
+           switch (type) {
+               case PathIterator.SEG_MOVETO:
+                   moveX = lastX = points[0];
+                   moveY = lastY = points[1];
+                   result.moveTo(moveX, moveY);
+                   nextAdvance = glyphVector.getGlyphMetrics(currentChar).getAdvance() * 0.5f;
+                   next = nextAdvance;
+                   break;
 
-		if (glyphCount == 0)
-			return result;
+               case PathIterator.SEG_CLOSE:
+                   points[0] = moveX;
+                   points[1] = moveY;
+               // Fall into....
 
-		float factor = stretchToFit ? measurePathLength(shape) / (float) glyphVector.getLogicalBounds().getWidth()
-				: 1.0f;
-		float nextAdvance = 0;
+               case PathIterator.SEG_LINETO:
+                   thisX = points[0];
+                   thisY = points[1];
+                   float dx = thisX - lastX;
+                   float dy = thisY - lastY;
+                   float distance = (float) Math.sqrt(dx * dx + dy * dy);
+                   if (distance >= next) {
+                       float r = 1.0f / distance;
+                       float angle = (float) Math.atan2(dy, dx);
+                       while (currentChar < length && distance >= next) {
+                           Shape glyph = glyphVector.getGlyphOutline(currentChar);
+                           Point2D p = glyphVector.getGlyphPosition(currentChar);
+                           float px = (float) p.getX();
+                           float py = (float) p.getY();
+                           float x = lastX + next * dx * r;
+                           float y = lastY + next * dy * r;
+                           float advance = nextAdvance;
+                           nextAdvance = currentChar < length - 1 ? glyphVector.getGlyphMetrics(currentChar + 1).getAdvance() * 0.5f : 0;
+                           transform.setToTranslation(x, y);
+                           transform.rotate(angle);
+                           transform.translate(-px - advance, -py);
+                           result.append(transform.createTransformedShape(glyph), false);
+                           next += (advance + nextAdvance) * factor;
+                           currentChar++;
+                           if (repeat) {
+                               currentChar %= length;
+                           }
+                       }
+                   }
+                   next -= distance;
+                   lastX = thisX;
+                   lastY = thisY;
+                   break;
+                   
+               default:
+                   // ignore
+           }
+           it.next();
+       }
 
-		// Move start of drawing glyphs
-		float pathLength = measurePathLength(shape);
-		float pathFragmentNoText = pathLength - (float) glyphVector.getLogicalBounds().getWidth() - 5.00f;
-		float lengthBehind = 0;
+       return result;
+   }
 
-		while (lengthBehind < pathFragmentNoText && !it.isDone()) {
-			type = it.currentSegment(points);
-			switch (type) {
-			case PathIterator.SEG_MOVETO:
-				moveX = lastX = points[0];
-				moveY = lastY = points[1];
-				result.moveTo(moveX, moveY);
-				first = true;
-				nextAdvance = glyphVector.getGlyphMetrics(currentChar).getAdvance() * 0.5f;
-				next = nextAdvance;
-				break;
+   public float measurePathLength(Shape shape) {
+       PathIterator it = new FlatteningPathIterator(shape.getPathIterator(null), FLATNESS);
+       float[] points = new float[6];
+       float moveX = 0, moveY = 0;
+       float lastX = 0, lastY = 0;
+       float thisX = 0, thisY = 0;
+       int type = 0;
+       float total = 0;
 
-			case PathIterator.SEG_CLOSE:
-				points[0] = moveX;
-				points[1] = moveY;
-				// Fall into....
+       while (!it.isDone()) {
+           type = it.currentSegment(points);
+           switch (type) {
+               case PathIterator.SEG_MOVETO:
+                   moveX = lastX = points[0];
+                   moveY = lastY = points[1];
+                   break;
 
-			case PathIterator.SEG_LINETO:
-				thisX = points[0];
-				thisY = points[1];
-				float dx = thisX - lastX;
-				float dy = thisY - lastY;
-				lengthBehind += (float) Math.sqrt(dx * dx + dy * dy);
+               case PathIterator.SEG_CLOSE:
+                   points[0] = moveX;
+                   points[1] = moveY;
+               // Fall into....
 
-				first = false;
-				lastX = thisX;
-				lastY = thisY;
+               case PathIterator.SEG_LINETO:
+                   thisX = points[0];
+                   thisY = points[1];
+                   float dx = thisX - lastX;
+                   float dy = thisY - lastY;
+                   total += (float) Math.sqrt(dx * dx + dy * dy);
+                   lastX = thisX;
+                   lastY = thisY;
+                   break;
+                   
+               default:
+                   // ignore
+           }
+           it.next();
+       }
 
-				break;
-			}
-			it.next();
-		}
-
-		while (currentChar < glyphCount && !it.isDone()) {
-			type = it.currentSegment(points);
-			switch (type) {
-			case PathIterator.SEG_MOVETO:
-				moveX = lastX = points[0];
-				moveY = lastY = points[1];
-				result.moveTo(moveX, moveY);
-				first = true;
-				nextAdvance = glyphVector.getGlyphMetrics(currentChar).getAdvance() * 0.5f;
-				next = nextAdvance;
-				break;
-
-			case PathIterator.SEG_CLOSE:
-				points[0] = moveX;
-				points[1] = moveY;
-				// Fall into....
-
-			case PathIterator.SEG_LINETO:
-				thisX = points[0];
-				thisY = points[1];
-				float dx = thisX - lastX; // advance in x for this segment
-				float dy = thisY - lastY; // increase in y for this segment
-				float distance = (float) Math.sqrt(dx * dx + dy * dy); // length
-																		// of
-																		// the
-																		// segment
-				if (distance >= next) { // check if segment length is more than
-										// next character's width
-					float r = 1.0f / distance; // invert of the length of the
-												// segment
-					float angle = (float) Math.atan2(dy, dx); // angle of the
-																// segment's
-																// line
-					while (currentChar < glyphCount && distance >= next) { // while
-																			// there's
-																			// a
-																			// space
-																			// for
-																			// next
-																			// character
-						Shape glyph = glyphVector.getGlyphOutline(currentChar);
-						Point2D p = glyphVector.getGlyphPosition(currentChar);
-						float px = (float) p.getX(); // x position of current
-														// letter relative to
-														// string's origin
-						float py = (float) p.getY(); // y position of current
-														// letter relative to
-														// string's origin
-						float x = lastX + next * dx * r; // x of previous point
-															// in the path +
-						// (next character's advance along baseline + advance in
-						// x for this segment)/invert of the length of the
-						// segment)
-						float y = lastY + next * dy * r;
-						float advance = nextAdvance;
-						nextAdvance = currentChar < glyphCount - 1
-								? glyphVector.getGlyphMetrics(currentChar + 1).getAdvance() * 0.5f : 0;
-						t.setToTranslation(x, y);
-						if (rotate) {
-							t.rotate(angle);
-							t.rotate(Math.toRadians(180));
-						} else {
-							t.rotate(angle);
-						}
-						t.translate(-px - advance, -py);
-
-						result.append(t.createTransformedShape(glyph), false);
-						next += (advance + nextAdvance) * factor;
-						currentChar++;
-						if (repeat)
-							currentChar %= glyphCount;
-					}
-				}
-				next -= distance;
-				first = false;
-				lastX = thisX;
-				lastY = thisY;
-				break;
-			}
-			it.next();
-		}
-
-		return result;
-	}
-
-	public float measurePathLength(Shape shape) {
-		PathIterator it = new FlatteningPathIterator(shape.getPathIterator(null), FLATNESS);
-		float points[] = new float[6];
-		float moveX = 0, moveY = 0;
-		float lastX = 0, lastY = 0;
-		float thisX = 0, thisY = 0;
-		int type = 0;
-		float total = 0;
-
-		while (!it.isDone()) {
-			type = it.currentSegment(points);
-			switch (type) {
-			case PathIterator.SEG_MOVETO:
-				moveX = lastX = points[0];
-				moveY = lastY = points[1];
-				break;
-
-			case PathIterator.SEG_CLOSE:
-				points[0] = moveX;
-				points[1] = moveY;
-				// Fall into....
-
-			case PathIterator.SEG_LINETO:
-				thisX = points[0];
-				thisY = points[1];
-				float dx = thisX - lastX;
-				float dy = thisY - lastY;
-				total += (float) Math.sqrt(dx * dx + dy * dy);
-				lastX = thisX;
-				lastY = thisY;
-				break;
-			}
-			it.next();
-		}
-
-		return total;
-	}
-
+       return total;
+   }
 }

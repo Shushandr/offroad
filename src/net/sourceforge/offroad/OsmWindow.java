@@ -59,7 +59,7 @@ public class OsmWindow {
 
 	public static final String RENDERING_STYLES_DIR = "/home/foltin/programming/java/osmand/OsmAnd-resources/rendering_styles/";
 	public static final String OSMAND_MAPS_DIR = "/home/foltin/programming/java/osmand/maps/";
-	public static final String OSMAND_ICONS_DIR = "/home/foltin/programming/java/osmand/OsmAnd-resources/rendering_styles/style-icons/drawable-xhdpi/";
+	public static final String OSMAND_ICONS_DIR = "/home/foltin/programming/java/osmand/OsmAnd-resources/rendering_styles/style-icons/drawable-xxhdpi/";
 
 	private static void createAndShowUI(OsmWindow pWin) {
 		STDrawPanel drawPanel = new STDrawPanel(pWin);

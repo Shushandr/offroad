@@ -276,7 +276,7 @@ public class TextRenderer {
 //							cv.drawTextOnPath(text.text, text.drawOnPath, 0, 
 //									text.vOffset - ( paintText.ascent()/2 + paintText.descent()), paintText);
 							newGraphics.setColor(createColor(text.textShadowColor));
-							newGraphics.setStroke(new TextStroke(text.text, textFont, true));
+							newGraphics.setStroke(new TextStroke(text.text, textFont, false, false));
 							newGraphics.draw(text.drawOnPath);
 //							// reset
 //							paintText.setStyle(Style.FILL);
@@ -284,7 +284,7 @@ public class TextRenderer {
 //							paintText.setColor(text.textColor);
 						}
 						newGraphics.setColor(createColor(text.textColor));
-						newGraphics.setStroke(new TextStroke(text.text, textFont, true));
+						newGraphics.setStroke(new TextStroke(text.text, textFont, false, false));
 						newGraphics.draw(text.drawOnPath);
 						AffineTransform transf2 = new AffineTransform();
 						transf2.translate(0, -vOffset);
