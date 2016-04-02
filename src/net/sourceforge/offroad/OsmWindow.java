@@ -42,11 +42,18 @@ import org.xmlpull.v1.XmlPullParserException;
 import net.osmand.IProgress;
 import net.osmand.PlatformUtil;
 import net.osmand.binary.BinaryMapIndexReader;
+import net.osmand.binary.CachedOsmandIndexes;
+import net.osmand.binary.OsmandIndex;
+import net.osmand.binary.OsmandIndex.MapLevel;
 import net.osmand.data.LatLon;
 import net.osmand.data.QuadPoint;
 import net.osmand.data.RotatedTileBox;
 import net.osmand.data.RotatedTileBox.RotatedTileBoxBuilder;
+import net.osmand.plus.OsmandSettings;
+import net.osmand.plus.api.SettingsAPI;
+import net.osmand.plus.api.SettingsAPI.SettingsEditor;
 import net.osmand.plus.render.MapRenderRepositories;
+import net.osmand.plus.resources.ResourceManager;
 import net.osmand.render.RenderingRulesStorage;
 import net.osmand.render.RenderingRulesStorage.RenderingRulesStorageResolver;
 
@@ -59,9 +66,11 @@ import net.osmand.render.RenderingRulesStorage.RenderingRulesStorageResolver;
  */
 public class OsmWindow {
 
-	public static final String RENDERING_STYLES_DIR = "/home/foltin/programming/java/osmand/OsmAnd-resources/rendering_styles/";
-	public static final String OSMAND_MAPS_DIR = "/home/foltin/programming/java/osmand/maps/";
-	public static final String OSMAND_ICONS_DIR = "/home/foltin/programming/java/osmand/OsmAnd-resources/rendering_styles/style-icons/drawable-xxhdpi/";
+	private static final String BASE_DIR = "/home/foltin/programming/java/osmand/dist/";
+	public static final String RENDERING_STYLES_DIR = BASE_DIR + "rendering_styles/";
+	public static final String OSMAND_MAPS_DIR = BASE_DIR + "maps/";
+	public static final String OSMAND_ICONS_DIR = BASE_DIR
+			+ "rendering_styles/style-icons/drawable-xxhdpi/";
 
 	private static void createAndShowUI(OsmWindow pWin) {
 		STDrawPanel drawPanel = new STDrawPanel(pWin);
@@ -188,10 +197,17 @@ public class OsmWindow {
 		}
 
 		public void zoomChange(final int pWheelRotation, final Point pNewCenter) {
-			final int newZoom = mTileBox.getZoom() + pWheelRotation;
-			if (newZoom < 1) {
-				return;
+			int newZoom = mTileBox.getZoom() + pWheelRotation;
+			MapLevel mapInstance = OsmandIndex.MapLevel.getDefaultInstance();
+			int minZoom = mapInstance.hasMinzoom() ? mapInstance.getMinzoom() : 1;
+			if (newZoom < minZoom) {
+				newZoom = minZoom;
 			}
+			int maxZoom = mapInstance.hasMaxzoom() ? mapInstance.getMaxzoom() : Integer.MAX_VALUE;
+			if (newZoom > maxZoom) {
+				newZoom = maxZoom;
+			}
+
 			if (mAnimationThread != null && mAnimationThread.isAlive()) {
 				return;
 			}
@@ -281,12 +297,11 @@ public class OsmWindow {
 			private int mCounter;
 			private Point mPoint;
 
-			public void addWheelEvent(MouseWheelEvent pE){
+			public void addWheelEvent(MouseWheelEvent pE) {
 				mCounter += pE.getWheelRotation();
-				System.out.println("Setting counter to " + mCounter);
 				mPoint = pE.getPoint();
 			}
-			
+
 			public void actionPerformed(ActionEvent evt) {
 				drawPanel.zoomChange(-mCounter, mPoint);
 				mCounter = 0;
@@ -352,6 +367,7 @@ public class OsmWindow {
 
 	private RenderingRulesStorage mRenderingRulesStorage;
 	private MapRenderRepositories mMapRenderRepositories;
+	private ResourceManager mResourceManager;
 
 	public static void main(String[] args) throws XmlPullParserException, IOException {
 		final OsmWindow win = new OsmWindow();
@@ -364,6 +380,11 @@ public class OsmWindow {
 
 	}
 
+	public OsmWindow() {
+		mResourceManager = new ResourceManager(this);
+		mResourceManager.indexingMaps(IProgress.EMPTY_PROGRESS);
+	}
+	
 	public void loadMGap(Graphics2D pG2, RotatedTileBox pTileRect) {
 		mMapRenderRepositories.loadMGap(pG2, pTileRect, mRenderingRulesStorage);
 	}
@@ -374,19 +395,19 @@ public class OsmWindow {
 	}
 
 	private MapRenderRepositories getMapRenderRepositories() throws FileNotFoundException, IOException {
-		MapRenderRepositories mapRenderRepositories = new MapRenderRepositories();
-		Path dir = Paths.get(OSMAND_MAPS_DIR);
-		try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "*.{obf}")) {
-			for (Path entry : stream) {
-				System.out.println(entry.getFileName());
-				BinaryMapIndexReader reader = getReader(entry.toString());
-				mapRenderRepositories.initializeNewResource(IProgress.EMPTY_PROGRESS, reader.getFile(), reader);
-			}
-		} catch (IOException x) {
-			// IOException can never be thrown by the iteration.
-			// In this snippet, it can // only be thrown by newDirectoryStream.
-			System.err.println(x);
-		}
+		MapRenderRepositories mapRenderRepositories = mResourceManager.getRenderer();
+//		Path dir = Paths.get(OSMAND_MAPS_DIR);
+//		try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "*.{obf}")) {
+//			for (Path entry : stream) {
+//				System.out.println(entry.getFileName());
+//				BinaryMapIndexReader reader = getReader(entry.toString());
+//				mapRenderRepositories.initializeNewResource(IProgress.EMPTY_PROGRESS, reader.getFile(), reader);
+//			}
+//		} catch (IOException x) {
+//			// IOException can never be thrown by the iteration.
+//			// In this snippet, it can // only be thrown by newDirectoryStream.
+//			System.err.println(x);
+//		}
 		return mapRenderRepositories;
 	}
 
@@ -442,4 +463,65 @@ public class OsmWindow {
 
 		return storage;
 	}
+
+	public File getAppPath(String pIndex) {
+		if(pIndex == null){
+			pIndex = "";
+		}
+		String pathname = BASE_DIR+pIndex;
+		System.out.println("Searching for " + pathname);
+		return new File(pathname);
+	}
+
+	public OsmandSettings getSettings() {
+		return prefs;
+	}
+	
+	private OsmandSettings prefs = new OsmandSettings(new SettingsAPI() {
+		
+		@Override
+		public String getString(Object pPref, String pKey, String pDefValue) {
+			return pDefValue;
+		}
+		
+		@Override
+		public Object getPreferenceObject(String pKey) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+		
+		@Override
+		public long getLong(Object pPref, String pKey, long pDefValue) {
+			return pDefValue;
+		}
+		
+		@Override
+		public int getInt(Object pPref, String pKey, int pDefValue) {
+			return pDefValue;
+		}
+		
+		@Override
+		public float getFloat(Object pPref, String pKey, float pDefValue) {
+			return pDefValue;
+		}
+		
+		@Override
+		public boolean getBoolean(Object pPref, String pKey, boolean pDefValue) {
+			return pDefValue;
+		}
+		
+		@Override
+		public SettingsEditor edit(Object pPref) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+		
+		@Override
+		public boolean contains(Object pPref, String pKey) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+	});
+
+
 }

@@ -1,14 +1,6 @@
 package net.osmand.plus.render;
 
 
-import gnu.trove.iterator.TIntObjectIterator;
-import gnu.trove.list.TLongList;
-import gnu.trove.list.array.TIntArrayList;
-import gnu.trove.list.array.TLongArrayList;
-import gnu.trove.map.hash.TIntObjectHashMap;
-import gnu.trove.set.TLongSet;
-import gnu.trove.set.hash.TLongHashSet;
-
 import java.awt.Graphics2D;
 import java.io.File;
 import java.io.IOException;
@@ -22,6 +14,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+
+import gnu.trove.iterator.TIntObjectIterator;
+import gnu.trove.list.TLongList;
+import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.list.array.TLongArrayList;
+import gnu.trove.map.hash.TIntObjectHashMap;
+import gnu.trove.set.TLongSet;
+import gnu.trove.set.hash.TLongHashSet;
 import net.osmand.IProgress;
 import net.osmand.PlatformUtil;
 import net.osmand.ResultMatcher;
@@ -39,8 +40,6 @@ import net.osmand.data.QuadRect;
 import net.osmand.data.RotatedTileBox;
 import net.osmand.plus.OsmandSettings;
 import net.osmand.plus.OsmandSettings.CommonPreference;
-import net.osmand.plus.api.SettingsAPI;
-import net.osmand.plus.api.SettingsAPI.SettingsEditor;
 import net.osmand.plus.render.OsmandRenderer.RenderingContext;
 import net.osmand.render.RenderingRuleProperty;
 import net.osmand.render.RenderingRuleSearchRequest;
@@ -49,8 +48,6 @@ import net.osmand.render.RenderingRulesStorage;
 import net.osmand.util.Algorithms;
 import net.osmand.util.MapAlgorithms;
 import net.osmand.util.MapUtils;
-
-import org.apache.commons.logging.Log;
 
 public class MapRenderRepositories {
 
@@ -91,53 +88,10 @@ public class MapRenderRepositories {
 	private RenderingContext currentRenderingContext;
 	private SearchRequest<BinaryMapDataObject> searchRequest;
 
-	private OsmandSettings prefs = new OsmandSettings(new SettingsAPI() {
-		
-		@Override
-		public String getString(Object pPref, String pKey, String pDefValue) {
-			return pDefValue;
-		}
-		
-		@Override
-		public Object getPreferenceObject(String pKey) {
-			// TODO Auto-generated method stub
-			return null;
-		}
-		
-		@Override
-		public long getLong(Object pPref, String pKey, long pDefValue) {
-			return pDefValue;
-		}
-		
-		@Override
-		public int getInt(Object pPref, String pKey, int pDefValue) {
-			return pDefValue;
-		}
-		
-		@Override
-		public float getFloat(Object pPref, String pKey, float pDefValue) {
-			return pDefValue;
-		}
-		
-		@Override
-		public boolean getBoolean(Object pPref, String pKey, boolean pDefValue) {
-			return pDefValue;
-		}
-		
-		@Override
-		public SettingsEditor edit(Object pPref) {
-			// TODO Auto-generated method stub
-			return null;
-		}
-		
-		@Override
-		public boolean contains(Object pPref, String pKey) {
-			// TODO Auto-generated method stub
-			return false;
-		}
-	});
+	private OsmandSettings prefs;
 
-	public MapRenderRepositories() {
+	public MapRenderRepositories(OsmandSettings pPrefs) {
+		prefs = pPrefs;
 		this.renderer = new OsmandRenderer();
 	}
 
