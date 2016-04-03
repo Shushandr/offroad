@@ -122,7 +122,7 @@ public class RenderingIcons {
 	}
 
 	public static void initIcons() {
-		Path dir = Paths.get(OsmWindow.getAppPath(OsmWindow.OSMAND_ICONS_DIR).getAbsolutePath());
+		Path dir = Paths.get(OsmWindow.getInstance().getAppPath(OsmWindow.OSMAND_ICONS_DIR).getAbsolutePath());
 		try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "*.{png}")) {
 			for (Path entry : stream) {
 				String f = entry.getFileName().toString().replaceFirst("\\.png", "");

@@ -25,6 +25,7 @@ import net.osmand.ResultMatcher;
 import net.osmand.data.Amenity;
 import net.osmand.data.QuadRect;
 import net.osmand.data.RotatedTileBox;
+import net.osmand.map.OsmandRegions;
 import net.osmand.plus.OsmandSettings;
 import net.osmand.plus.api.SettingsAPI;
 import net.osmand.plus.render.MapRenderRepositories;
@@ -94,7 +95,7 @@ public class OsmWindow {
 	private ResourceManager mResourceManager;
 
 	public static void main(String[] args) throws XmlPullParserException, IOException {
-		final OsmWindow win = new OsmWindow();
+		final OsmWindow win = OsmWindow.getInstance();
 		win.init();
 		java.awt.EventQueue.invokeLater(new Runnable() {
 			public void run() {
@@ -105,6 +106,8 @@ public class OsmWindow {
 	}
 
 	public OsmWindow() {
+		mStrings = new R.string();
+		mRegions = new OsmandRegions();
 		mResourceManager = new ResourceManager(this);
 		mResourceManager.indexingMaps(IProgress.EMPTY_PROGRESS);
 	}
@@ -160,7 +163,7 @@ public class OsmWindow {
 		return storage;
 	}
 
-	public static File getAppPath(String pIndex) {
+	public File getAppPath(String pIndex) {
 		if (pIndex == null) {
 			pIndex = "";
 		}
@@ -218,5 +221,29 @@ public class OsmWindow {
 			return false;
 		}
 	});
+	private R.string mStrings;
+	private OsmandRegions mRegions;
+
+	public String getString(int pKey) {
+		return mStrings.hash.get(pKey);
+	}
+	
+	private static OsmWindow minstance = null;
+
+	public static OsmWindow getInstance() {
+		if (minstance == null) {
+			minstance = new OsmWindow();
+		}
+		return minstance;
+	}
+
+	public OsmandRegions getRegions() {
+		return mRegions;
+	}
+
+	public ResourceManager getResourceManager() {
+		return mResourceManager;
+	}
+	
 
 }
