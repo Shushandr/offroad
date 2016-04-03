@@ -1,8 +1,12 @@
 package net.sourceforge.offroad;
 
+import java.awt.Dialog.ModalExclusionType;
 import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -27,7 +31,6 @@ import net.osmand.data.QuadRect;
 import net.osmand.data.RotatedTileBox;
 import net.osmand.map.OsmandRegions;
 import net.osmand.plus.OsmandSettings;
-import net.osmand.plus.api.SettingsAPI;
 import net.osmand.plus.render.MapRenderRepositories;
 import net.osmand.plus.resources.ResourceManager;
 import net.osmand.render.RenderingRulesStorage;
@@ -44,19 +47,38 @@ public class OsmWindow {
 
 	public static final String RENDERING_STYLES_DIR = "rendering_styles/";
 	public static final String OSMAND_ICONS_DIR = "rendering_styles/style-icons/drawable-xxhdpi/";
+	private static OsmWindow minstance = null;
+	private RenderingRulesStorage mRenderingRulesStorage;
+	private ResourceManager mResourceManager;
+	private OffRoadSettings settings = new OffRoadSettings(this);
+	private OsmandSettings prefs = new OsmandSettings(settings);
+	private R.string mStrings;
+	private OsmandRegions mRegions;
+	private OsmBitmapPanel mDrawPanel;
+	private OsmBitmapPanelMouseAdapter mAdapter;
+	private JFrame mFrame;
 
 	public void createAndShowUI() {
-		final OsmBitmapPanel drawPanel = new OsmBitmapPanel(this);
-		OsmBitmapPanelMouseAdapter mAdapter = new OsmBitmapPanelMouseAdapter(drawPanel);
-		drawPanel.addMouseListener(mAdapter);
-		drawPanel.addMouseMotionListener(mAdapter);
-		drawPanel.addMouseWheelListener(mAdapter);
+		mDrawPanel = new OsmBitmapPanel(this);
+		mAdapter = new OsmBitmapPanelMouseAdapter(mDrawPanel);
+		mDrawPanel.addMouseListener(mAdapter);
+		mDrawPanel.addMouseMotionListener(mAdapter);
+		mDrawPanel.addMouseWheelListener(mAdapter);
 
-		JFrame frame = new JFrame("OffRoad");
-		frame.getContentPane().add(drawPanel);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setResizable(true);
-		frame.addComponentListener(mAdapter);
+		mFrame = new JFrame("OffRoad");
+		mFrame.getContentPane().add(mDrawPanel);
+		mFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		mFrame.addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent pE) {
+				// save properties:
+				saveSettings();
+				mFrame.dispose();
+				System.exit(0);
+			}
+		});
+		mFrame.setResizable(true);
+		mFrame.addComponentListener(mAdapter);
 		JMenuBar menubar = new JMenuBar();
 		JMenu jSearchMenu = new JMenu("Search");
 		JMenuItem findItem = new JMenuItem("Find...");
@@ -65,9 +87,9 @@ public class OsmWindow {
 			@Override
 			public void actionPerformed(ActionEvent pE) {
 				String search = JOptionPane.showInputDialog("Search item");
-				QuadRect bounds = drawPanel.getTileBox().getLatLonBounds();
+				QuadRect bounds = mDrawPanel.getTileBox().getLatLonBounds();
 				mResourceManager.searchAmenitiesByName(search, bounds.top, bounds.left, bounds.bottom, bounds.right,
-						drawPanel.getTileBox().getLatitude(), drawPanel.getTileBox().getLongitude(),
+						mDrawPanel.getTileBox().getLatitude(), mDrawPanel.getTileBox().getLongitude(),
 						new ResultMatcher<Amenity>() {
 
 							@Override
@@ -85,14 +107,11 @@ public class OsmWindow {
 		});
 		jSearchMenu.add(findItem);
 		menubar.add(jSearchMenu);
-		frame.setJMenuBar(menubar);
-		frame.pack();
-		frame.setLocationRelativeTo(null);
-		frame.setVisible(true);
+		mFrame.setJMenuBar(menubar);
+		mFrame.pack();
+		mFrame.setLocationRelativeTo(null);
+		mFrame.setVisible(true);
 	}
-
-	private RenderingRulesStorage mRenderingRulesStorage;
-	private ResourceManager mResourceManager;
 
 	public static void main(String[] args) throws XmlPullParserException, IOException {
 		final OsmWindow win = OsmWindow.getInstance();
@@ -103,6 +122,13 @@ public class OsmWindow {
 			}
 		});
 
+	}
+
+	protected void saveSettings() {
+		RotatedTileBox tileBox = mDrawPanel.getTileBox();
+		prefs.setLastKnownMapLocation(tileBox.getLatitude(), tileBox.getLongitude());
+		prefs.setLastKnownMapZoom(tileBox.getZoom());
+		settings.save();
 	}
 
 	public OsmWindow() {
@@ -125,7 +151,7 @@ public class OsmWindow {
 	}
 
 	public RenderingRulesStorage getRenderingRulesStorage() throws XmlPullParserException, IOException {
-		final String loc = getAppPath(RENDERING_STYLES_DIR).getAbsolutePath()+File.separator;
+		final String loc = getAppPath(RENDERING_STYLES_DIR).getAbsolutePath() + File.separator;
 		String defaultFile = loc + "default.render.xml";
 		final Map<String, String> renderingConstants = new LinkedHashMap<String, String>();
 		InputStream is = new FileInputStream(loc + "default.render.xml");
@@ -176,59 +202,9 @@ public class OsmWindow {
 		return prefs;
 	}
 
-	private OsmandSettings prefs = new OsmandSettings(new SettingsAPI() {
-
-		@Override
-		public String getString(Object pPref, String pKey, String pDefValue) {
-			return pDefValue;
-		}
-
-		@Override
-		public Object getPreferenceObject(String pKey) {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		@Override
-		public long getLong(Object pPref, String pKey, long pDefValue) {
-			return pDefValue;
-		}
-
-		@Override
-		public int getInt(Object pPref, String pKey, int pDefValue) {
-			return pDefValue;
-		}
-
-		@Override
-		public float getFloat(Object pPref, String pKey, float pDefValue) {
-			return pDefValue;
-		}
-
-		@Override
-		public boolean getBoolean(Object pPref, String pKey, boolean pDefValue) {
-			return pDefValue;
-		}
-
-		@Override
-		public SettingsEditor edit(Object pPref) {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		@Override
-		public boolean contains(Object pPref, String pKey) {
-			// TODO Auto-generated method stub
-			return false;
-		}
-	});
-	private R.string mStrings;
-	private OsmandRegions mRegions;
-
 	public String getString(int pKey) {
 		return mStrings.hash.get(pKey);
 	}
-	
-	private static OsmWindow minstance = null;
 
 	public static OsmWindow getInstance() {
 		if (minstance == null) {
@@ -244,6 +220,5 @@ public class OsmWindow {
 	public ResourceManager getResourceManager() {
 		return mResourceManager;
 	}
-	
 
 }

@@ -91,8 +91,14 @@ public class OsmBitmapPanel extends JPanel {
 	public OsmBitmapPanel(OsmWindow pWin) {
 		mWin = pWin;
 		clear(bImage);
-		setTileBox(new RotatedTileBoxBuilder().setLocation(51.03325, 13.64656).setZoom(17)
-				.setPixelDimensions(bImage.getWidth(), bImage.getHeight()).setRotate(0).setMapDensity(2d).build());
+		LatLon latLon = new LatLon(51.03325, 13.64656);
+		int zoom = 17;
+		if(mWin.getSettings().isLastKnownMapLocation()){
+			latLon = mWin.getSettings().getLastKnownMapLocation();
+			zoom = mWin.getSettings().getLastKnownMapZoom();
+		}
+		setTileBox(new RotatedTileBoxBuilder().setLocation(latLon.getLatitude(), latLon.getLongitude()).setZoom(zoom)
+				.setPixelDimensions(bImage.getWidth(), bImage.getHeight()).setRotate(0).setMapDensity(1d).build());
 		mCursorLength = (int) (15 * mTileBox.getMapDensity());
 		mStroke = new BasicStroke( (float) (2f * mTileBox.getMapDensity()));
 		Action updateCursorAction = new AbstractAction() {
@@ -175,7 +181,7 @@ public class OsmBitmapPanel extends JPanel {
 			newZoom = minZoom;
 		}
 		// FIXME: Magic number
-		int maxZoom = mapInstance.hasMaxzoom() ? mapInstance.getMaxzoom() : 21;
+		int maxZoom = mapInstance.hasMaxzoom() ? mapInstance.getMaxzoom() : 22;
 		if (newZoom > maxZoom) {
 			newZoom = maxZoom;
 		}
