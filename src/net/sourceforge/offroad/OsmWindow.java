@@ -41,11 +41,8 @@ import net.osmand.render.RenderingRulesStorage.RenderingRulesStorageResolver;
  */
 public class OsmWindow {
 
-	private static final String BASE_DIR = "/home/foltin/programming/java/osmand/dist/";
-	public static final String RENDERING_STYLES_DIR = BASE_DIR + "rendering_styles/";
-	public static final String OSMAND_MAPS_DIR = BASE_DIR + "maps/";
-	public static final String OSMAND_ICONS_DIR = BASE_DIR
-			+ "rendering_styles/style-icons/drawable-xxhdpi/";
+	public static final String RENDERING_STYLES_DIR = "rendering_styles/";
+	public static final String OSMAND_ICONS_DIR = "rendering_styles/style-icons/drawable-xxhdpi/";
 
 	public void createAndShowUI() {
 		final OsmBitmapPanel drawPanel = new OsmBitmapPanel(this);
@@ -62,25 +59,29 @@ public class OsmWindow {
 		JMenuBar menubar = new JMenuBar();
 		JMenu jSearchMenu = new JMenu("Search");
 		JMenuItem findItem = new JMenuItem("Find...");
-		findItem.addActionListener(new ActionListener(){
+		findItem.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent pE) {
-				String search= JOptionPane.showInputDialog("Search item");
+				String search = JOptionPane.showInputDialog("Search item");
 				QuadRect bounds = drawPanel.getTileBox().getLatLonBounds();
-				mResourceManager.searchAmenitiesByName(search, bounds.top, bounds.left, bounds.bottom, bounds.right, drawPanel.getTileBox().getLatitude(), drawPanel.getTileBox().getLongitude(), new ResultMatcher<Amenity>(){
+				mResourceManager.searchAmenitiesByName(search, bounds.top, bounds.left, bounds.bottom, bounds.right,
+						drawPanel.getTileBox().getLatitude(), drawPanel.getTileBox().getLongitude(),
+						new ResultMatcher<Amenity>() {
 
-					@Override
-					public boolean publish(Amenity pObject) {
-						System.out.println("found: " + pObject);
-						return true;
-					}
+							@Override
+							public boolean publish(Amenity pObject) {
+								System.out.println("found: " + pObject);
+								return true;
+							}
 
-					@Override
-					public boolean isCancelled() {
-						return false;
-					}});
-			}});
+							@Override
+							public boolean isCancelled() {
+								return false;
+							}
+						});
+			}
+		});
 		jSearchMenu.add(findItem);
 		menubar.add(jSearchMenu);
 		frame.setJMenuBar(menubar);
@@ -107,7 +108,7 @@ public class OsmWindow {
 		mResourceManager = new ResourceManager(this);
 		mResourceManager.indexingMaps(IProgress.EMPTY_PROGRESS);
 	}
-	
+
 	public void loadMGap(Graphics2D pG2, RotatedTileBox pTileRect) {
 		getRenderer().loadMGap(pG2, pTileRect, mRenderingRulesStorage);
 	}
@@ -121,10 +122,7 @@ public class OsmWindow {
 	}
 
 	public RenderingRulesStorage getRenderingRulesStorage() throws XmlPullParserException, IOException {
-		// RenderingRulesStorage.STORE_ATTTRIBUTES = true;
-		// InputStream is =
-		// RenderingRulesStorage.class.getResourceAsStream("default.render.xml");
-		final String loc = RENDERING_STYLES_DIR;
+		final String loc = getAppPath(RENDERING_STYLES_DIR).getAbsolutePath()+File.separator;
 		String defaultFile = loc + "default.render.xml";
 		final Map<String, String> renderingConstants = new LinkedHashMap<String, String>();
 		InputStream is = new FileInputStream(loc + "default.render.xml");
@@ -152,8 +150,6 @@ public class OsmWindow {
 			public RenderingRulesStorage resolve(String name, RenderingRulesStorageResolver ref)
 					throws XmlPullParserException, IOException {
 				RenderingRulesStorage depends = new RenderingRulesStorage(name, renderingConstants);
-				// depends.parseRulesFromXmlInputStream(RenderingRulesStorage.class.getResourceAsStream(name
-				// + ".render.xml"), ref);
 				depends.parseRulesFromXmlInputStream(new FileInputStream(loc + name + ".render.xml"), ref);
 				return depends;
 			}
@@ -164,11 +160,11 @@ public class OsmWindow {
 		return storage;
 	}
 
-	public File getAppPath(String pIndex) {
-		if(pIndex == null){
+	public static File getAppPath(String pIndex) {
+		if (pIndex == null) {
 			pIndex = "";
 		}
-		String pathname = BASE_DIR+pIndex;
+		String pathname = System.getProperty("user.dir") + System.getProperty("file.separator") + pIndex;
 		System.out.println("Searching for " + pathname);
 		return new File(pathname);
 	}
@@ -176,52 +172,51 @@ public class OsmWindow {
 	public OsmandSettings getSettings() {
 		return prefs;
 	}
-	
+
 	private OsmandSettings prefs = new OsmandSettings(new SettingsAPI() {
-		
+
 		@Override
 		public String getString(Object pPref, String pKey, String pDefValue) {
 			return pDefValue;
 		}
-		
+
 		@Override
 		public Object getPreferenceObject(String pKey) {
 			// TODO Auto-generated method stub
 			return null;
 		}
-		
+
 		@Override
 		public long getLong(Object pPref, String pKey, long pDefValue) {
 			return pDefValue;
 		}
-		
+
 		@Override
 		public int getInt(Object pPref, String pKey, int pDefValue) {
 			return pDefValue;
 		}
-		
+
 		@Override
 		public float getFloat(Object pPref, String pKey, float pDefValue) {
 			return pDefValue;
 		}
-		
+
 		@Override
 		public boolean getBoolean(Object pPref, String pKey, boolean pDefValue) {
 			return pDefValue;
 		}
-		
+
 		@Override
 		public SettingsEditor edit(Object pPref) {
 			// TODO Auto-generated method stub
 			return null;
 		}
-		
+
 		@Override
 		public boolean contains(Object pPref, String pKey) {
 			// TODO Auto-generated method stub
 			return false;
 		}
 	});
-
 
 }
