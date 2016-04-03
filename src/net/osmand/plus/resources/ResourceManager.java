@@ -208,6 +208,7 @@ public class ResourceManager {
 			}
 			for (File f : lf) {
 				if (f.getName().endsWith(ext)) {
+					System.out.println("Found " + f.getName() + " on search for " + dir.getAbsolutePath());
 					files.add(f);
 				}
 			}
