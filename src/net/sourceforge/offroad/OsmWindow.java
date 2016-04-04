@@ -66,6 +66,7 @@ public class OsmWindow {
 		mDrawPanel.addMouseWheelListener(mAdapter);
 
 		mFrame = new JFrame("OffRoad");
+		mFrame.addKeyListener(mAdapter);
 		mFrame.getContentPane().add(mDrawPanel);
 		mFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		mFrame.addWindowListener(new WindowAdapter() {

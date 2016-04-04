@@ -5,13 +5,15 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 
 import javax.swing.Timer;
 
-public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements ComponentListener {
+public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements ComponentListener, KeyListener {
 	private class ZoomPerformer implements ActionListener {
 		private int mCounter;
 		private Point mPoint;
@@ -86,6 +88,37 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 	@Override
 	public void mouseClicked(MouseEvent pE) {
 		drawPanel.setCursor(pE.getPoint());
+	}
+
+	@Override
+	public void keyTyped(KeyEvent pE) {
+		
+	}
+
+	@Override
+	public void keyPressed(KeyEvent pE) {
+		int height = drawPanel.getHeight();
+		int width = drawPanel.getWidth();
+		switch (pE.getKeyCode()) {
+		case KeyEvent.VK_UP:
+			drawPanel.moveImage(0,-height/3);
+			return;
+		case KeyEvent.VK_DOWN:
+			drawPanel.moveImage(0,height/3);
+			return;
+		case KeyEvent.VK_LEFT:
+			drawPanel.moveImage(-width/3,0);
+			return;
+		case KeyEvent.VK_RIGHT:
+			drawPanel.moveImage(width/3,0);
+			return;
+//		case KeyEvent.VK_PAGE_UP:
+//		case KeyEvent.VK_PAGE_DOWN:
+		}
+	}
+
+	@Override
+	public void keyReleased(KeyEvent pE) {
 	}
 	
 }
