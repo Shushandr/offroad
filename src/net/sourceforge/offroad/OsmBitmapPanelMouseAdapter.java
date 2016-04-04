@@ -18,9 +18,9 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 		private int mCounter;
 		private Point mPoint;
 
-		public void addWheelEvent(MouseWheelEvent pE) {
-			mCounter += pE.getWheelRotation();
-			mPoint = pE.getPoint();
+		public void addWheelEvent(int pWheelRotation, Point pPoint) {
+			mCounter += pWheelRotation;
+			mPoint = pPoint;
 		}
 
 		public void actionPerformed(ActionEvent evt) {
@@ -64,7 +64,7 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent pE) {
 		pE.consume();
-		mZoomPerformer.addWheelEvent(pE);
+		mZoomPerformer.addWheelEvent(pE.getWheelRotation(), pE.getPoint());
 		mZoomTimer.restart();
 	}
 
@@ -112,8 +112,14 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 		case KeyEvent.VK_RIGHT:
 			drawPanel.moveImageAnimated(width/3,0);
 			return;
-//		case KeyEvent.VK_PAGE_UP:
-//		case KeyEvent.VK_PAGE_DOWN:
+		case KeyEvent.VK_MINUS:
+			mZoomPerformer.addWheelEvent(1, new Point(drawPanel.getTileBox().getCenterPixelX(), drawPanel.getTileBox().getCenterPixelY()));
+			mZoomTimer.restart();
+			return;
+		case KeyEvent.VK_PLUS:
+			mZoomPerformer.addWheelEvent(-1, new Point(drawPanel.getTileBox().getCenterPixelX(), drawPanel.getTileBox().getCenterPixelY()));
+			mZoomTimer.restart();
+			return;
 		}
 	}
 
