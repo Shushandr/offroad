@@ -256,6 +256,48 @@ public class OsmBitmapPanel extends JPanel {
 		setImage(bImage);
 	}
 
+	public void moveImageAnimated(final float pDeltaX, final float pDeltaY) {
+		if (mAnimationThread != null && mAnimationThread.isAlive()) {
+			return;
+		}
+		if (mGenerationThread != null && mGenerationThread.isAlive()) {
+			return;
+		}
+		QuadPoint center = getTileBox().getCenterPixelPoint();
+		final RotatedTileBox tileCopy = getTileBox().copy();
+		tileCopy.setLatLonCenter(getTileBox().getLatFromPixel(center.x + pDeltaX, center.y + pDeltaY),
+				getTileBox().getLonFromPixel(center.x + pDeltaX, center.y + pDeltaY));
+		mAnimationThread = new Thread() {
+
+			@Override
+			public void run() {
+				int it = 10;
+				for (int i = 0; i < it; ++i) {
+					originX = -(int) pDeltaX * i / it;
+					originY = -(int) pDeltaY * i / it;
+					try {
+						SwingUtilities.invokeAndWait(new Runnable() {
+
+							@Override
+							public void run() {
+								repaint();
+							}
+						});
+						Thread.sleep(50);
+					} catch (InvocationTargetException | InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+
+		};
+		mAnimationThread.start();
+		mGenerationThread = new GenerationThread(tileCopy, mAnimationThread);
+		mGenerationThread.start();
+	}
+	
+	
+	
 	public BufferedImage newBitmap() {
 		BufferedImage image = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
 		getTileBox().setPixelDimensions(getWidth(), getHeight());

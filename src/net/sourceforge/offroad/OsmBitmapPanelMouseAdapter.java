@@ -101,16 +101,16 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 		int width = drawPanel.getWidth();
 		switch (pE.getKeyCode()) {
 		case KeyEvent.VK_UP:
-			drawPanel.moveImage(0,-height/3);
+			drawPanel.moveImageAnimated(0,-height/3);
 			return;
 		case KeyEvent.VK_DOWN:
-			drawPanel.moveImage(0,height/3);
+			drawPanel.moveImageAnimated(0,height/3);
 			return;
 		case KeyEvent.VK_LEFT:
-			drawPanel.moveImage(-width/3,0);
+			drawPanel.moveImageAnimated(-width/3,0);
 			return;
 		case KeyEvent.VK_RIGHT:
-			drawPanel.moveImage(width/3,0);
+			drawPanel.moveImageAnimated(width/3,0);
 			return;
 //		case KeyEvent.VK_PAGE_UP:
 //		case KeyEvent.VK_PAGE_DOWN:
