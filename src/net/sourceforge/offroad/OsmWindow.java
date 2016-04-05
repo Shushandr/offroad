@@ -1,12 +1,11 @@
 package net.sourceforge.offroad;
 
-import java.awt.Dialog.ModalExclusionType;
+import java.awt.Frame;
 import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -19,6 +18,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.KeyStroke;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -35,6 +35,7 @@ import net.osmand.plus.render.MapRenderRepositories;
 import net.osmand.plus.resources.ResourceManager;
 import net.osmand.render.RenderingRulesStorage;
 import net.osmand.render.RenderingRulesStorage.RenderingRulesStorageResolver;
+import net.sourceforge.offroad.actions.SearchAddressAction;
 
 /**
  * OffRoad
@@ -83,29 +84,31 @@ public class OsmWindow {
 		JMenuBar menubar = new JMenuBar();
 		JMenu jSearchMenu = new JMenu("Search");
 		JMenuItem findItem = new JMenuItem("Find...");
-		findItem.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent pE) {
-				String search = JOptionPane.showInputDialog("Search item");
-				QuadRect bounds = mDrawPanel.getTileBox().getLatLonBounds();
-				mResourceManager.searchAmenitiesByName(search, bounds.top, bounds.left, bounds.bottom, bounds.right,
-						mDrawPanel.getTileBox().getLatitude(), mDrawPanel.getTileBox().getLongitude(),
-						new ResultMatcher<Amenity>() {
-
-							@Override
-							public boolean publish(Amenity pObject) {
-								System.out.println("found: " + pObject);
-								return true;
-							}
-
-							@Override
-							public boolean isCancelled() {
-								return false;
-							}
-						});
-			}
-		});
+		findItem.addActionListener(new SearchAddressAction(this));
+		findItem.setAccelerator(KeyStroke.getKeyStroke("control F"));
+//		findItem.addActionListener(new ActionListener() {
+//
+//			@Override
+//			public void actionPerformed(ActionEvent pE) {
+//				String search = JOptionPane.showInputDialog("Search item");
+//				QuadRect bounds = mDrawPanel.getTileBox().getLatLonBounds();
+//				mResourceManager.searchAmenitiesByName(search, bounds.top, bounds.left, bounds.bottom, bounds.right,
+//						mDrawPanel.getTileBox().getLatitude(), mDrawPanel.getTileBox().getLongitude(),
+//						new ResultMatcher<Amenity>() {
+//
+//							@Override
+//							public boolean publish(Amenity pObject) {
+//								System.out.println("found: " + pObject);
+//								return true;
+//							}
+//
+//							@Override
+//							public boolean isCancelled() {
+//								return false;
+//							}
+//						});
+//			}
+//		});
 		jSearchMenu.add(findItem);
 		menubar.add(jSearchMenu);
 		mFrame.setJMenuBar(menubar);
@@ -220,6 +223,10 @@ public class OsmWindow {
 
 	public ResourceManager getResourceManager() {
 		return mResourceManager;
+	}
+
+	public Frame getWindow() {
+		return mFrame;
 	}
 
 }
