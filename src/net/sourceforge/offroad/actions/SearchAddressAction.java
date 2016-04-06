@@ -105,7 +105,6 @@ public class SearchAddressAction extends AbstractAction {
 		contentPane.add(new JLabel(getResourceString("region")), new GridBagConstraints(0, y, 1, 1, 1.0, 0.0,
 				GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
 		mFilterTextRegionField = new JTextField();
-		mFilterTextRegionField.getDocument().addDocumentListener(new FilterTextDocumentListener());
 		contentPane.add(mFilterTextRegionField, new GridBagConstraints(1, y++, 1, 1, 1.0, 0.0,
 				GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
 		
@@ -125,6 +124,17 @@ public class SearchAddressAction extends AbstractAction {
 				return true; 
 			}
 		});
+		mFilterTextRegionField.getDocument().addDocumentListener(new FilterTextDocumentListener(mFilteredRegionModel, new FilteredListModel.Filter() {
+			public boolean accept(Object element) {
+				if (element instanceof RegionAddressRepository) {
+					RegionAddressRepository repo = (RegionAddressRepository) element;
+					if(repo.getFileName().toLowerCase().contains(getText().toLowerCase())){
+						return true;
+					}
+				}
+				return false; 
+			}
+		}));
 		mRegionList.addListSelectionListener(new ListSelectionListener() {
 			
 			@Override
@@ -135,13 +145,12 @@ public class SearchAddressAction extends AbstractAction {
 				// else enable city list:
 				RegionAddressRepository region = mContext.getResourceManager().getRegionRepository(mRegionList.getSelectedValue().getFileName());
 				if(region != null){
-					mSourceCityModel.clear();
 					// preload cities
 					region.preloadCities(new ResultMatcher<City>() {
 						
 						@Override
 						public boolean publish(City object) {
-							mSourceCityModel.addElement(object);
+//							mSourceCityModel.addElement(object);
 							return true;
 						}
 						
@@ -150,8 +159,11 @@ public class SearchAddressAction extends AbstractAction {
 							return false;
 						}
 					});
-					mFilteredCityModel = new FilteredListModel(mSourceCityModel);
-					mCityList.setModel(mFilteredCityModel);
+//					System.out.println("Processing region " + region);
+					mSourceCityModel.clear();
+					for (City city : region.getLoadedCities()) {
+							mSourceCityModel.addElement(city);
+					}
 					mFilteredCityModel.setFilter(new FilteredListModel.Filter() {
 						public boolean accept(Object element) {
 							return true; 
@@ -168,13 +180,25 @@ public class SearchAddressAction extends AbstractAction {
 		contentPane.add(new JLabel(getResourceString("city")), new GridBagConstraints(0, y, 1, 1, 1.0, 0.0,
 				GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
 		mFilterTextCityField = new JTextField();
-//		mFilterTextCityField.getDocument().addDocumentListener(new FilterTextDocumentListener());
 		contentPane.add(mFilterTextCityField, new GridBagConstraints(1, y++, 1, 1, 1.0, 0.0,
 				GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
 		
 		mSourceCityModel = new DefaultListModel<City>();
 		mFilteredCityModel = new FilteredListModel(mSourceCityModel);
 		mCityList = new JList<City>(mFilteredCityModel);
+		mFilterTextCityField.getDocument().addDocumentListener(new FilterTextDocumentListener(mFilteredCityModel, new FilteredListModel.Filter() {
+			public boolean accept(Object element) {
+				if (element instanceof City) {
+					City city = (City) element;
+					// FIXME: Translations!
+					if(city.getName().toLowerCase().contains(getText().toLowerCase())){
+						return true;
+					}
+					
+				}
+				return false; 
+			}
+		}));
 		mCityList.addListSelectionListener(new ListSelectionListener() {
 			
 			@Override
@@ -194,7 +218,14 @@ public class SearchAddressAction extends AbstractAction {
 
 	private final class FilterTextDocumentListener implements DocumentListener {
 		private static final int TYPE_DELAY_TIME = 500;
+		private FilteredListModel mModel;
+		private FilteredListModel.Filter mFilter;
 
+		public FilterTextDocumentListener(FilteredListModel pModel, FilteredListModel.Filter pFilter) {
+			mModel = pModel;
+			mFilter = pFilter;
+		}
+		
 		private Timer mTypeDelayTimer = null;
 
 		private synchronized void change(DocumentEvent event) {
@@ -239,21 +270,13 @@ public class SearchAddressAction extends AbstractAction {
 
 			public void run() {
 				SwingUtilities.invokeLater(new Runnable() {
+
 					public void run() {
 						try {
 							Document document = event.getDocument();
 							final String text = getText(document);
-							mFilteredRegionModel.setFilter(new FilteredListModel.Filter() {
-								public boolean accept(Object element) {
-									if (element instanceof RegionAddressRepository) {
-										RegionAddressRepository repo = (RegionAddressRepository) element;
-										if(repo.getFileName().toLowerCase().contains(text.toLowerCase())){
-											return true;
-										}
-									}
-									return false; 
-								}
-							});
+							mFilter.setText(text);
+							mModel.setFilter(mFilter);
 						} catch (BadLocationException e) {
 						}
 					}
