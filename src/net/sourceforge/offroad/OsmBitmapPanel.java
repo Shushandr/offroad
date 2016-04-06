@@ -329,4 +329,10 @@ public class OsmBitmapPanel extends JPanel {
 		System.out.println("Setting cursor to " + mCursorPosition);
 		repaint();
 	}
+
+	public void move(LatLon pLocation) {
+		mTileBox.setLatLonCenter(pLocation.getLatitude(), pLocation.getLongitude());
+		drawImage(bImage);
+		setImage(bImage);
+	}
 }

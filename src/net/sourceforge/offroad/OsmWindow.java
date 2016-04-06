@@ -27,6 +27,7 @@ import net.osmand.IProgress;
 import net.osmand.PlatformUtil;
 import net.osmand.ResultMatcher;
 import net.osmand.data.Amenity;
+import net.osmand.data.LatLon;
 import net.osmand.data.QuadRect;
 import net.osmand.data.RotatedTileBox;
 import net.osmand.map.OsmandRegions;
@@ -115,6 +116,10 @@ public class OsmWindow {
 		mFrame.pack();
 		mFrame.setLocationRelativeTo(null);
 		mFrame.setVisible(true);
+	}
+
+	public OsmBitmapPanel getDrawPanel() {
+		return mDrawPanel;
 	}
 
 	public static void main(String[] args) throws XmlPullParserException, IOException {
@@ -227,6 +232,10 @@ public class OsmWindow {
 
 	public Frame getWindow() {
 		return mFrame;
+	}
+
+	public void move(LatLon pLocation) {
+		mDrawPanel.move(pLocation);
 	}
 
 }

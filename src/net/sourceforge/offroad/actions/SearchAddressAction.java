@@ -5,6 +5,8 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.text.Collator;
@@ -205,6 +207,20 @@ public class SearchAddressAction extends AbstractAction {
 			public void valueChanged(ListSelectionEvent pE) {
 				// else enable street list:
 				
+			}
+		});
+		mCityList.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent pE) {
+				if(pE.getKeyCode()== KeyEvent.VK_ENTER){
+					pE.consume();
+					City city = mCityList.getSelectedValue();
+					if (city != null) {
+						disposeDialog();
+						mContext.move(city.getLocation());
+					}
+				}
+				super.keyTyped(pE);
 			}
 		});
 		contentPane.add(new JScrollPane(mCityList), new GridBagConstraints(0, y++, 2, 1, 1.0, 4.0,
