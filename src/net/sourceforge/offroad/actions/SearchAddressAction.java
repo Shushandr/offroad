@@ -271,6 +271,18 @@ public class SearchAddressAction extends AbstractAction {
 					return false; 
 				}
 			}));
+			mTextField.addKeyListener(new KeyAdapter(){
+				@Override
+				public void keyReleased(KeyEvent pE) {
+					if(pE.getKeyCode() == KeyEvent.VK_DOWN){
+						pE.consume();
+						mList.requestFocus();
+						if(mList.isSelectionEmpty() && mList.getModel().getSize() > 0){
+							mList.setSelectedIndex(0);
+						}
+					}
+				}
+			});
 			mKeyListener = new KeyAdapter() {
 				@Override
 				public void keyReleased(KeyEvent pE) {

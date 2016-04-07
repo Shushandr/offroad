@@ -1,5 +1,6 @@
 package net.sourceforge.offroad;
 
+import java.awt.Font;
 import java.awt.Frame;
 import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
@@ -10,6 +11,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -19,6 +21,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
+import javax.swing.UIManager;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -145,7 +148,24 @@ public class OsmWindow {
 		mRegions = new OsmandRegions();
 		mResourceManager = new ResourceManager(this);
 		mResourceManager.indexingMaps(IProgress.EMPTY_PROGRESS);
+		scaleAllFonts(2.0f);
 	}
+	public static void scaleAllFonts(float pScale) {
+		for (Iterator i = UIManager.getLookAndFeelDefaults().keySet()
+				.iterator(); i.hasNext();) {
+			Object next = i.next();
+			if (next instanceof String) {
+				String key = (String) next;
+				if (key.endsWith(".font")) {
+					Font font = UIManager.getFont(key);
+					Font biggerFont = font.deriveFont(pScale * font.getSize2D());
+					// change ui default to bigger font
+					UIManager.put(key, biggerFont);
+				}				
+			}
+		}
+	}
+
 
 	public void loadMGap(Graphics2D pG2, RotatedTileBox pTileRect) {
 		getRenderer().loadMGap(pG2, pTileRect, mRenderingRulesStorage);
