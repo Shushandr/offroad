@@ -14,8 +14,8 @@ import javax.swing.event.ListDataListener;
  * @date 05.04.2016
  */
 public class FilteredListModel extends AbstractListModel {
-	public abstract static class Filter {
-		public abstract boolean accept(Object element);
+	public abstract static class Filter<T> {
+		public abstract boolean accept(T element);
 		public String getText() {
 			return mText;
 		}

@@ -236,6 +236,7 @@ public class OsmWindow {
 
 	public void move(LatLon pLocation) {
 		mDrawPanel.move(pLocation);
+		mDrawPanel.setCursor(pLocation);
 	}
 
 }

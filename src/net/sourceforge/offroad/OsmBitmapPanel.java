@@ -335,4 +335,9 @@ public class OsmBitmapPanel extends JPanel {
 		drawImage(bImage);
 		setImage(bImage);
 	}
+
+	public void setCursor(LatLon pLocation) {
+		mCursorPosition = pLocation;
+		repaint();
+	}
 }
