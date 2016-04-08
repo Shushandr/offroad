@@ -47,16 +47,13 @@ import net.osmand.data.MapObject;
 import net.osmand.data.Street;
 import net.osmand.plus.resources.RegionAddressRepository;
 import net.sourceforge.offroad.OsmWindow;
+import net.sourceforge.offroad.data.RegionAsMapObject;
 import net.sourceforge.offroad.ui.FilteredListModel;
 
 public class SearchAddressAction extends AbstractAction {
 
 	private OsmWindow mContext;
 	private JDialog mDialog;
-	private JTextField mFilterTextRegionField;
-	private FilteredListModel mFilteredRegionModel;
-	private JList<RegionAddressRepository> mRegionList;
-	private DefaultListModel<RegionAddressRepository> mSourceRegionModel;
 
 	public SearchAddressAction(OsmWindow ctx) {
 		mContext = ctx;
@@ -109,44 +106,43 @@ public class SearchAddressAction extends AbstractAction {
 		gbl.rowWeights = new double[] { 1.0f };
 		contentPane.setLayout(gbl);
 		int y = 0;
-		contentPane.add(new JLabel(getResourceString("region")), new GridBagConstraints(0, y, 1, 1, 1.0, 0.0,
-				GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
-		mFilterTextRegionField = new JTextField();
-		contentPane.add(mFilterTextRegionField, new GridBagConstraints(1, y++, 1, 1, 1.0, 0.0,
-				GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
-		
-		if (mContext.getResourceManager().getAddressRepositories().isEmpty()) {
-		}
-		ArrayList<RegionAddressRepository> initialListToFilter = new ArrayList<RegionAddressRepository>(
-				mContext.getResourceManager().getAddressRepositories());
-		mSourceRegionModel = new DefaultListModel<RegionAddressRepository>();
-		for (RegionAddressRepository regionAddressRepository : initialListToFilter) {
-			mSourceRegionModel.addElement(regionAddressRepository);
-		}
+		final MapObjectStore<RegionAsMapObject> regionStore = new MapObjectStore<RegionAsMapObject>() {
 
-		mFilteredRegionModel = new FilteredListModel(mSourceRegionModel);
-		mRegionList = new JList<RegionAddressRepository>(mFilteredRegionModel);
-		mFilteredRegionModel.setFilter(new FilteredListModel.Filter() {
-			public boolean accept(Object element) {
-				return true; 
-			}
-		});
-		mFilterTextRegionField.getDocument().addDocumentListener(new FilterTextDocumentListener(mFilteredRegionModel, new FilteredListModel.Filter() {
-			public boolean accept(Object element) {
-				if (element instanceof RegionAddressRepository) {
-					RegionAddressRepository repo = (RegionAddressRepository) element;
-					if(repo.getFileName().toLowerCase().contains(getText().toLowerCase())){
-						return true;
-					}
+			@Override
+			public Collection getSubObjects(RegionAsMapObject pObj) {
+				RegionAddressRepository region = pObj.getRegion();
+				// bad hack to fill mRegion field:
+				this.mRegion = region;
+				if (region != null) {
+					// preload cities
+					region.preloadCities(new ResultMatcher<City>() {
+
+						@Override
+						public boolean publish(City object) {
+							return true;
+						}
+
+						@Override
+						public boolean isCancelled() {
+							return false;
+						}
+					});
+					return region.getLoadedCities();
 				}
-				return false; 
+				return Collections.emptyList();
 			}
-		}));
-		contentPane.add(mRegionList, new GridBagConstraints(0, y++, 2, 1, 1.0, 4.0,
-				GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
-		
+		};
+		y = regionStore.addMapObject(contentPane, y, "region");
+		// fill region store:
+		if (!mContext.getResourceManager().getAddressRepositories().isEmpty()) {
+			ArrayList<RegionAddressRepository> initialListToFilter = new ArrayList<RegionAddressRepository>(
+					mContext.getResourceManager().getAddressRepositories());
+			for (RegionAddressRepository regionAddressRepository : initialListToFilter) {
+				regionStore.mSourceModel.addElement(new RegionAsMapObject(regionAddressRepository));
+			}
+		}
 		// cities:
-		final MapObjectStore<City> cityStore = new MapObjectStore<City>(){
+		final MapObjectStore<City> cityStore = new MapObjectStore<City>() {
 
 			@Override
 			public Collection getSubObjects(City pObj) {
@@ -163,49 +159,13 @@ public class SearchAddressAction extends AbstractAction {
 					}
 				});
 				return pObj.getStreets();
-			}};
-		y = cityStore.addMapObject(contentPane, y, "city");		
-
-		mRegionList.addListSelectionListener(new ListSelectionListener() {
-			
-			@Override
-			public void valueChanged(ListSelectionEvent pE) {
-				if(mRegionList.isSelectionEmpty()){
-					return;
-				}
-				// else enable city list:
-				RegionAddressRepository region = mRegionList.getSelectedValue();
-				if(region != null){
-					// preload cities
-					region.preloadCities(new ResultMatcher<City>() {
-						
-						@Override
-						public boolean publish(City object) {
-							return true;
-						}
-						
-						@Override
-						public boolean isCancelled() {
-							return false;
-						}
-					});
-					cityStore.mRegion = region;
-					cityStore.mSourceModel.clear();
-					for (City city : region.getLoadedCities()) {
-							cityStore.mSourceModel.addElement(city);
-					}
-					cityStore.mFilteredSourceModel.setFilter(new FilteredListModel.Filter() {
-						public boolean accept(Object element) {
-							return true; 
-						}
-					});
-				}
-				
 			}
-		});
+		};
+		y = cityStore.addMapObject(contentPane, y, "city");
+		// bind it to the regions
+		regionStore.addSelectionListener(cityStore);
 
-		
-		MapObjectStore<Street> streetStore = new MapObjectStore<Street>(){
+		MapObjectStore<Street> streetStore = new MapObjectStore<Street>() {
 
 			@Override
 			public Collection getSubObjects(Street pObj) {
@@ -222,22 +182,24 @@ public class SearchAddressAction extends AbstractAction {
 					}
 				});
 				return pObj.getBuildings();
-			}};
-		y = streetStore.addMapObject(contentPane, y, "street");		
+			}
+		};
+		y = streetStore.addMapObject(contentPane, y, "street");
 		cityStore.addSelectionListener(streetStore);
-		MapObjectStore<Building> buildingStore = new MapObjectStore<Building>(){
+		MapObjectStore<Building> buildingStore = new MapObjectStore<Building>() {
 
 			@Override
 			public Collection getSubObjects(Building pObj) {
 				return Collections.emptyList();
-			}};
-		y = buildingStore.addMapObject(contentPane, y, "building");		
+			}
+		};
+		y = buildingStore.addMapObject(contentPane, y, "building");
 		streetStore.addSelectionListener(buildingStore);
 		mDialog.pack();
 		mDialog.setVisible(true);
 
 	}
-	
+
 	private abstract class MapObjectStore<T extends MapObject> {
 		RegionAddressRepository mRegion;
 		JTextField mTextField;
@@ -247,37 +209,38 @@ public class SearchAddressAction extends AbstractAction {
 		ListSelectionListener mSelectionListener;
 		KeyListener mKeyListener;
 		MouseListener mMouseListener;
-		
+
 		public abstract Collection getSubObjects(T obj);
 
 		public int addMapObject(Container contentPane, int y, String pName) {
-			contentPane.add(new JLabel(getResourceString(pName)), new GridBagConstraints(0, y, 1, 1, 1.0, 0.0,
-							GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+			contentPane.add(new JLabel(getResourceString(pName)), new GridBagConstraints(0, y, 1, 1, 1.0, 1.0,
+					GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 			mTextField = new JTextField();
-			contentPane.add(mTextField, new GridBagConstraints(1, y++, 1, 1, 1.0, 0.0,
-					GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
-			
+			contentPane.add(mTextField, new GridBagConstraints(1, y++, 1, 1, 4.0, 1.0, GridBagConstraints.WEST,
+					GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
+
 			mSourceModel = new DefaultListModel<T>();
 			mFilteredSourceModel = new FilteredListModel(mSourceModel);
 			mList = new JList<T>(mFilteredSourceModel);
-			mTextField.getDocument().addDocumentListener(new FilterTextDocumentListener(mFilteredSourceModel, new FilteredListModel.Filter<T>() {
-				@Override
-				public boolean accept(T pElement) {
-					// FIXME: Translations!
-					if(pElement.getName().toLowerCase().contains(getText().toLowerCase())){
-						return true;
-					}
-					
-					return false; 
-				}
-			}));
-			mTextField.addKeyListener(new KeyAdapter(){
+			mTextField.getDocument().addDocumentListener(
+					new FilterTextDocumentListener(mFilteredSourceModel, new FilteredListModel.Filter<T>() {
+						@Override
+						public boolean accept(T pElement) {
+							// FIXME: Translations!
+							if (pElement.getName().toLowerCase().contains(getText().toLowerCase())) {
+								return true;
+							}
+
+							return false;
+						}
+					}));
+			mTextField.addKeyListener(new KeyAdapter() {
 				@Override
 				public void keyReleased(KeyEvent pE) {
-					if(pE.getKeyCode() == KeyEvent.VK_DOWN){
+					if (pE.getKeyCode() == KeyEvent.VK_DOWN) {
 						pE.consume();
 						mList.requestFocus();
-						if(mList.isSelectionEmpty() && mList.getModel().getSize() > 0){
+						if (mList.isSelectionEmpty() && mList.getModel().getSize() > 0) {
 							mList.setSelectedIndex(0);
 						}
 					}
@@ -286,9 +249,15 @@ public class SearchAddressAction extends AbstractAction {
 			mKeyListener = new KeyAdapter() {
 				@Override
 				public void keyReleased(KeyEvent pE) {
-					if(pE.getKeyCode()== KeyEvent.VK_ENTER){
+					if (pE.getKeyCode() == KeyEvent.VK_ENTER) {
 						pE.consume();
 						moveToEntity(mList.getSelectedValue());
+					}
+					if (pE.getKeyCode() == KeyEvent.VK_UP) {
+						if (mList.getSelectedIndex() == 0) {
+							pE.consume();
+							mTextField.requestFocus();
+						}
 					}
 					super.keyTyped(pE);
 				}
@@ -296,7 +265,6 @@ public class SearchAddressAction extends AbstractAction {
 			mList.addKeyListener(mKeyListener);
 			mMouseListener = new MouseAdapter() {
 				public void mouseClicked(MouseEvent evt) {
-					JList list = (JList)evt.getSource();
 					if (evt.getClickCount() >= 2) {
 						// Double-click detected
 						evt.consume();
@@ -312,32 +280,32 @@ public class SearchAddressAction extends AbstractAction {
 
 		public void addSelectionListener(final MapObjectStore nextStore) {
 			mSelectionListener = new ListSelectionListener() {
-				
+
 				@Override
 				public void valueChanged(ListSelectionEvent pE) {
-					if(mList.isSelectionEmpty()){
+					if (mList.isSelectionEmpty()) {
 						return;
 					}
 					T selected = mList.getSelectedValue();
-					if(selected != null){
+					if (selected != null) {
+						Collection subObjects = getSubObjects(selected);
 						nextStore.mRegion = mRegion;
 						nextStore.mSourceModel.clear();
-						for (Object sub : getSubObjects(selected)) {
-								nextStore.mSourceModel.addElement(sub);
+						for (Object sub : subObjects) {
+							nextStore.mSourceModel.addElement(sub);
 						}
 						nextStore.mFilteredSourceModel.setFilter(new FilteredListModel.Filter() {
 							public boolean accept(Object element) {
-								return true; 
+								return true;
 							}
 						});
 					}
-					
+
 				}
 			};
 			mList.addListSelectionListener(mSelectionListener);
 		}
 	}
-
 
 	private final class FilterTextDocumentListener implements DocumentListener {
 		private static final int TYPE_DELAY_TIME = 500;
@@ -348,7 +316,7 @@ public class SearchAddressAction extends AbstractAction {
 			mModel = pModel;
 			mFilter = pFilter;
 		}
-		
+
 		private Timer mTypeDelayTimer = null;
 
 		private synchronized void change(DocumentEvent event) {
