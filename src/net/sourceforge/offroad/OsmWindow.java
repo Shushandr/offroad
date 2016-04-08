@@ -40,6 +40,7 @@ import net.osmand.plus.resources.ResourceManager;
 import net.osmand.render.RenderingRulesStorage;
 import net.osmand.render.RenderingRulesStorage.RenderingRulesStorageResolver;
 import net.sourceforge.offroad.actions.SearchAddressAction;
+import net.sourceforge.offroad.data.QuadRectExtendable;
 
 /**
  * OffRoad
@@ -50,6 +51,7 @@ import net.sourceforge.offroad.actions.SearchAddressAction;
  */
 public class OsmWindow {
 
+	private static final int MAX_ZOOM = 23;
 	public static final String RENDERING_STYLES_DIR = "rendering_styles/";
 	public static final String OSMAND_ICONS_DIR = "rendering_styles/style-icons/drawable-xxhdpi/";
 	private static OsmWindow minstance = null;
@@ -254,7 +256,19 @@ public class OsmWindow {
 		return mFrame;
 	}
 
-	public void move(LatLon pLocation) {
+	public void move(LatLon pLocation, QuadRectExtendable pQuadRectExtendable) {
+		// make sure that all points of the rect are in:
+		if (pQuadRectExtendable!= null) {
+			RotatedTileBox tileBox = mDrawPanel.getTileBox();
+			tileBox.setLatLonCenter(pLocation.getLatitude(), pLocation.getLongitude());
+			tileBox.setZoom(MAX_ZOOM);
+			while (!tileBox.containsLatLon(pQuadRectExtendable.left, pQuadRectExtendable.top)) {
+				tileBox.setZoom(tileBox.getZoom() - 1);
+			}
+			while (!tileBox.containsLatLon(pQuadRectExtendable.right, pQuadRectExtendable.bottom)) {
+				tileBox.setZoom(tileBox.getZoom() - 1);
+			} 
+		}
 		mDrawPanel.move(pLocation);
 		mDrawPanel.setCursor(pLocation);
 	}

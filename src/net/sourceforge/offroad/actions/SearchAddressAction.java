@@ -44,10 +44,13 @@ import net.osmand.ResultMatcher;
 import net.osmand.data.Building;
 import net.osmand.data.City;
 import net.osmand.data.MapObject;
+import net.osmand.data.QuadRect;
 import net.osmand.data.Street;
 import net.osmand.plus.resources.RegionAddressRepository;
 import net.sourceforge.offroad.OsmWindow;
+import net.sourceforge.offroad.data.QuadRectExtendable;
 import net.sourceforge.offroad.data.RegionAsMapObject;
+import net.sourceforge.offroad.data.TrivialResultMatcher;
 import net.sourceforge.offroad.ui.FilteredListModel;
 
 public class SearchAddressAction extends AbstractAction {
@@ -109,24 +112,13 @@ public class SearchAddressAction extends AbstractAction {
 		final MapObjectStore<RegionAsMapObject> regionStore = new MapObjectStore<RegionAsMapObject>() {
 
 			@Override
-			public Collection getSubObjects(RegionAsMapObject pObj) {
+			public Collection<City> getSubObjects(RegionAsMapObject pObj) {
 				RegionAddressRepository region = pObj.getRegion();
 				// bad hack to fill mRegion field:
 				this.mRegion = region;
 				if (region != null) {
 					// preload cities
-					region.preloadCities(new ResultMatcher<City>() {
-
-						@Override
-						public boolean publish(City object) {
-							return true;
-						}
-
-						@Override
-						public boolean isCancelled() {
-							return false;
-						}
-					});
+					region.preloadCities(new TrivialResultMatcher<City>());
 					return region.getLoadedCities();
 				}
 				return Collections.emptyList();
@@ -145,56 +137,33 @@ public class SearchAddressAction extends AbstractAction {
 		final MapObjectStore<City> cityStore = new MapObjectStore<City>() {
 
 			@Override
-			public Collection getSubObjects(City pObj) {
-				mRegion.preloadStreets(pObj, new ResultMatcher<Street>() {
-
-					@Override
-					public boolean publish(Street pObject) {
-						return true;
-					}
-
-					@Override
-					public boolean isCancelled() {
-						return false;
-					}
-				});
+			public Collection<Street> getSubObjects(City pObj) {
+				mRegion.preloadStreets(pObj, new TrivialResultMatcher<Street>());
 				return pObj.getStreets();
 			}
 		};
 		y = cityStore.addMapObject(contentPane, y, "city");
-		// bind it to the regions
-		regionStore.addSelectionListener(cityStore);
 
 		MapObjectStore<Street> streetStore = new MapObjectStore<Street>() {
 
 			@Override
-			public Collection getSubObjects(Street pObj) {
-				mRegion.preloadBuildings(pObj, new ResultMatcher<Building>() {
-
-					@Override
-					public boolean publish(Building pObject) {
-						return true;
-					}
-
-					@Override
-					public boolean isCancelled() {
-						return false;
-					}
-				});
+			public Collection<Building> getSubObjects(Street pObj) {
+				mRegion.preloadBuildings(pObj, new TrivialResultMatcher<Building>());
 				return pObj.getBuildings();
 			}
 		};
 		y = streetStore.addMapObject(contentPane, y, "street");
-		cityStore.addSelectionListener(streetStore);
 		MapObjectStore<Building> buildingStore = new MapObjectStore<Building>() {
 
 			@Override
-			public Collection getSubObjects(Building pObj) {
+			public Collection<MapObject> getSubObjects(Building pObj) {
 				return Collections.emptyList();
 			}
 		};
 		y = buildingStore.addMapObject(contentPane, y, "building");
-		streetStore.addSelectionListener(buildingStore);
+		// bindings:
+		regionStore.addSelectionListener(cityStore).addSelectionListener(streetStore)
+				.addSelectionListener(buildingStore);
 		mDialog.pack();
 		mDialog.setVisible(true);
 
@@ -209,8 +178,10 @@ public class SearchAddressAction extends AbstractAction {
 		ListSelectionListener mSelectionListener;
 		KeyListener mKeyListener;
 		MouseListener mMouseListener;
+		private MapObjectStore mNextStore;
+		private T selected;
 
-		public abstract Collection getSubObjects(T obj);
+		public abstract Collection<? extends MapObject> getSubObjects(T obj);
 
 		public int addMapObject(Container contentPane, int y, String pName) {
 			contentPane.add(new JLabel(getResourceString(pName)), new GridBagConstraints(0, y, 1, 1, 1.0, 1.0,
@@ -230,7 +201,6 @@ public class SearchAddressAction extends AbstractAction {
 							if (pElement.getName().toLowerCase().contains(getText().toLowerCase())) {
 								return true;
 							}
-
 							return false;
 						}
 					}));
@@ -240,11 +210,21 @@ public class SearchAddressAction extends AbstractAction {
 					if (pE.getKeyCode() == KeyEvent.VK_DOWN) {
 						pE.consume();
 						mList.requestFocus();
-						if (mList.isSelectionEmpty() && mList.getModel().getSize() > 0) {
-							mList.setSelectedIndex(0);
+						selectFirstElementIfNecessary();
+					}
+					if (pE.getKeyCode() == KeyEvent.VK_ENTER) {
+						pE.consume();
+						if(mNextStore != null){
+							selectFirstElementIfNecessary();
+							mNextStore.mTextField.requestFocus();
+						} else {
+							// last field: show it:
+							selectFirstElementIfNecessary();
+							moveToEntity(mList.getSelectedValue());
 						}
 					}
 				}
+
 			});
 			mKeyListener = new KeyAdapter() {
 				@Override
@@ -278,15 +258,27 @@ public class SearchAddressAction extends AbstractAction {
 			return y;
 		}
 
-		public void addSelectionListener(final MapObjectStore nextStore) {
+		public void selectFirstElementIfNecessary() {
+			if (mList.isSelectionEmpty() && mList.getModel().getSize() > 0) {
+				mList.setSelectedIndex(0);
+			}
+		}
+
+		/**
+		 * @param nextStore
+		 * @return the nextStore in order to be chained.
+		 */
+		public MapObjectStore addSelectionListener(final MapObjectStore nextStore) {
+			mNextStore = nextStore;
 			mSelectionListener = new ListSelectionListener() {
+
 
 				@Override
 				public void valueChanged(ListSelectionEvent pE) {
 					if (mList.isSelectionEmpty()) {
 						return;
 					}
-					T selected = mList.getSelectedValue();
+					selected = mList.getSelectedValue();
 					if (selected != null) {
 						Collection subObjects = getSubObjects(selected);
 						nextStore.mRegion = mRegion;
@@ -304,7 +296,29 @@ public class SearchAddressAction extends AbstractAction {
 				}
 			};
 			mList.addListSelectionListener(mSelectionListener);
+			return nextStore;
 		}
+		
+		public void moveToEntity(MapObject obj) {
+			if (obj != null) {
+				disposeDialog();
+				// find correct zoom:
+				QuadRectExtendable rect = null;
+				if(selected != null){
+					// trick: take all subobjects and take their hull.
+					Collection<MapObject> subObjects = (Collection<MapObject>) getSubObjects(selected);
+					rect = new QuadRectExtendable(selected.getLocation());
+					for (MapObject sub : subObjects) {
+//						System.out.println("Adding " + sub + " to the bounding box.");
+						rect.insert(sub.getLocation());
+					}
+					
+				}
+				mContext.move(obj.getLocation(), rect);
+			}
+		}
+
+
 	}
 
 	private final class FilterTextDocumentListener implements DocumentListener {
@@ -384,13 +398,6 @@ public class SearchAddressAction extends AbstractAction {
 
 	private String getResourceString(String pWindowTitle) {
 		return pWindowTitle;
-	}
-
-	public void moveToEntity(MapObject obj) {
-		if (obj != null) {
-			disposeDialog();
-			mContext.move(obj.getLocation());
-		}
 	}
 
 }
