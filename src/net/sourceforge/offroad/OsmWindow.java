@@ -53,7 +53,7 @@ import net.sourceforge.offroad.data.QuadRectExtendable;
  */
 public class OsmWindow {
 
-	private static final int MAX_ZOOM = 23;
+	static final int MAX_ZOOM = 22;
 	public static final String RENDERING_STYLES_DIR = "rendering_styles/";
 	public static final String OSMAND_ICONS_DIR = "rendering_styles/style-icons/drawable-xxhdpi/";
 	private static OsmWindow minstance = null;

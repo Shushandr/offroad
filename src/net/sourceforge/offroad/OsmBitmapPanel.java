@@ -186,7 +186,7 @@ public class OsmBitmapPanel extends JPanel {
 			newZoom = minZoom;
 		}
 		// FIXME: Magic number
-		int maxZoom = mapInstance.hasMaxzoom() ? mapInstance.getMaxzoom() : 22;
+		int maxZoom = mapInstance.hasMaxzoom() ? mapInstance.getMaxzoom() : OsmWindow.MAX_ZOOM;
 		if (newZoom > maxZoom) {
 			newZoom = maxZoom;
 		}

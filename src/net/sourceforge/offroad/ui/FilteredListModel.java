@@ -1,9 +1,10 @@
 package net.sourceforge.offroad.ui;
 
 import java.util.ArrayList;
+import java.util.Collection;
 
 import javax.swing.AbstractListModel;
-import javax.swing.ListModel;
+import javax.swing.DefaultListModel;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 
@@ -25,15 +26,16 @@ public class FilteredListModel extends AbstractListModel {
 		private String mText;
 	}
 
-	private final ListModel _source;
+	private final DefaultListModel _source;
 	private Filter _filter;
 	private final ArrayList<Integer> _indices = new ArrayList<Integer>();
+	private ListDataListener mListener;
 
-	public FilteredListModel(ListModel source) {
+	public FilteredListModel(DefaultListModel source) {
 		if (source == null)
 			throw new IllegalArgumentException("Source is null");
 		_source = source;
-		_source.addListDataListener(new ListDataListener() {
+		mListener = new ListDataListener() {
 			public void intervalRemoved(ListDataEvent e) {
 				doFilter();
 			}
@@ -45,7 +47,8 @@ public class FilteredListModel extends AbstractListModel {
 			public void contentsChanged(ListDataEvent e) {
 				doFilter();
 			}
-		});
+		};
+		_source.addListDataListener(mListener);
 	}
 
 	public void setFilter(Filter f) {
@@ -66,6 +69,8 @@ public class FilteredListModel extends AbstractListModel {
 				}
 			}
 			fireContentsChanged(this, 0, getSize() - 1);
+		} else {
+			fireContentsChanged(this, 0, getSize() - 1);
 		}
 	}
 
@@ -76,4 +81,5 @@ public class FilteredListModel extends AbstractListModel {
 	public Object getElementAt(int index) {
 		return (_filter != null) ? _source.getElementAt(_indices.get(index)) : _source.getElementAt(index);
 	}
+
 }

@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Vector;
@@ -39,6 +40,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.event.ListDataListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.text.BadLocationException;
@@ -255,6 +257,7 @@ public class SearchAddressAction extends AbstractAction {
 		private T selected;
 		private T previousSelected;
 		private FilteredListModel.Filter<T> mTextFilter;
+		private String mName;
 
 		public abstract Collection<? extends MapObject> getSubObjects(T obj);
 
@@ -290,14 +293,18 @@ public class SearchAddressAction extends AbstractAction {
 				mNextStore.save(pSettings);
 			}
 		}
+
 		class MyRenderer extends DefaultListCellRenderer {
-			   public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-			      Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-			      setText(((MapObject) value).getName()); // where getValue is some method you implement that gets the text you want to render for the component
-			      return c;
+			public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,
+					boolean cellHasFocus) {
+				Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+				setText(((MapObject) value).getName());
+				return c;
 			}
-		}			   
+		}
+
 		public int addMapObject(Container contentPane, int y, String pName) {
+			mName = pName;
 			contentPane.add(new JLabel(getResourceString(pName)), new GridBagConstraints(0, y, 1, 1, 1.0, 1.0,
 					GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 			mTextField = new JTextField();
@@ -321,7 +328,7 @@ public class SearchAddressAction extends AbstractAction {
 				}
 			};
 			mTextField.getDocument()
-					.addDocumentListener(new FilterTextDocumentListener(mFilteredSourceModel, mTextFilter, mList));
+					.addDocumentListener(new FilterTextDocumentListener(this));
 			mTextField.addKeyListener(new KeyAdapter() {
 				@Override
 				public void keyReleased(KeyEvent pE) {
@@ -398,6 +405,9 @@ public class SearchAddressAction extends AbstractAction {
 				@Override
 				public void valueChanged(ListSelectionEvent pE) {
 					if (mList.isSelectionEmpty()) {
+						previousSelected = null;
+						selected = null;
+						mNextStore.clear();
 						return;
 					}
 					selected = mList.getSelectedValue();
@@ -424,16 +434,16 @@ public class SearchAddressAction extends AbstractAction {
 			}
 			selected = pSelected;
 			Collection subObjects = getSubObjects(selected);
-			mNextStore.mRegion = mRegion;
-			mNextStore.mSourceModel.clear();
-			for (Object sub : subObjects) {
-				mNextStore.mSourceModel.addElement(sub);
+			mNextStore.insertList(subObjects, mRegion);
+		}
+
+		public void insertList(Collection<T> subObjects, RegionAddressRepository pRegion){
+			mRegion = pRegion;
+			mFilteredSourceModel.setFilter(null);
+			mSourceModel.clear();
+			for (T sub : subObjects) {
+				mSourceModel.addElement(sub);
 			}
-			mNextStore.mFilteredSourceModel.setFilter(new FilteredListModel.Filter() {
-				public boolean accept(Object element) {
-					return true;
-				}
-			});
 		}
 		
 		public void moveToEntity(MapObject obj) {
@@ -462,10 +472,11 @@ public class SearchAddressAction extends AbstractAction {
 		}
 		
 		public void clear() {
+			mList.clearSelection();
 			mSourceModel.clear();
 			mTextField.setText("");
 			mTextFilter.setText("");
-			mFilteredSourceModel.setFilter(mTextFilter);
+			mFilteredSourceModel.setFilter(null);
 			if(mNextStore != null){
 				mNextStore.clear();
 			}
@@ -474,16 +485,12 @@ public class SearchAddressAction extends AbstractAction {
 
 	}
 
-	private final class FilterTextDocumentListener implements DocumentListener {
+	private final class FilterTextDocumentListener<T extends MapObject> implements DocumentListener {
 		private static final int TYPE_DELAY_TIME = 500;
-		private FilteredListModel mModel;
-		private FilteredListModel.Filter mFilter;
-		private JList mList;
+		private MapObjectStore<T> mMapObjectStore;
 
-		public FilterTextDocumentListener(FilteredListModel pModel, FilteredListModel.Filter pFilter, JList pList) {
-			mModel = pModel;
-			mFilter = pFilter;
-			mList = pList;
+		public FilterTextDocumentListener(MapObjectStore<T> pMapObjectStore) {
+			mMapObjectStore = pMapObjectStore;
 		}
 
 		private Timer mTypeDelayTimer = null;
@@ -533,20 +540,21 @@ public class SearchAddressAction extends AbstractAction {
 
 					public void run() {
 						try {
+							List<T> selectedValuesList = mMapObjectStore.mList.getSelectedValuesList();
 							Document document = event.getDocument();
 							final String text = getText(document);
-							mFilter.setText(text);
+							mMapObjectStore.mTextFilter.setText(text);
 							// check, if selected items are still correct:
 							boolean filterAccepted = true;
-							for (Object obj : mList.getSelectedValuesList()) {
-								if(!mFilter.accept(obj)){
+							for (T obj : selectedValuesList) {
+								if(!mMapObjectStore.mTextFilter.accept(obj)){
 									filterAccepted = false;
 								}
 							}
 							if (!filterAccepted) {
-								mList.clearSelection();
+								mMapObjectStore.mList.clearSelection();
 							}
-							mModel.setFilter(mFilter);
+							mMapObjectStore.mFilteredSourceModel.setFilter(mMapObjectStore.mTextFilter);
 						} catch (BadLocationException e) {
 						}
 					}
