@@ -1,6 +1,8 @@
 package net.sourceforge.offroad.actions;
 
+import java.awt.Component;
 import java.awt.Container;
+import java.awt.Cursor;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -20,9 +22,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.Vector;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
@@ -40,12 +44,12 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
-import net.osmand.ResultMatcher;
 import net.osmand.data.Building;
 import net.osmand.data.City;
+import net.osmand.data.LatLon;
 import net.osmand.data.MapObject;
-import net.osmand.data.QuadRect;
 import net.osmand.data.Street;
+import net.osmand.plus.OsmandSettings;
 import net.osmand.plus.resources.RegionAddressRepository;
 import net.sourceforge.offroad.OsmWindow;
 import net.sourceforge.offroad.data.QuadRectExtendable;
@@ -57,6 +61,7 @@ public class SearchAddressAction extends AbstractAction {
 
 	private OsmWindow mContext;
 	private JDialog mDialog;
+	private MapObjectStore<RegionAsMapObject> mRegionStore;
 
 	public SearchAddressAction(OsmWindow ctx) {
 		mContext = ctx;
@@ -90,6 +95,7 @@ public class SearchAddressAction extends AbstractAction {
 	@Override
 	public void actionPerformed(ActionEvent pE) {
 		mDialog = new JDialog(mContext.getWindow(), true /* modal */);
+		setWaitingCursor();
 		String windowTitle = "search";
 		mDialog.setTitle(getResourceString(windowTitle));
 		mDialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
@@ -109,7 +115,7 @@ public class SearchAddressAction extends AbstractAction {
 		gbl.rowWeights = new double[] { 1.0f };
 		contentPane.setLayout(gbl);
 		int y = 0;
-		final MapObjectStore<RegionAsMapObject> regionStore = new MapObjectStore<RegionAsMapObject>() {
+		mRegionStore = new MapObjectStore<RegionAsMapObject>() {
 
 			@Override
 			public Collection<City> getSubObjects(RegionAsMapObject pObj) {
@@ -123,14 +129,24 @@ public class SearchAddressAction extends AbstractAction {
 				}
 				return Collections.emptyList();
 			}
+
+			@Override
+			public String loadSetting(OsmandSettings pSettings) {
+				return pSettings.getLastSearchedRegion();
+			}
+
+			@Override
+			public void saveSetting(OsmandSettings pSettings, String pValue) {
+				pSettings.setLastSearchedRegion(pValue, getLatLon());
+			}
 		};
-		y = regionStore.addMapObject(contentPane, y, "region");
+		y = mRegionStore.addMapObject(contentPane, y, "region");
 		// fill region store:
 		if (!mContext.getResourceManager().getAddressRepositories().isEmpty()) {
 			ArrayList<RegionAddressRepository> initialListToFilter = new ArrayList<RegionAddressRepository>(
 					mContext.getResourceManager().getAddressRepositories());
 			for (RegionAddressRepository regionAddressRepository : initialListToFilter) {
-				regionStore.mSourceModel.addElement(new RegionAsMapObject(regionAddressRepository));
+				mRegionStore.mSourceModel.addElement(new RegionAsMapObject(regionAddressRepository));
 			}
 		}
 		// cities:
@@ -140,6 +156,25 @@ public class SearchAddressAction extends AbstractAction {
 			public Collection<Street> getSubObjects(City pObj) {
 				mRegion.preloadStreets(pObj, new TrivialResultMatcher<Street>());
 				return pObj.getStreets();
+			}
+			@Override
+			public String loadSetting(OsmandSettings pSettings) {
+				return pSettings.getLastSearchedCityName();
+			}
+			@Override
+			public void saveSetting(OsmandSettings pSettings, String pValue) {
+				City selectedCity = mList.getSelectedValue();
+				Long id  = 0l;
+				if (selectedCity != null) {
+					id = selectedCity.getId();
+				}
+				pSettings.setLastSearchedCity(id, pValue, getLatLon());
+			}
+			
+			@Override
+			protected void addBoundingObjects(City pSelected, Vector<MapObject> pMoreObjects) {
+				super.addBoundingObjects(pSelected, pMoreObjects);
+				pMoreObjects.add(pSelected.getClosestCity());
 			}
 		};
 		y = cityStore.addMapObject(contentPane, y, "city");
@@ -151,6 +186,19 @@ public class SearchAddressAction extends AbstractAction {
 				mRegion.preloadBuildings(pObj, new TrivialResultMatcher<Building>());
 				return pObj.getBuildings();
 			}
+			@Override
+			public String loadSetting(OsmandSettings pSettings) {
+				return pSettings.getLastSearchedStreet();
+			}
+			@Override
+			public void saveSetting(OsmandSettings pSettings, String pValue) {
+				pSettings.setLastSearchedStreet(pValue, getLatLon());
+			}
+			@Override
+			protected void addBoundingObjects(Street pSelected, Vector<MapObject> pMoreObjects) {
+				super.addBoundingObjects(pSelected, pMoreObjects);
+				pMoreObjects.addAll(pSelected.getIntersectedStreets());
+			}
 		};
 		y = streetStore.addMapObject(contentPane, y, "street");
 		MapObjectStore<Building> buildingStore = new MapObjectStore<Building>() {
@@ -159,14 +207,39 @@ public class SearchAddressAction extends AbstractAction {
 			public Collection<MapObject> getSubObjects(Building pObj) {
 				return Collections.emptyList();
 			}
+			@Override
+			public String loadSetting(OsmandSettings pSettings) {
+				return pSettings.getLastSearchedBuilding();
+			}
+			@Override
+			public void saveSetting(OsmandSettings pSettings, String pValue) {
+				pSettings.setLastSearchedBuilding(pValue, getLatLon());
+			}
 		};
 		y = buildingStore.addMapObject(contentPane, y, "building");
 		// bindings:
-		regionStore.addSelectionListener(cityStore).addSelectionListener(streetStore)
-				.addSelectionListener(buildingStore);
+		mRegionStore.setNextStore(cityStore).setNextStore(streetStore)
+				.setNextStore(buildingStore);
+		mRegionStore.load(mContext.getSettings());
+		mRegionStore.addSelectionListener();
 		mDialog.pack();
+		removeWaitingCursor();
 		mDialog.setVisible(true);
 
+	}
+
+	private void setWaitingCursor() {
+		mDialog.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+		mContext.setWaitingCursor(true);
+	}
+
+	private void removeWaitingCursor() {
+		mDialog.setCursor(Cursor.getDefaultCursor());
+		mContext.setWaitingCursor(false);
+	}
+	
+	protected LatLon getLatLon() {
+		return mContext.getDrawPanel().getTileBox().getCenterLatLon();
 	}
 
 	private abstract class MapObjectStore<T extends MapObject> {
@@ -180,9 +253,50 @@ public class SearchAddressAction extends AbstractAction {
 		MouseListener mMouseListener;
 		private MapObjectStore mNextStore;
 		private T selected;
+		private T previousSelected;
+		private FilteredListModel.Filter<T> mTextFilter;
 
 		public abstract Collection<? extends MapObject> getSubObjects(T obj);
 
+		public MapObjectStore setNextStore(MapObjectStore pNextStore) {
+			mNextStore = pNextStore;
+			return mNextStore;
+		}
+
+		public abstract String loadSetting(OsmandSettings pSettings);
+		public abstract void saveSetting(OsmandSettings pSettings, String pValue);
+		
+		public void load(OsmandSettings pSettings) {
+			String lastText = loadSetting(pSettings);
+			mTextField.setText(lastText);
+			mTextFilter.setText(lastText);
+			mFilteredSourceModel.setFilter(mTextFilter);
+			if(mFilteredSourceModel.getSize() >= 1){
+				mList.setSelectedIndex(0);
+			}
+			if(mNextStore!=null){
+				setSelectedItem(mList.getSelectedValue());
+				mNextStore.load(pSettings);
+			}
+		}
+		
+		public void save(OsmandSettings pSettings) {
+			String text = mTextField.getText();
+			if(!mList.isSelectionEmpty()){
+				text = mList.getSelectedValue().getName();
+			}
+			saveSetting(pSettings, text);
+			if(mNextStore!=null){
+				mNextStore.save(pSettings);
+			}
+		}
+		class MyRenderer extends DefaultListCellRenderer {
+			   public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+			      Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+			      setText(((MapObject) value).getName()); // where getValue is some method you implement that gets the text you want to render for the component
+			      return c;
+			}
+		}			   
 		public int addMapObject(Container contentPane, int y, String pName) {
 			contentPane.add(new JLabel(getResourceString(pName)), new GridBagConstraints(0, y, 1, 1, 1.0, 1.0,
 					GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
@@ -193,17 +307,21 @@ public class SearchAddressAction extends AbstractAction {
 			mSourceModel = new DefaultListModel<T>();
 			mFilteredSourceModel = new FilteredListModel(mSourceModel);
 			mList = new JList<T>(mFilteredSourceModel);
-			mTextField.getDocument().addDocumentListener(
-					new FilterTextDocumentListener(mFilteredSourceModel, new FilteredListModel.Filter<T>() {
-						@Override
-						public boolean accept(T pElement) {
-							// FIXME: Translations!
-							if (pElement.getName().toLowerCase().contains(getText().toLowerCase())) {
-								return true;
-							}
-							return false;
-						}
-					}));
+			mList.setCellRenderer(new MyRenderer());
+			mTextFilter = new FilteredListModel.Filter<T>() {
+				@Override
+				public boolean accept(T pElement) {
+					// FIXME: Translations!
+					String text = getText().toLowerCase();
+					String elementText = pElement.getName().toLowerCase();
+					if (elementText.contains(text)) {
+						return true;
+					}
+					return false;
+				}
+			};
+			mTextField.getDocument()
+					.addDocumentListener(new FilterTextDocumentListener(mFilteredSourceModel, mTextFilter, mList));
 			mTextField.addKeyListener(new KeyAdapter() {
 				@Override
 				public void keyReleased(KeyEvent pE) {
@@ -216,7 +334,7 @@ public class SearchAddressAction extends AbstractAction {
 						pE.consume();
 						if(mNextStore != null){
 							selectFirstElementIfNecessary();
-							mNextStore.mTextField.requestFocus();
+							mNextStore.requestFocusToTextField();
 						} else {
 							// last field: show it:
 							selectFirstElementIfNecessary();
@@ -236,7 +354,7 @@ public class SearchAddressAction extends AbstractAction {
 					if (pE.getKeyCode() == KeyEvent.VK_UP) {
 						if (mList.getSelectedIndex() == 0) {
 							pE.consume();
-							mTextField.requestFocus();
+							requestFocusToTextField();
 						}
 					}
 					super.keyTyped(pE);
@@ -263,16 +381,20 @@ public class SearchAddressAction extends AbstractAction {
 				mList.setSelectedIndex(0);
 			}
 		}
+		
+		public void requestFocusToTextField(){
+			mTextField.selectAll();
+			mTextField.requestFocus();
+		}
 
 		/**
-		 * @param nextStore
 		 * @return the nextStore in order to be chained.
 		 */
-		public MapObjectStore addSelectionListener(final MapObjectStore nextStore) {
-			mNextStore = nextStore;
+		public void addSelectionListener() {
+			if(mNextStore == null){
+				return;
+			}
 			mSelectionListener = new ListSelectionListener() {
-
-
 				@Override
 				public void valueChanged(ListSelectionEvent pE) {
 					if (mList.isSelectionEmpty()) {
@@ -280,23 +402,38 @@ public class SearchAddressAction extends AbstractAction {
 					}
 					selected = mList.getSelectedValue();
 					if (selected != null) {
-						Collection subObjects = getSubObjects(selected);
-						nextStore.mRegion = mRegion;
-						nextStore.mSourceModel.clear();
-						for (Object sub : subObjects) {
-							nextStore.mSourceModel.addElement(sub);
+						setWaitingCursor();
+						if(!selected.equals(previousSelected)){
+							mNextStore.clear();
 						}
-						nextStore.mFilteredSourceModel.setFilter(new FilteredListModel.Filter() {
-							public boolean accept(Object element) {
-								return true;
-							}
-						});
+						previousSelected = selected;
+						setSelectedItem(selected);
+						removeWaitingCursor();
 					}
-
 				}
 			};
 			mList.addListSelectionListener(mSelectionListener);
-			return nextStore;
+			if(mNextStore != null){
+				mNextStore.addSelectionListener();
+			}
+		}
+
+		public void setSelectedItem(T pSelected) {
+			if(pSelected == null){
+				return;
+			}
+			selected = pSelected;
+			Collection subObjects = getSubObjects(selected);
+			mNextStore.mRegion = mRegion;
+			mNextStore.mSourceModel.clear();
+			for (Object sub : subObjects) {
+				mNextStore.mSourceModel.addElement(sub);
+			}
+			mNextStore.mFilteredSourceModel.setFilter(new FilteredListModel.Filter() {
+				public boolean accept(Object element) {
+					return true;
+				}
+			});
 		}
 		
 		public void moveToEntity(MapObject obj) {
@@ -307,6 +444,8 @@ public class SearchAddressAction extends AbstractAction {
 				if(selected != null){
 					// trick: take all subobjects and take their hull.
 					Collection<MapObject> subObjects = (Collection<MapObject>) getSubObjects(selected);
+					Vector<MapObject> moreObjects = new Vector<>(subObjects);
+					addBoundingObjects(selected, moreObjects);
 					rect = new QuadRectExtendable(selected.getLocation());
 					for (MapObject sub : subObjects) {
 //						System.out.println("Adding " + sub + " to the bounding box.");
@@ -318,6 +457,20 @@ public class SearchAddressAction extends AbstractAction {
 			}
 		}
 
+		protected void addBoundingObjects(T pSelected, Vector<MapObject> pMoreObjects) {
+			// fill me, if there is more.
+		}
+		
+		public void clear() {
+			mSourceModel.clear();
+			mTextField.setText("");
+			mTextFilter.setText("");
+			mFilteredSourceModel.setFilter(mTextFilter);
+			if(mNextStore != null){
+				mNextStore.clear();
+			}
+		}
+
 
 	}
 
@@ -325,10 +478,12 @@ public class SearchAddressAction extends AbstractAction {
 		private static final int TYPE_DELAY_TIME = 500;
 		private FilteredListModel mModel;
 		private FilteredListModel.Filter mFilter;
+		private JList mList;
 
-		public FilterTextDocumentListener(FilteredListModel pModel, FilteredListModel.Filter pFilter) {
+		public FilterTextDocumentListener(FilteredListModel pModel, FilteredListModel.Filter pFilter, JList pList) {
 			mModel = pModel;
 			mFilter = pFilter;
+			mList = pList;
 		}
 
 		private Timer mTypeDelayTimer = null;
@@ -381,6 +536,16 @@ public class SearchAddressAction extends AbstractAction {
 							Document document = event.getDocument();
 							final String text = getText(document);
 							mFilter.setText(text);
+							// check, if selected items are still correct:
+							boolean filterAccepted = true;
+							for (Object obj : mList.getSelectedValuesList()) {
+								if(!mFilter.accept(obj)){
+									filterAccepted = false;
+								}
+							}
+							if (!filterAccepted) {
+								mList.clearSelection();
+							}
 							mModel.setFilter(mFilter);
 						} catch (BadLocationException e) {
 						}
@@ -392,6 +557,7 @@ public class SearchAddressAction extends AbstractAction {
 	}
 
 	protected void disposeDialog() {
+		mRegionStore.save(mContext.getSettings());
 		mDialog.setVisible(false);
 		mDialog.dispose();
 	}

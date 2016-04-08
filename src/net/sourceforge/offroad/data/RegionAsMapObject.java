@@ -33,7 +33,7 @@ public class RegionAsMapObject extends MapObject {
 
 	public RegionAsMapObject(RegionAddressRepository pRegion) {
 		setRegion(pRegion);
-		name = getRegion().getName();
+		name = getRegion().getName();//.replace('_', ' ');
 		enName = getRegion().getLang();
 		names = new HashMap<String, String>();
 		names.put(getRegion().getLang(), name);

@@ -1,5 +1,7 @@
 package net.sourceforge.offroad;
 
+import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Font;
 import java.awt.Frame;
 import java.awt.Graphics2D;
@@ -271,6 +273,19 @@ public class OsmWindow {
 		}
 		mDrawPanel.move(pLocation);
 		mDrawPanel.setCursor(pLocation);
+	}
+
+	public void setWaitingCursor(boolean waiting) {
+		Component glassPane = mFrame.getRootPane().getGlassPane();
+		if (waiting) {
+			glassPane.setCursor(
+					Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+			glassPane.setVisible(true);
+		} else {
+			glassPane.setCursor(
+					Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			glassPane.setVisible(false);
+		}
 	}
 
 }
