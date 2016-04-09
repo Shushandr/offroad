@@ -2,7 +2,6 @@ package net.sourceforge.offroad.actions;
 
 import java.awt.Component;
 import java.awt.Container;
-import java.awt.Cursor;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -13,8 +12,6 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -25,22 +22,15 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Vector;
 
-import javax.swing.AbstractAction;
-import javax.swing.Action;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
-import javax.swing.JComponent;
-import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
-import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
-import javax.swing.WindowConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.event.ListDataListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.text.BadLocationException;
@@ -59,28 +49,22 @@ import net.sourceforge.offroad.data.RegionAsMapObject;
 import net.sourceforge.offroad.data.TrivialResultMatcher;
 import net.sourceforge.offroad.ui.FilteredListModel;
 
-public class SearchAddressAction extends AbstractAction {
+/**
+ * TODO:
+ * * OK+Cancel Button
+ * * Camera driving to the new place
+ * * Bug fix for selection
+ * * Multi-Selection
+ * 
+ * @author foltin
+ * @date 09.04.2016
+ */
+public class SearchAddressAction extends OffRoadAction {
 
-	private OsmWindow mContext;
-	private JDialog mDialog;
-	private MapObjectStore<RegionAsMapObject> mRegionStore;
+	MapObjectStore<RegionAsMapObject> mRegionStore;
 
 	public SearchAddressAction(OsmWindow ctx) {
-		mContext = ctx;
-	}
-
-	public static void addEscapeActionToDialog(JDialog dialog, Action action) {
-		addKeyActionToDialog(dialog, action, "ESCAPE", "end_dialog");
-	}
-
-	public static void addKeyActionToDialog(JDialog dialog, Action action, String keyStroke, String actionId) {
-		action.putValue(Action.NAME, actionId);
-		// Register keystroke
-		dialog.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(keyStroke),
-				action.getValue(Action.NAME));
-
-		// Register action
-		dialog.getRootPane().getActionMap().put(action.getValue(Action.NAME), action);
+		super(ctx);
 	}
 
 	protected Comparator<? super RegionAddressRepository> createComparator() {
@@ -96,21 +80,9 @@ public class SearchAddressAction extends AbstractAction {
 
 	@Override
 	public void actionPerformed(ActionEvent pE) {
-		mDialog = new JDialog(mContext.getWindow(), true /* modal */);
+		createDialog();
 		setWaitingCursor();
-		String windowTitle = "search";
-		mDialog.setTitle(getResourceString(windowTitle));
-		mDialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-		mDialog.addWindowListener(new WindowAdapter() {
-			public void windowClosing(WindowEvent event) {
-				disposeDialog();
-			}
-		});
-		addEscapeActionToDialog(mDialog, new AbstractAction() {
-			public void actionPerformed(ActionEvent arg0) {
-				disposeDialog();
-			}
-		});
+		mDialog.setTitle(getResourceString("search"));
 		Container contentPane = mDialog.getContentPane();
 		GridBagLayout gbl = new GridBagLayout();
 		gbl.columnWeights = new double[] { 1.0f };
@@ -230,21 +202,17 @@ public class SearchAddressAction extends AbstractAction {
 
 	}
 
-	private void setWaitingCursor() {
-		mDialog.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-		mContext.setWaitingCursor(true);
+	@Override
+	public void save() {
+		mRegionStore.save(mContext.getSettings());
 	}
 
-	private void removeWaitingCursor() {
-		mDialog.setCursor(Cursor.getDefaultCursor());
-		mContext.setWaitingCursor(false);
-	}
-	
+
 	protected LatLon getLatLon() {
 		return mContext.getDrawPanel().getTileBox().getCenterLatLon();
 	}
 
-	private abstract class MapObjectStore<T extends MapObject> {
+	abstract class MapObjectStore<T extends MapObject> {
 		RegionAddressRepository mRegion;
 		JTextField mTextField;
 		DefaultListModel<T> mSourceModel;
@@ -562,16 +530,6 @@ public class SearchAddressAction extends AbstractAction {
 			}
 		}
 
-	}
-
-	protected void disposeDialog() {
-		mRegionStore.save(mContext.getSettings());
-		mDialog.setVisible(false);
-		mDialog.dispose();
-	}
-
-	private String getResourceString(String pWindowTitle) {
-		return pWindowTitle;
 	}
 
 }

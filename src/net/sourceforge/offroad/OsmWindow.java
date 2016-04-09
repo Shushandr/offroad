@@ -43,6 +43,7 @@ import net.osmand.plus.resources.ResourceManager;
 import net.osmand.render.RenderingRulesStorage;
 import net.osmand.render.RenderingRulesStorage.RenderingRulesStorageResolver;
 import net.osmand.util.MapUtils;
+import net.sourceforge.offroad.actions.DownloadAction;
 import net.sourceforge.offroad.actions.SearchAddressAction;
 import net.sourceforge.offroad.data.QuadRectExtendable;
 
@@ -106,6 +107,14 @@ public class OsmWindow {
 		JMenuItem findItem = new JMenuItem("Find...");
 		findItem.addActionListener(new SearchAddressAction(this));
 		findItem.setAccelerator(KeyStroke.getKeyStroke("control F"));
+		jSearchMenu.add(findItem);
+		menubar.add(jSearchMenu);
+		JMenu jDownloadMenu = new JMenu(getString("download"));
+		JMenuItem downloadItem = new JMenuItem("Download...");
+		downloadItem.addActionListener(new DownloadAction(this));
+		downloadItem.setAccelerator(KeyStroke.getKeyStroke("control D"));
+		jDownloadMenu.add(downloadItem);
+		menubar.add(jDownloadMenu);
 //		findItem.addActionListener(new ActionListener() {
 //
 //			@Override
@@ -129,12 +138,15 @@ public class OsmWindow {
 //						});
 //			}
 //		});
-		jSearchMenu.add(findItem);
-		menubar.add(jSearchMenu);
 		mFrame.setJMenuBar(menubar);
 		mFrame.pack();
 		mFrame.setLocationRelativeTo(null);
 		mFrame.setVisible(true);
+	}
+
+	public String getString(String pString) {
+		// TODO: Translate
+		return pString;
 	}
 
 	public OsmBitmapPanel getDrawPanel() {
