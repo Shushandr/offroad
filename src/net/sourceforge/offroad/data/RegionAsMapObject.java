@@ -20,7 +20,10 @@
 package net.sourceforge.offroad.data;
 
 import java.util.HashMap;
+import java.util.List;
 
+import net.osmand.data.City;
+import net.osmand.data.LatLon;
 import net.osmand.data.MapObject;
 import net.osmand.plus.resources.RegionAddressRepository;
 
@@ -51,5 +54,21 @@ public class RegionAsMapObject extends MapObject {
 		mRegion = pRegion;
 	}
 	
+	
+	@Override
+	public LatLon getLocation() {
+		// getEstimatedRegionCenter does not work, because it is null.
+		List<City> loadedCities = getRegion().getLoadedCities();
+		if(loadedCities.isEmpty()){
+			return null;
+		}
+		QuadRectExtendable qr = new QuadRectExtendable(loadedCities.get(0).getLocation());
+		for (City city : loadedCities) {
+			LatLon cityLoc = city.getLocation();
+//			System.out.println(cityLoc + " is location of " + city);
+			qr.insert(cityLoc);
+		}
+		return qr.getCenter();
+	}
 	
 }

@@ -33,6 +33,7 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 	private Point startPoint;
 	private Timer mZoomTimer;
 	private ZoomPerformer mZoomPerformer;
+	private MouseEvent mMouseEvent;
 
 	public OsmBitmapPanelMouseAdapter(OsmBitmapPanel drawPanel) {
 		this.drawPanel = drawPanel;
@@ -125,6 +126,19 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 
 	@Override
 	public void keyReleased(KeyEvent pE) {
+	}
+	
+	@Override
+	public void mouseMoved(MouseEvent pE) {
+		setMouseEvent(pE);
+	}
+
+	public MouseEvent getMouseEvent() {
+		return mMouseEvent;
+	}
+
+	public void setMouseEvent(MouseEvent pMouseEvent) {
+		mMouseEvent = pMouseEvent;
 	}
 	
 }

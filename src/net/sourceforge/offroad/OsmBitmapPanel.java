@@ -340,4 +340,8 @@ public class OsmBitmapPanel extends JPanel {
 		mCursorPosition = pLocation;
 		repaint();
 	}
+	
+	public LatLon getCursorPosition() {
+		return mCursorPosition;
+	}
 }

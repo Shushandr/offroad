@@ -1,28 +1,32 @@
 package net.sourceforge.offroad;
 
+import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Font;
 import java.awt.Frame;
 import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.MessageFormat;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import javax.swing.AbstractAction;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
+import javax.swing.Timer;
 import javax.swing.UIManager;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -30,10 +34,7 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import net.osmand.IProgress;
 import net.osmand.PlatformUtil;
-import net.osmand.ResultMatcher;
-import net.osmand.data.Amenity;
 import net.osmand.data.LatLon;
-import net.osmand.data.QuadRect;
 import net.osmand.data.RotatedTileBox;
 import net.osmand.map.OsmandRegions;
 import net.osmand.plus.OsmandSettings;
@@ -41,6 +42,7 @@ import net.osmand.plus.render.MapRenderRepositories;
 import net.osmand.plus.resources.ResourceManager;
 import net.osmand.render.RenderingRulesStorage;
 import net.osmand.render.RenderingRulesStorage.RenderingRulesStorageResolver;
+import net.osmand.util.MapUtils;
 import net.sourceforge.offroad.actions.SearchAddressAction;
 import net.sourceforge.offroad.data.QuadRectExtendable;
 
@@ -66,6 +68,8 @@ public class OsmWindow {
 	private OsmBitmapPanel mDrawPanel;
 	private OsmBitmapPanelMouseAdapter mAdapter;
 	private JFrame mFrame;
+	private JLabel mStatusLabel;
+	private Timer mMouseMoveTimer;
 
 	public void createAndShowUI() {
 		mDrawPanel = new OsmBitmapPanel(this);
@@ -73,10 +77,18 @@ public class OsmWindow {
 		mDrawPanel.addMouseListener(mAdapter);
 		mDrawPanel.addMouseMotionListener(mAdapter);
 		mDrawPanel.addMouseWheelListener(mAdapter);
+		
+		mStatusLabel = new JLabel("!");
+		mStatusLabel.setPreferredSize(mStatusLabel.getPreferredSize());
+		mMouseMoveTimer = new Timer(500, new StatusLabelAction() );
+		mMouseMoveTimer.setRepeats(true);
+		mMouseMoveTimer.start();
 
 		mFrame = new JFrame("OffRoad");
 		mFrame.addKeyListener(mAdapter);
-		mFrame.getContentPane().add(mDrawPanel);
+		mFrame.getContentPane().setLayout(new BorderLayout());
+		mFrame.getContentPane().add(mDrawPanel, BorderLayout.CENTER);
+		mFrame.getContentPane().add(mStatusLabel, BorderLayout.SOUTH);
 		mFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		mFrame.addWindowListener(new WindowAdapter() {
 			@Override
@@ -286,6 +298,30 @@ public class OsmWindow {
 					Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 			glassPane.setVisible(false);
 		}
+	}
+	
+	public class StatusLabelAction extends AbstractAction {
+
+		@Override
+		public void actionPerformed(ActionEvent pE) {
+			// calculate the distance to the cursor
+			MouseEvent e = mAdapter.getMouseEvent();
+			LatLon cursorPosition = mDrawPanel.getCursorPosition();
+			if(e == null || cursorPosition == null){
+				mStatusLabel.setText("");
+				return;
+			}
+			LatLon mousePosition = mDrawPanel.getTileBox().getLatLonFromPixel(e.getX(), e.getY());
+			double distance = MapUtils.getDistance(mousePosition, cursorPosition)/1000d;
+			Object[] messageArguments = { new Double(distance),
+					new Double(cursorPosition.getLatitude()),
+					new Double(cursorPosition.getLongitude()) };
+			MessageFormat formatter = new MessageFormat(
+					"Distance (bee-line) between mouse and cursor: {0,number,###,###.###}km. Position: {1,number,###.####}, {2,number,###.####}.");
+			String message = formatter.format(messageArguments);
+			mStatusLabel.setText(message);
+		}
+		
 	}
 
 }

@@ -29,28 +29,32 @@ import net.osmand.data.QuadRect;
 public class QuadRectExtendable extends QuadRect {
 	
 	public QuadRectExtendable(LatLon pLatLon) {
-		double x = pLatLon.getLatitude();
-		double y = pLatLon.getLongitude();
-		left = x;
-		right = x;
-		top = y;
-		bottom = y;
+		double lat = pLatLon.getLatitude();
+		double lon = pLatLon.getLongitude();
+		left = lat;
+		right = lat;
+		top = lon;
+		bottom = lon;
 	}
 	
 	public void insert(LatLon pLatLon){
-		double x = pLatLon.getLatitude();
-		if(left > x){
-			left = x;
+		double lat = pLatLon.getLatitude();
+		if(left > lat){
+			left = lat;
 		}
-		if(right < x){
-			right = x;
+		if(right < lat){
+			right = lat;
 		}
-		double y = pLatLon.getLongitude();
-		if(top > y){
-			top = y;
+		double lon = pLatLon.getLongitude();
+		if(top > lon){
+			top = lon;
 		}
-		if(bottom < y){
-			bottom = y;
+		if(bottom < lon){
+			bottom = lon;
 		}
+	}
+
+	public LatLon getCenter() {
+		return new LatLon((left+right)/2, (top+bottom)/2);
 	}
 }
