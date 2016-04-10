@@ -117,7 +117,8 @@ public class DownloadOsmandIndexesHelper {
 	
 	private static Map<String, String>  assetMapping(OsmWindow ctx) throws XmlPullParserException, IOException {
 		XmlPullParser xmlParser = XmlPullParserFactory.newInstance().newPullParser();
-		InputStream isBundledAssetsXml = new FileInputStream(ctx.getAppPath("bundled_assets.xml").getAbsolutePath());
+//		InputStream isBundledAssetsXml = new FileInputStream(ctx.getAppPath("bundled_assets.xml").getAbsolutePath());
+		InputStream isBundledAssetsXml = ctx.getClass().getResourceAsStream("/bundled_assets.xml");
 		xmlParser.setInput(isBundledAssetsXml, "UTF-8");
 		Map<String, String> assets = new HashMap<String, String>();
 		int next = 0;

@@ -219,10 +219,13 @@ public class OsmWindow {
 	}
 
 	public RenderingRulesStorage getRenderingRulesStorage() throws XmlPullParserException, IOException {
-		final String loc = getAppPath(RENDERING_STYLES_DIR).getAbsolutePath() + File.separator;
+//		final String loc = getAppPath(RENDERING_STYLES_DIR).getAbsolutePath() + File.separator;
+		final String loc = File.separator +  RENDERING_STYLES_DIR; // + File.separator;
 		String defaultFile = loc + "default.render.xml";
 		final Map<String, String> renderingConstants = new LinkedHashMap<String, String>();
-		InputStream is = new FileInputStream(loc + "default.render.xml");
+//		InputStream is = new FileInputStream(loc + "default.render.xml");
+		InputStream is = this.getClass().getResourceAsStream(loc + "default.render.xml");
+		System.out.println("Stream: " +is + ", loc " + loc);
 		try {
 			XmlPullParser parser = PlatformUtil.newXMLPullParser();
 			parser.setInput(is, "UTF-8");
@@ -247,11 +250,13 @@ public class OsmWindow {
 			public RenderingRulesStorage resolve(String name, RenderingRulesStorageResolver ref)
 					throws XmlPullParserException, IOException {
 				RenderingRulesStorage depends = new RenderingRulesStorage(name, renderingConstants);
-				depends.parseRulesFromXmlInputStream(new FileInputStream(loc + name + ".render.xml"), ref);
+//				depends.parseRulesFromXmlInputStream(new FileInputStream(loc + name + ".render.xml"), ref);
+				depends.parseRulesFromXmlInputStream(this.getClass().getResourceAsStream(loc + name + ".render.xml"), ref);
 				return depends;
 			}
 		};
-		is = new FileInputStream(defaultFile);
+//		is = new FileInputStream(defaultFile);
+		is = this.getClass().getResourceAsStream(defaultFile);
 		storage.parseRulesFromXmlInputStream(is, resolver);
 
 		return storage;
