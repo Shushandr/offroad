@@ -30,6 +30,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.text.DateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Timer;
@@ -57,6 +58,7 @@ import javax.swing.text.Document;
 import org.apache.commons.logging.Log;
 
 import net.osmand.IProgress;
+import net.osmand.IndexConstants;
 import net.osmand.PlatformUtil;
 import net.osmand.plus.download.DownloadActivityType;
 import net.osmand.plus.download.DownloadFileHelper;
@@ -65,6 +67,7 @@ import net.osmand.plus.download.DownloadOsmandIndexesHelper;
 import net.osmand.plus.download.DownloadOsmandIndexesHelper.IndexFileList;
 import net.osmand.plus.download.DownloadResources;
 import net.osmand.plus.download.IndexItem;
+import net.osmand.plus.resources.ResourceManager;
 import net.sourceforge.offroad.OsmWindow;
 
 public class DownloadAction extends OffRoadAction {
@@ -220,6 +223,7 @@ public class DownloadAction extends OffRoadAction {
 	}
 
 	private final static Log log = PlatformUtil.getLog(DownloadAction.class);
+	private DownloadResources mDownloadResources;
 
 	@Override
 	public void actionPerformed(ActionEvent pE) {
@@ -299,10 +303,12 @@ public class DownloadAction extends OffRoadAction {
 				GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 
 		IndexFileList indexesList = DownloadOsmandIndexesHelper.getIndexesList(mContext);
-		DownloadResources downloadResources = new DownloadResources(mContext);
-		downloadResources.updateLoadedFiles();
+		mDownloadResources = new DownloadResources(mContext);
+		mDownloadResources.updateLoadedFiles();
 		for (IndexItem item : indexesList.getIndexFiles()) {
-			mSourceModel.addRow(item);
+			if (item.getType() == DownloadActivityType.NORMAL_FILE) {
+				mSourceModel.addRow(item);
+			}
 		}
 		mDialog.pack();
 		removeWaitingCursor();
@@ -380,6 +386,13 @@ public class DownloadAction extends OffRoadAction {
 
 									}
 								}, false);
+						String result = reindexFiles(toReIndex);
+						SwingUtilities.invokeLater(new Runnable() {
+							public void run() {
+								mProgressStatus.setText(result);
+							}
+						});
+						mDownloadResources.updateLoadedFiles();
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
@@ -389,6 +402,33 @@ public class DownloadAction extends OffRoadAction {
 		download.start();
 	}
 
+    private String reindexFiles(List<File> filesToReindex) {
+
+	    boolean vectorMapsToReindex = false;
+	    // reindex vector maps all at one time
+	    ResourceManager manager = mContext.getResourceManager();
+	    for (File f : filesToReindex) {
+	            if (f.getName().endsWith(IndexConstants.BINARY_MAP_INDEX_EXT)) {
+	                    vectorMapsToReindex = true;
+	            }
+	    }
+	    List<String> warnings = new ArrayList<String>();
+	    manager.indexVoiceFiles(IProgress.EMPTY_PROGRESS);
+	    if (vectorMapsToReindex) {
+	            warnings = manager.indexingMaps(IProgress.EMPTY_PROGRESS);
+	    }
+	    List<String> wns = manager.indexAdditionalMaps(IProgress.EMPTY_PROGRESS);
+	    if (wns != null) {
+	            warnings.addAll(wns);
+	    }
+	
+	    if (!warnings.isEmpty()) {
+	            return warnings.get(0);
+	    }
+	    return null;
+	}
+
+	
 	public void selectFirstElementIfNecessary() {
 		if (mTable.getSelectedRowCount() == 0 && mTable.getModel().getRowCount() > 0) {
 			mTable.setRowSelectionInterval(0, 0);
