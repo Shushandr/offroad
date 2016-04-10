@@ -151,11 +151,8 @@ public class RenderingIcons {
 						if (!entry.startsWith(OsmWindow.OSMAND_ICONS_DIR)) {
 							continue;
 						}
-//						BufferedImage icon = ImageIO.read(jar.getInputStream(jarEntry));
 						sJarResource = resource;
-//						System.out.println(entry);
 						String f = entry.toString().substring(OsmWindow.OSMAND_ICONS_DIR.length()).replaceFirst("\\.png", "");
-						System.out.println(f);
 						if (f.startsWith("h_")) {
 							shaderIcons.put(f.substring(2), jarEntry);
 						} else if (f.startsWith("mm_")) {
