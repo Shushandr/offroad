@@ -71,6 +71,7 @@ public class OsmWindow {
 	private JFrame mFrame;
 	private JLabel mStatusLabel;
 	private Timer mMouseMoveTimer;
+	private GeoServer mGeoServer;
 
 	public void createAndShowUI() {
 		mDrawPanel = new OsmBitmapPanel(this);
@@ -144,6 +145,15 @@ public class OsmWindow {
 		mFrame.setVisible(true);
 	}
 
+	public void startServer() {
+		String portFile = getAppPath("port.txt").getAbsolutePath();
+		if (portFile == null) {
+			return;
+		}
+		mGeoServer = new GeoServer(portFile, this);
+		mGeoServer.start();
+	}
+	
 	public String getString(String pString) {
 		// TODO: Translate
 		return pString;
@@ -177,6 +187,7 @@ public class OsmWindow {
 		mResourceManager = new ResourceManager(this);
 		mResourceManager.indexingMaps(IProgress.EMPTY_PROGRESS);
 		scaleAllFonts(2.0f);
+		startServer();
 	}
 	public static void scaleAllFonts(float pScale) {
 		for (Iterator i = UIManager.getLookAndFeelDefaults().keySet()

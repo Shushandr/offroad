@@ -294,19 +294,20 @@ public class DownloadAction extends OffRoadAction {
 				GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 
 		mProgressStatus = new JLabel("!");
-		contentPane.add(mProgressStatus, new GridBagConstraints(0, y++, 2, 1, 1.0, 4.0, GridBagConstraints.WEST,
+		contentPane.add(mProgressStatus, new GridBagConstraints(0, y, 1, 1, 1.0, 1.0, GridBagConstraints.WEST,
 				GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 
 		mProgressBar = new JProgressBar();
 		mProgressBar.setStringPainted(true);
-		contentPane.add(mProgressBar, new GridBagConstraints(0, y++, 2, 1, 1.0, 4.0, GridBagConstraints.WEST,
+		contentPane.add(mProgressBar, new GridBagConstraints(1, y++, 1, 1, 1.0, 1.0, GridBagConstraints.WEST,
 				GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 
 		IndexFileList indexesList = DownloadOsmandIndexesHelper.getIndexesList(mContext);
 		mDownloadResources = new DownloadResources(mContext);
 		mDownloadResources.updateLoadedFiles();
 		for (IndexItem item : indexesList.getIndexFiles()) {
-			if (item.getType() == DownloadActivityType.NORMAL_FILE) {
+			if (item.getType() == DownloadActivityType.NORMAL_FILE || item.getType() == DownloadActivityType.ROADS_FILE
+					|| item.getType() == DownloadActivityType.SRTM_COUNTRY_FILE) {
 				mSourceModel.addRow(item);
 			}
 		}
