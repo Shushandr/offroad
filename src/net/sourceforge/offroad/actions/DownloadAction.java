@@ -33,6 +33,7 @@ import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Vector;
@@ -68,6 +69,7 @@ import net.osmand.plus.download.DownloadOsmandIndexesHelper.IndexFileList;
 import net.osmand.plus.download.DownloadResources;
 import net.osmand.plus.download.IndexItem;
 import net.osmand.plus.resources.ResourceManager;
+import net.osmand.util.Algorithms;
 import net.sourceforge.offroad.OsmWindow;
 
 public class DownloadAction extends OffRoadAction {
@@ -111,14 +113,17 @@ public class DownloadAction extends OffRoadAction {
 		}
 	}
 
+	enum DownloadStatus {
+		DOWNLOADED, UPDATEABLE, NOTPRESENT
+	};
 	public class DownloadedTableCellRenderer extends DefaultTableCellRenderer {
 		@Override
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
 				int row, int column) {
 			super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-			if (value instanceof Boolean) {
-				Boolean d = (Boolean) value;
-				setText(d ? "X" : "");
+			if (value instanceof DownloadStatus) {
+				DownloadStatus d = (DownloadStatus) value;
+				setText((d == DownloadStatus.NOTPRESENT)?"":d.name());
 			}
 			return this;
 		}
@@ -149,7 +154,7 @@ public class DownloadAction extends OffRoadAction {
 		private Vector<IndexItem> mRows = new Vector<>();
 
 		public DownloadTableModel() {
-			mColumns.addElement(new DownloadTableColumn("present", Boolean.class, item -> item.isOutdated(),
+			mColumns.addElement(new DownloadTableColumn("present", DownloadStatus.class, item -> getDownloadStatus(item),
 					new DownloadedTableCellRenderer()));
 			mColumns.addElement(new DownloadTableColumn("name", String.class, item -> item.getBasename(),
 					new DefaultTableCellRenderer()));
@@ -221,6 +226,23 @@ public class DownloadAction extends OffRoadAction {
 	public DownloadAction(OsmWindow pContext) {
 		super(pContext);
 	}
+
+	public DownloadStatus getDownloadStatus(IndexItem pItem) {
+//		System.out.println("Target: " + pItem.getTargetFileName() + " and " + pItem.getTargetFile(mContext));
+		String fileName = pItem.getTargetFileName();
+		ResourceManager rm = mContext.getResourceManager();
+		Map<String, String> indexFileNames = rm.getIndexFileNames();
+		if(indexFileNames.containsKey(fileName)) {
+			String localDate = indexFileNames.get(fileName);
+			String remoteDate = pItem.getDate(DateFormat.getDateInstance());
+			if(localDate != null && localDate.equals(remoteDate)){
+				return DownloadStatus.DOWNLOADED;
+			}
+			return DownloadStatus.UPDATEABLE;
+		}
+		return DownloadStatus.NOTPRESENT;
+	}
+
 
 	private final static Log log = PlatformUtil.getLog(DownloadAction.class);
 	private DownloadResources mDownloadResources;
