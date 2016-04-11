@@ -321,6 +321,9 @@ public class DownloadFileHelper {
 			while ((read = toRead.read(buffer)) != -1) {
 				out.write(buffer, 0, read);
 				remaining -= countIS.getAndClearReadCount();
+				if(progress.isInterrupted()){
+					throw new IOException("Download interrupted");
+				}
 				progress.remaining(remaining / 1024);
 			}
 		} finally {

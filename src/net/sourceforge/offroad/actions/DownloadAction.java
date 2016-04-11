@@ -24,6 +24,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -38,7 +39,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Vector;
 
+import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -69,7 +72,6 @@ import net.osmand.plus.download.DownloadOsmandIndexesHelper.IndexFileList;
 import net.osmand.plus.download.DownloadResources;
 import net.osmand.plus.download.IndexItem;
 import net.osmand.plus.resources.ResourceManager;
-import net.osmand.util.Algorithms;
 import net.sourceforge.offroad.OsmWindow;
 
 public class DownloadAction extends OffRoadAction {
@@ -228,7 +230,6 @@ public class DownloadAction extends OffRoadAction {
 	}
 
 	public DownloadStatus getDownloadStatus(IndexItem pItem) {
-//		System.out.println("Target: " + pItem.getTargetFileName() + " and " + pItem.getTargetFile(mContext));
 		String fileName = pItem.getTargetFileName();
 		ResourceManager rm = mContext.getResourceManager();
 		Map<String, String> indexFileNames = rm.getIndexFileNames();
@@ -246,6 +247,9 @@ public class DownloadAction extends OffRoadAction {
 
 	private final static Log log = PlatformUtil.getLog(DownloadAction.class);
 	private DownloadResources mDownloadResources;
+	private Thread mDownloadThread;
+	private boolean mIsDownloadInterrupted;
+	private JButton mInterruptDownload;
 
 	@Override
 	public void actionPerformed(ActionEvent pE) {
@@ -323,13 +327,24 @@ public class DownloadAction extends OffRoadAction {
 		mProgressBar.setStringPainted(true);
 		contentPane.add(mProgressBar, new GridBagConstraints(1, y++, 1, 1, 1.0, 1.0, GridBagConstraints.WEST,
 				GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+		mInterruptDownload = new JButton("Interrupt Download");
+		mInterruptDownload.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent pE) {
+				mIsDownloadInterrupted = true;
+			}
+		});
+		mInterruptDownload.setEnabled(false);
+		contentPane.add(mInterruptDownload, new GridBagConstraints(1, y++, 1, 1, 1.0, 1.0, GridBagConstraints.WEST,
+				GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 
 		IndexFileList indexesList = DownloadOsmandIndexesHelper.getIndexesList(mContext);
 		mDownloadResources = new DownloadResources(mContext);
 		mDownloadResources.updateLoadedFiles();
 		for (IndexItem item : indexesList.getIndexFiles()) {
 			if (item.getType() == DownloadActivityType.NORMAL_FILE || item.getType() == DownloadActivityType.ROADS_FILE
-					|| item.getType() == DownloadActivityType.SRTM_COUNTRY_FILE) {
+					|| item.getType() == DownloadActivityType.WIKIPEDIA_FILE) {
 				mSourceModel.addRow(item);
 			}
 		}
@@ -340,9 +355,20 @@ public class DownloadAction extends OffRoadAction {
 	}
 
 	public void download(List<IndexItem> pList) {
+		//check download thread:
+		if(mDownloadThread != null && mDownloadThread.isAlive()){
+			JOptionPane.showMessageDialog(mDialog, "A download is currently running. Not started!", "Currently occupied", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		if(pList.size() > 10){
+			JOptionPane.showMessageDialog(mDialog, "Not more than 10 downloads can be started at once. Not started!", "Too many files", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		mIsDownloadInterrupted = false;
+		mInterruptDownload.setEnabled(true);
 		final DownloadFileHelper helper = new DownloadFileHelper(mContext);
 		final Vector<File> toReIndex = new Vector<>();
-		Thread download = new Thread(new Runnable() {
+		mDownloadThread = new Thread(new Runnable() {
 			public void run() {
 				for (final IndexItem item : pList) {
 					System.out.println("Starting download for " + item);
@@ -385,6 +411,11 @@ public class DownloadAction extends OffRoadAction {
 							SwingUtilities.invokeLater(new Runnable() {
 								public void run() {
 									mProgressBar.setValue(mProgressBar.getMaximum());
+									if (mIsDownloadInterrupted) {
+										mProgressStatus.setText("Interrupted.");
+									} else {
+										mProgressStatus.setText("Done.");
+									}
 								}
 							});
 						}
@@ -396,7 +427,7 @@ public class DownloadAction extends OffRoadAction {
 
 						@Override
 						public boolean isInterrupted() {
-							return false;
+							return mIsDownloadInterrupted;
 						}
 					};
 					try {
@@ -420,9 +451,17 @@ public class DownloadAction extends OffRoadAction {
 						e.printStackTrace();
 					}
 				}
+				SwingUtilities.invokeLater(new Runnable(){
+
+					@Override
+					public void run() {
+						mInterruptDownload.setEnabled(false);
+					}
+					
+				});
 			}
 		});
-		download.start();
+		mDownloadThread.start();
 	}
 
     private String reindexFiles(List<File> filesToReindex) {
