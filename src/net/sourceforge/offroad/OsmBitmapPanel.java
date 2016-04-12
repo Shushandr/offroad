@@ -113,6 +113,21 @@ public class OsmBitmapPanel extends JPanel {
 
 	}
 
+    public float getScaleCoefficient() {
+        float scaleCoefficient = getDensity();
+        OsmWindow dm = mWin;
+        if (Math.min(dm.widthPixels / (dm.density * 160), dm.heightPixels / (dm.density * 160)) > 2.5f) {
+                // large screen
+                scaleCoefficient *= 1.5f;
+        }
+        return scaleCoefficient;
+    }
+
+
+	public float getDensity() {
+		return mTileBox.getDensity();
+	}
+
 	private void clear(BufferedImage pImage) {
 		Graphics g = pImage.getGraphics();
 		g.setColor(BACKGROUND_COLOR);
@@ -343,5 +358,9 @@ public class OsmBitmapPanel extends JPanel {
 	
 	public LatLon getCursorPosition() {
 		return mCursorPosition;
+	}
+
+	public OsmWindow getContext() {
+		return mWin;
 	}
 }

@@ -3,6 +3,7 @@ package net.sourceforge.offroad;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Cursor;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Frame;
 import java.awt.Graphics2D;
@@ -11,9 +12,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.text.MessageFormat;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -33,15 +34,26 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import net.osmand.IProgress;
+import net.osmand.IndexConstants;
 import net.osmand.PlatformUtil;
 import net.osmand.data.LatLon;
 import net.osmand.data.RotatedTileBox;
 import net.osmand.map.OsmandRegions;
+import net.osmand.osm.AbstractPoiType;
+import net.osmand.osm.MapPoiTypes;
+import net.osmand.plus.ApplicationMode;
+import net.osmand.plus.GeocodingLookupService;
 import net.osmand.plus.OsmandSettings;
+import net.osmand.plus.TargetPointsHelper;
 import net.osmand.plus.render.MapRenderRepositories;
+import net.osmand.plus.render.RendererRegistry;
 import net.osmand.plus.resources.ResourceManager;
+import net.osmand.plus.routing.RoutingHelper;
 import net.osmand.render.RenderingRulesStorage;
 import net.osmand.render.RenderingRulesStorage.RenderingRulesStorageResolver;
+import net.osmand.router.GeneralRouter;
+import net.osmand.router.RoutingConfiguration;
+import net.osmand.router.RoutingConfiguration.Builder;
 import net.osmand.util.MapUtils;
 import net.sourceforge.offroad.actions.DownloadAction;
 import net.sourceforge.offroad.actions.SearchAddressAction;
@@ -63,7 +75,7 @@ public class OsmWindow {
 	private RenderingRulesStorage mRenderingRulesStorage;
 	private ResourceManager mResourceManager;
 	private OffRoadSettings settings = new OffRoadSettings(this);
-	private OsmandSettings prefs = new OsmandSettings(settings);
+	private OsmandSettings prefs = new OsmandSettings(this, settings);
 	private R.string mStrings;
 	private OsmandRegions mRegions;
 	private OsmBitmapPanel mDrawPanel;
@@ -72,6 +84,14 @@ public class OsmWindow {
 	private JLabel mStatusLabel;
 	private Timer mMouseMoveTimer;
 	private GeoServer mGeoServer;
+	public int widthPixels;
+	public float density;
+	public int heightPixels;
+	private RendererRegistry mRendererRegistry;
+	private TargetPointsHelper mTargetPointsHelper;
+	private RoutingHelper mRoutingHelper;
+	private GeocodingLookupService mGeocodingLookupService;
+	private MapPoiTypes mMapPoiTypes;
 
 	public void createAndShowUI() {
 		mDrawPanel = new OsmBitmapPanel(this);
@@ -182,13 +202,64 @@ public class OsmWindow {
 	}
 
 	public OsmWindow() {
+        Dimension size = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
+        widthPixels = size.width;
+        heightPixels = size.height;
+        density = java.awt.Toolkit.getDefaultToolkit().getScreenResolution()/72f;
 		mStrings = new R.string();
 		mRegions = new OsmandRegions();
 		mResourceManager = new ResourceManager(this);
 		mResourceManager.indexingMaps(IProgress.EMPTY_PROGRESS);
-		scaleAllFonts(2.0f);
+		scaleAllFonts(density);
 		startServer();
+		mRendererRegistry = new RendererRegistry(this);
+		mTargetPointsHelper = new TargetPointsHelper(this);
+		mRoutingHelper = new RoutingHelper(this);
+		mGeocodingLookupService = new GeocodingLookupService(this);
+		mMapPoiTypes = MapPoiTypes.getDefault();
 	}
+	
+//	private void initPoiTypes() {
+//		if (getAppPath("poi_types.xml").exists()) {
+//			poiTypes.init(getAppPath("poi_types.xml").getAbsolutePath());
+//		} else {
+//			poiTypes.init();
+//		}
+//		poiTypes.setPoiTranslator(new MapPoiTypes.PoiTranslator() {
+//
+//			@Override
+//			public String getTranslation(AbstractPoiType type) {
+//				if (type.getBaseLangType() != null) {
+//					return getTranslation(type.getBaseLangType()) + " ("
+//							+ getLangTranslation(type.getLang()).toLowerCase() + ")";
+//				}
+//				try {
+//					Field f = R.string.class.getField("poi_" + type.getIconKeyName());
+//					if (f != null) {
+//						Integer in = (Integer) f.get(null);
+//						return getString(in);
+//					}
+//				} catch (Exception e) {
+//					System.err.println("No translation for " + type.getIconKeyName() + " " + e.getMessage());
+//				}
+//				return null;
+//			}
+//		});
+//	}
+
+	public String getLangTranslation(String l) {
+		try {
+			java.lang.reflect.Field f = R.string.class.getField("lang_" + l);
+			if (f != null) {
+				Integer in = (Integer) f.get(null);
+				return getString(in);
+			}
+		} catch (Exception e) {
+			System.err.println(e.getMessage());
+		}
+		return l;
+	}
+
 	public static void scaleAllFonts(float pScale) {
 		for (Iterator i = UIManager.getLookAndFeelDefaults().keySet()
 				.iterator(); i.hasNext();) {
@@ -262,6 +333,17 @@ public class OsmWindow {
 		return storage;
 	}
 
+	public InputStream getResource(String pIndex){
+		if(pIndex != null){
+			String name = pIndex;
+			if(!name.startsWith(File.separator)){
+				name = File.separator+pIndex;
+			}
+			return this.getClass().getResourceAsStream(name);
+		}
+		return null;
+	}
+	
 	public File getAppPath(String pIndex) {
 		if (pIndex == null) {
 			pIndex = "";
@@ -350,6 +432,63 @@ public class OsmWindow {
 			mStatusLabel.setText(message);
 		}
 		
+	}
+
+	public RendererRegistry getRendererRegistry() {
+		return mRendererRegistry;
+	}
+
+	public Builder getDefaultRoutingConfig() {
+		long tm = System.currentTimeMillis();
+		try {
+			InputStream routingXml = getResource(IndexConstants.ROUTING_XML_FILE);
+			if (routingXml != null) {
+				try {
+					return RoutingConfiguration.parseFromInputStream(routingXml);
+				} catch (XmlPullParserException | IOException e) {
+					throw new IllegalStateException(e);
+				}
+			} else {
+				return RoutingConfiguration.getDefault();
+			}
+		} finally {
+			long te = System.currentTimeMillis();
+			if (te - tm > 30) {
+				System.err.println("Defalt routing config init took " + (te - tm) + " ms");
+			}
+		}
+	}
+
+	public static GeneralRouter getRouter(net.osmand.router.RoutingConfiguration.Builder builder, ApplicationMode am) {
+		GeneralRouter router = builder.getRouter(am.getStringKey());
+		if (router == null && am.getParent() != null) {
+			router = builder.getRouter(am.getParent().getStringKey());
+		}
+		return router;
+	}
+
+	public String getString(int pKey, Object... pObj) {
+		return MessageFormat.format(getString(pKey), pObj);
+	}
+
+	public TargetPointsHelper getTargetPointsHelper() {
+		return mTargetPointsHelper;
+	}
+
+	public RoutingHelper getRoutingHelper() {
+		return mRoutingHelper;
+	}
+
+	public GeocodingLookupService getGeocodingLookupService() {
+		return mGeocodingLookupService;
+	}
+
+	public Object getLocationProvider() {
+		return null;
+	}
+
+	public MapPoiTypes getPoiTypes() {
+		return mMapPoiTypes;
 	}
 
 }
