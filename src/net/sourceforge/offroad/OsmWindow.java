@@ -12,9 +12,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.text.MessageFormat;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -26,6 +26,7 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 import javax.swing.KeyStroke;
 import javax.swing.Timer;
 import javax.swing.UIManager;
@@ -39,7 +40,6 @@ import net.osmand.PlatformUtil;
 import net.osmand.data.LatLon;
 import net.osmand.data.RotatedTileBox;
 import net.osmand.map.OsmandRegions;
-import net.osmand.osm.AbstractPoiType;
 import net.osmand.osm.MapPoiTypes;
 import net.osmand.plus.ApplicationMode;
 import net.osmand.plus.GeocodingLookupService;
@@ -56,6 +56,7 @@ import net.osmand.router.RoutingConfiguration;
 import net.osmand.router.RoutingConfiguration.Builder;
 import net.osmand.util.MapUtils;
 import net.sourceforge.offroad.actions.DownloadAction;
+import net.sourceforge.offroad.actions.RouteAction;
 import net.sourceforge.offroad.actions.SearchAddressAction;
 import net.sourceforge.offroad.data.QuadRectExtendable;
 
@@ -136,6 +137,10 @@ public class OsmWindow {
 		downloadItem.setAccelerator(KeyStroke.getKeyStroke("control D"));
 		jDownloadMenu.add(downloadItem);
 		menubar.add(jDownloadMenu);
+		JPopupMenu popupMenu = new JPopupMenu();
+		JMenuItem routeMenu = new JMenuItem(new RouteAction(this));
+		popupMenu.add(routeMenu);
+		mDrawPanel.setComponentPopupMenu(popupMenu);
 //		findItem.addActionListener(new ActionListener() {
 //
 //			@Override
@@ -202,6 +207,7 @@ public class OsmWindow {
 	}
 
 	public OsmWindow() {
+		prefs.APPLICATION_MODE.set(ApplicationMode.CAR);
         Dimension size = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
         widthPixels = size.width;
         heightPixels = size.height;
@@ -294,9 +300,11 @@ public class OsmWindow {
 		final String loc = File.separator +  RENDERING_STYLES_DIR; // + File.separator;
 		String defaultFile = loc + "default.render.xml";
 		final Map<String, String> renderingConstants = new LinkedHashMap<String, String>();
-//		InputStream is = new FileInputStream(loc + "default.render.xml");
 		InputStream is = this.getClass().getResourceAsStream(loc + "default.render.xml");
-		System.out.println("Stream: " +is + ", loc " + loc);
+//		System.out.println("Stream: " +is + ", loc " + loc);
+		if(is == null){
+			is = new FileInputStream(loc.substring(1) + "default.render.xml");
+		}
 		try {
 			XmlPullParser parser = PlatformUtil.newXMLPullParser();
 			parser.setInput(is, "UTF-8");
@@ -415,7 +423,7 @@ public class OsmWindow {
 		@Override
 		public void actionPerformed(ActionEvent pE) {
 			// calculate the distance to the cursor
-			MouseEvent e = mAdapter.getMouseEvent();
+			MouseEvent e = getLastMouseEvent();
 			LatLon cursorPosition = mDrawPanel.getCursorPosition();
 			if(e == null || cursorPosition == null){
 				mStatusLabel.setText("");
@@ -489,6 +497,10 @@ public class OsmWindow {
 
 	public MapPoiTypes getPoiTypes() {
 		return mMapPoiTypes;
+	}
+
+	public MouseEvent getLastMouseEvent() {
+		return mAdapter.getMouseEvent();
 	}
 
 }

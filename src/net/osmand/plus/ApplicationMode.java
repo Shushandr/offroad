@@ -1,6 +1,7 @@
 package net.osmand.plus;
 
 import net.osmand.StateChangedListener;
+import net.sourceforge.offroad.OsmWindow;
 import net.sourceforge.offroad.R;
 
 import java.util.ArrayList;
@@ -267,7 +268,7 @@ public class ApplicationMode {
 	}
 	
 	public String toHumanStringCtx() {
-		return ""+(key);
+		return OsmWindow.getInstance().getString(key);
 	}
 	
 	public static ApplicationMode valueOfStringKey(String key, ApplicationMode def) {

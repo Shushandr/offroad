@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.text.DateFormat;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -37,6 +38,7 @@ import net.osmand.plus.render.MapRenderRepositories;
 import net.osmand.util.Algorithms;
 import net.osmand.util.MapUtils;
 import net.sourceforge.offroad.OsmWindow;
+import net.sourceforge.offroad.R;
 
 /**
  * Resource manager is responsible to work with all resources 
@@ -318,17 +320,17 @@ public class ResourceManager {
 //							warnings.add(MessageFormat.format(context.getString(R.string.version_index_is_not_supported), f.getName())); //$NON-NLS-1$
 						}
 					}
-//					// disable osmc for routing temporarily due to some bugs
-//					if (mapReader.containsRouteData() && (!f.getParentFile().equals(liveDir) || 
-//							context.getSettings().USE_OSM_LIVE_FOR_ROUTING.get())) {
-//						try {
-//							RandomAccessFile raf = new RandomAccessFile(f, "r"); //$NON-NLS-1$
-//							routingMapFiles.put(f.getName(), new BinaryMapIndexReader(raf, mapReader));
-//						} catch (IOException e) {
-//							log.error("Exception reading " + f.getAbsolutePath(), e); //$NON-NLS-1$
-//							warnings.add(MessageFormat.format(context.getString(R.string.version_index_is_not_supported), f.getName())); //$NON-NLS-1$
-//						}
-//					}
+					// disable osmc for routing temporarily due to some bugs
+					if (mapReader.containsRouteData() && (!f.getParentFile().equals(liveDir) || 
+							context.getSettings().USE_OSM_LIVE_FOR_ROUTING.get())) {
+						try {
+							RandomAccessFile raf = new RandomAccessFile(f, "r"); //$NON-NLS-1$
+							routingMapFiles.put(f.getName(), new BinaryMapIndexReader(raf, mapReader));
+						} catch (IOException e) {
+							log.error("Exception reading " + f.getAbsolutePath(), e); //$NON-NLS-1$
+							warnings.add(MessageFormat.format(context.getString(R.string.version_index_is_not_supported), f.getName())); //$NON-NLS-1$
+						}
+					}
 					if (mapReader.containsPoiData()) {
 						try {
 							RandomAccessFile raf = new RandomAccessFile(f, "r"); //$NON-NLS-1$

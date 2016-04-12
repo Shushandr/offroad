@@ -45,11 +45,21 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 
 	@Override
 	public void mousePressed(MouseEvent e) {
+		if(isPopup(e)){
+			return;
+		}
 		startPoint = e.getPoint();
+	}
+
+	public boolean isPopup(MouseEvent e) {
+		return e.getButton() != MouseEvent.BUTTON1;
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
+		if(isPopup(e)){
+			return;
+		}
 		double delx = e.getX() - startPoint.getX();
 		double dely = e.getY() - startPoint.getY();
 		drawPanel.moveImage(-(float) delx, -(float) dely);
@@ -57,6 +67,9 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 
 	@Override
 	public void mouseDragged(MouseEvent e) {
+		if(isPopup(e)){
+			return;
+		}
 		Point point = e.getPoint();
 		point.translate(-startPoint.x, -startPoint.y);
 		drawPanel.dragImage(point);
@@ -87,8 +100,11 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 	}
 	
 	@Override
-	public void mouseClicked(MouseEvent pE) {
-		drawPanel.setCursor(pE.getPoint());
+	public void mouseClicked(MouseEvent e) {
+		if(isPopup(e)){
+			return;
+		}
+		drawPanel.setCursor(e.getPoint());
 	}
 
 	@Override

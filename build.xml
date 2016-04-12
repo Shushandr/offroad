@@ -7,8 +7,7 @@
     <property name="dir.workspace" value="/home/foltin/programming/workspace"/>
     <property name="dir.jarfile" value="/home/foltin/programming/java/osmand/dist"/>
 	<jar destfile="${dir.jarfile}/Resources.jar">
-        <zipfileset dir="${dir.buildfile}/../OsmAnd-resources" includes="rendering_styles/**"/>
-        <zipfileset dir="${dir.buildfile}/../Osmand/OsmAnd/assets" includes="bundled_assets.xml"/> 
+        <zipfileset dir="${dir.buildfile}/res" includes="**"/>
 	</jar>
 	<target name="create_run_jar">
         <jar destfile="${dir.jarfile}/OffRoad.jar">

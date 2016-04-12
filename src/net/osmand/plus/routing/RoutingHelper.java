@@ -121,9 +121,9 @@ public class RoutingHelper {
 		return isPauseNavigation;
 	}
 	
-//	public void setFollowingMode(boolean follow) {
-//		isFollowingMode = follow;
-//		isPauseNavigation = false;
+	public void setFollowingMode(boolean follow) {
+		isFollowingMode = follow;
+		isPauseNavigation = false;
 //		if (!follow) {
 //			if (app.getNavigationService() != null) {
 //				app.getNavigationService().stopIfNeeded(app, NavigationService.USED_BY_NAVIGATION);
@@ -131,7 +131,7 @@ public class RoutingHelper {
 //		} else {
 //			app.startNavigationService(NavigationService.USED_BY_NAVIGATION);
 //		}
-//	}
+	}
 	
 	public boolean isRoutePlanningMode() {
 		return isRoutePlanningMode;
@@ -145,15 +145,15 @@ public class RoutingHelper {
 	
 	public synchronized void setFinalAndCurrentLocation(LatLon finalLocation, List<LatLon> intermediatePoints, Location currentLocation){
 		RouteCalculationResult previousRoute = route;
-//		clearCurrentRoute(finalLocation, intermediatePoints);
+		clearCurrentRoute(finalLocation, intermediatePoints);
 		// to update route
 		setCurrentLocation(currentLocation, false, previousRoute, true);
 	}
 	
-//	public synchronized void clearCurrentRoute(LatLon newFinalLocation, List<LatLon> newIntermediatePoints) {
-//		route = new RouteCalculationResult("");
-//		isDeviatedFromRoute = false;
-//		evalWaitInterval = 0;
+	public synchronized void clearCurrentRoute(LatLon newFinalLocation, List<LatLon> newIntermediatePoints) {
+		route = new RouteCalculationResult("");
+		isDeviatedFromRoute = false;
+		evalWaitInterval = 0;
 //		app.getWaypointHelper().setNewRoute(route);
 //		app.runInUIThread(new Runnable() {
 //			@Override
@@ -170,19 +170,19 @@ public class RoutingHelper {
 //				}
 //			}
 //		});
-//		this.finalLocation = newFinalLocation;
-//		this.intermediatePoints = newIntermediatePoints;
-//		if(currentRunningJob instanceof RouteRecalculationThread) {
-//			((RouteRecalculationThread) currentRunningJob).stopCalculation();
-//		}
-//		if (newFinalLocation == null) {
-//			settings.FOLLOW_THE_ROUTE.set(false);
-//			settings.FOLLOW_THE_GPX_ROUTE.set(null);
-//			// clear last fixed location
-//			this.lastProjection = null;
-//			setFollowingMode(false);
-//		}
-//	}
+		this.finalLocation = newFinalLocation;
+		this.intermediatePoints = newIntermediatePoints;
+		if(currentRunningJob instanceof RouteRecalculationThread) {
+			((RouteRecalculationThread) currentRunningJob).stopCalculation();
+		}
+		if (newFinalLocation == null) {
+			settings.FOLLOW_THE_ROUTE.set(false);
+			settings.FOLLOW_THE_GPX_ROUTE.set(null);
+			// clear last fixed location
+			this.lastProjection = null;
+			setFollowingMode(false);
+		}
+	}
 
 //	private synchronized void finishCurrentRoute() {
 //		app.runInUIThread(new Runnable() {
