@@ -6,9 +6,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.awt.Rectangle;
 import java.awt.RenderingHints;
-import java.awt.RenderingHints.Key;
 import java.awt.Stroke;
 import java.awt.event.ActionEvent;
 import java.awt.geom.AffineTransform;
@@ -28,6 +26,8 @@ import net.osmand.data.LatLon;
 import net.osmand.data.QuadPoint;
 import net.osmand.data.RotatedTileBox;
 import net.osmand.data.RotatedTileBox.RotatedTileBoxBuilder;
+import net.osmand.plus.views.OsmandMapLayer.DrawSettings;
+import net.osmand.plus.views.RouteLayer;
 
 @SuppressWarnings("serial")
 public class OsmBitmapPanel extends JPanel {
@@ -89,6 +89,7 @@ public class OsmBitmapPanel extends JPanel {
 	private LatLon mCursorPosition = null;
 	private int mCursorLength = 20;
 	private BasicStroke mStroke;
+	private RouteLayer mRouteLayer;
 
 	public OsmBitmapPanel(OsmWindow pWin) {
 		mWin = pWin;
@@ -103,6 +104,8 @@ public class OsmBitmapPanel extends JPanel {
 				.setPixelDimensions(bImage.getWidth(), bImage.getHeight()).setRotate(0).setMapDensity(1d).build());
 		mCursorLength = (int) (15 * mTileBox.getMapDensity());
 		mStroke = new BasicStroke( (float) (2f * mTileBox.getMapDensity()));
+		mRouteLayer = new RouteLayer(mWin.getRoutingHelper());
+		mRouteLayer.initLayer(this);
 		Action updateCursorAction = new AbstractAction() {
 			public void actionPerformed(ActionEvent e) {
 				mShowCursor = !mShowCursor;
@@ -181,6 +184,17 @@ public class OsmBitmapPanel extends JPanel {
 		g2.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		mWin.loadMGap(g2, getTileBox());
+		try {
+			// rotate if needed
+			if (!mRouteLayer.drawInScreenPixels()) {
+				final QuadPoint c = mTileBox.getCenterPixelPoint();
+
+				g2.rotate(mTileBox.getRotate(), c.x, c.y);
+			}
+			mRouteLayer.onPrepareBufferImage(g2, mTileBox, new DrawSettings(false));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		g2.dispose();
 	}
 

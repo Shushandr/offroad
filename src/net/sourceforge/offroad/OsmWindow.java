@@ -211,7 +211,7 @@ public class OsmWindow {
         Dimension size = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
         widthPixels = size.width;
         heightPixels = size.height;
-        density = java.awt.Toolkit.getDefaultToolkit().getScreenResolution()/72f;
+        density = java.awt.Toolkit.getDefaultToolkit().getScreenResolution()/96f;
 		mStrings = new R.string();
 		mRegions = new OsmandRegions();
 		mResourceManager = new ResourceManager(this);
@@ -284,7 +284,7 @@ public class OsmWindow {
 
 
 	public void loadMGap(Graphics2D pG2, RotatedTileBox pTileRect) {
-		getRenderer().loadMGap(pG2, pTileRect, mRenderingRulesStorage);
+		getRenderer().loadMGap(pG2, pTileRect, getRenderingRulesStorage());
 	}
 
 	public MapRenderRepositories getRenderer() {
@@ -292,10 +292,10 @@ public class OsmWindow {
 	}
 
 	private void init() throws XmlPullParserException, IOException {
-		mRenderingRulesStorage = getRenderingRulesStorage();
+		mRenderingRulesStorage = initRenderingRulesStorage();
 	}
 
-	public RenderingRulesStorage getRenderingRulesStorage() throws XmlPullParserException, IOException {
+	public RenderingRulesStorage initRenderingRulesStorage() throws XmlPullParserException, IOException {
 //		final String loc = getAppPath(RENDERING_STYLES_DIR).getAbsolutePath() + File.separator;
 		final String loc = File.separator +  RENDERING_STYLES_DIR; // + File.separator;
 		String defaultFile = loc + "default.render.xml";
@@ -501,6 +501,10 @@ public class OsmWindow {
 
 	public MouseEvent getLastMouseEvent() {
 		return mAdapter.getMouseEvent();
+	}
+	
+	public RenderingRulesStorage getRenderingRulesStorage() {
+		return mRenderingRulesStorage;
 	}
 
 }

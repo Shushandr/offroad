@@ -9,6 +9,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,6 +31,7 @@ import net.osmand.plus.routing.RoutingHelper;
 import net.osmand.render.RenderingRuleSearchRequest;
 import net.osmand.render.RenderingRulesStorage;
 import net.sourceforge.offroad.OsmBitmapPanel;
+import net.sourceforge.offroad.OsmWindow;
 
 public class RouteLayer extends OsmandMapLayer {
 	
@@ -98,7 +100,7 @@ public class RouteLayer extends OsmandMapLayer {
 
 	public BufferedImage readImage(String image) {
 		try {
-			return ImageIO.read(this.getClass().getResourceAsStream("drawable-xxhdpi/"
+			return ImageIO.read(this.getClass().getResourceAsStream("/drawable-xxhdpi/"
 					+ image));
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -118,7 +120,7 @@ public class RouteLayer extends OsmandMapLayer {
 	}
 	
 	private void updatePaints(Graphics2D pGraphics2d, DrawSettings nightMode, RotatedTileBox tileBox){
-		RenderingRulesStorage rrs = view.getContext().getRendererRegistry().getCurrentSelectedRenderer();
+		RenderingRulesStorage rrs = view.getContext().getRenderingRulesStorage();
 		final boolean isNight = nightMode != null && nightMode.isNightMode();
 		int hsh = calculateHash(rrs, isNight, tileBox.getMapDensity());
 		if (hsh != cachedHash) {
@@ -199,10 +201,16 @@ public class RouteLayer extends OsmandMapLayer {
 		if (helper.getFinalLocation() != null && helper.getRoute().isCalculated()) {
 			updatePaints(canvas, settings, tileBox);
 			if(coloredArrowUp == null) {
-				BufferedImage originalArrowUp = RenderingIcons.getBigIcon("h_arrow");//BitmapFactory.decodeResource(view.getResources(), R.drawable.h_arrow, null);
-				coloredArrowUp = originalArrowUp;
+				BufferedImage originalArrowUp;
+				try {
+					originalArrowUp = ImageIO.read(this.getClass().getClassLoader()
+							.getResourceAsStream(File.separator + OsmWindow.OSMAND_ICONS_DIR + "h_arrow.png"));
+					coloredArrowUp = originalArrowUp;
 //				coloredArrowUp = BufferedImage.createScaledBitmap(originalArrowUp, originalArrowUp.getWidth() * 3 / 4,	
 //						originalArrowUp.getHeight() * 3 / 4, true);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 			int w = tileBox.getPixWidth();
 			int h = tileBox.getPixHeight();
