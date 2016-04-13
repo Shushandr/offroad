@@ -207,7 +207,7 @@ public class OsmWindow {
 	}
 
 	public OsmWindow() {
-		prefs.APPLICATION_MODE.set(ApplicationMode.CAR);
+		prefs.APPLICATION_MODE.set(ApplicationMode.DEFAULT);
         Dimension size = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
         widthPixels = size.width;
         heightPixels = size.height;
@@ -302,9 +302,6 @@ public class OsmWindow {
 		final Map<String, String> renderingConstants = new LinkedHashMap<String, String>();
 		InputStream is = this.getClass().getResourceAsStream(loc + "default.render.xml");
 //		System.out.println("Stream: " +is + ", loc " + loc);
-		if(is == null){
-			is = new FileInputStream(loc.substring(1) + "default.render.xml");
-		}
 		try {
 			XmlPullParser parser = PlatformUtil.newXMLPullParser();
 			parser.setInput(is, "UTF-8");

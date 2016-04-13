@@ -11,6 +11,7 @@ import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -124,7 +125,7 @@ public class RouteLayer extends OsmandMapLayer {
 		final boolean isNight = nightMode != null && nightMode.isNightMode();
 		int hsh = calculateHash(rrs, isNight, tileBox.getMapDensity());
 		if (hsh != cachedHash) {
-			cachedHash = hsh;
+//			cachedHash = hsh;
 			// cachedColor = view.getResources().getColor(R.color.nav_track);
 			if (rrs != null) {
 				RenderingRuleSearchRequest req = new RenderingRuleSearchRequest(rrs);
@@ -203,11 +204,14 @@ public class RouteLayer extends OsmandMapLayer {
 			if(coloredArrowUp == null) {
 				BufferedImage originalArrowUp;
 				try {
-					originalArrowUp = ImageIO.read(this.getClass().getClassLoader()
-							.getResourceAsStream(File.separator + OsmWindow.OSMAND_ICONS_DIR + "h_arrow.png"));
-					coloredArrowUp = originalArrowUp;
-//				coloredArrowUp = BufferedImage.createScaledBitmap(originalArrowUp, originalArrowUp.getWidth() * 3 / 4,	
-//						originalArrowUp.getHeight() * 3 / 4, true);
+					InputStream is = this.getClass().getClassLoader()
+							.getResourceAsStream(File.separator + OsmWindow.OSMAND_ICONS_DIR + "h_arrow.png");
+					if (is != null) {
+						originalArrowUp = ImageIO.read(is);
+						coloredArrowUp = originalArrowUp;
+						//				coloredArrowUp = BufferedImage.createScaledBitmap(originalArrowUp, originalArrowUp.getWidth() * 3 / 4,	
+						//						originalArrowUp.getHeight() * 3 / 4, true);
+					}
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -249,7 +253,7 @@ public class RouteLayer extends OsmandMapLayer {
 
 	private void drawAction(RotatedTileBox tb, Graphics2D canvas) {
 		if (actionPoints.size() > 0) {
-			canvas.rotate(-tb.getRotate(), tb.getCenterPixelX(), tb.getCenterPixelY());
+			rotate(-tb.getRotate(), tb.getCenterPixelX(), tb.getCenterPixelY());
 			try {
 				Path2D pth = new Path2D.Double();
 				AffineTransform matrix = new AffineTransform();
@@ -270,9 +274,9 @@ public class RouteLayer extends OsmandMapLayer {
 						// int len = (int) (distSegment / pxStep);
 						float pdx = x - px;
 						float pdy = y - py;
-						matrix.setToTranslation(0, -actionArrow.getHeight() / 2);
+						matrix.setToTranslation(px + pdx - actionArrow.getWidth() / 2, py + pdy);
 						matrix.rotate((float) angle, actionArrow.getWidth() / 2, 0);
-						matrix.translate(px + pdx - actionArrow.getWidth() / 2, py + pdy);
+						matrix.translate(0, -actionArrow.getHeight() / 2);
 						gpaintIconAction.drawImage(actionArrow, matrix, null);
 //						canvas.drawBitmap(actionArrow, matrix, paintIconAction);
 					} else {
@@ -291,14 +295,14 @@ public class RouteLayer extends OsmandMapLayer {
 				}
 
 			} finally {
-				canvas.rotate(tb.getRotate(), tb.getCenterPixelX(), tb.getCenterPixelY());
+				rotate(tb.getRotate(), tb.getCenterPixelX(), tb.getCenterPixelY());
 			}
 		}
 	}
 
 	private void drawSegment(RotatedTileBox tb, Graphics2D canvas) {
 		if (points.size() > 0) {
-			canvas.rotate(-tb.getRotate(), tb.getCenterPixelX(), tb.getCenterPixelY());
+			rotate(-tb.getRotate(), tb.getCenterPixelX(), tb.getCenterPixelY());
 			try {
 				TIntArrayList tx = new TIntArrayList();
 				TIntArrayList ty = new TIntArrayList();
@@ -327,9 +331,21 @@ public class RouteLayer extends OsmandMapLayer {
 					drawArrowsOverPath(canvas, lst, coloredArrowUp);
 				}
 			} finally {
-				canvas.rotate(tb.getRotate(), tb.getCenterPixelX(), tb.getCenterPixelY());
+				rotate(tb.getRotate(), tb.getCenterPixelX(), tb.getCenterPixelY());
 			}
 		}
+	}
+
+
+	private void rotate(float pRotate, int pCenterPixelX, int pCenterPixelY) {
+		gpaint.rotate(pRotate, pCenterPixelX, pCenterPixelY);
+		gactionPaint.rotate(pRotate, pCenterPixelX, pCenterPixelY);
+		gpaintIconAction.rotate(pRotate, pCenterPixelX, pCenterPixelY);
+		gpaintIcon.rotate(pRotate, pCenterPixelX, pCenterPixelY);
+		gpaint2.rotate(pRotate, pCenterPixelX, pCenterPixelY);
+		gpaint_1.rotate(pRotate, pCenterPixelX, pCenterPixelY);
+		gshadowPaint.rotate(pRotate, pCenterPixelX, pCenterPixelY);
+		
 	}
 
 
@@ -353,17 +369,17 @@ public class RouteLayer extends OsmandMapLayer {
 				float pdx = ((x - px) / len);
 				float pdy = ((y - py) / len);
 				for (int k = 1; k <= len; k++) {
-					matrix.setToTranslation(0, -arrow.getHeight() / 2);
+					matrix.setToTranslation(px + k * pdx- arrow.getWidth() / 2 , py + pdy * k);
 					matrix.rotate(angle, arrow.getWidth() / 2, 0);
-					matrix.translate(px + k * pdx- arrow.getWidth() / 2 , py + pdy * k);
+					matrix.translate(0, -arrow.getHeight() / 2);
 					gpaintIcon.drawImage(arrow, matrix, null);
 					dist = 0;
 				}
 			} else {
 				if(dist > pxStep) {
-					matrix.setToTranslation(0, -arrow.getHeight() / 2);
+					matrix.setToTranslation(px + (x - px) / 2 - arrow.getWidth() / 2, py + (y - py) / 2);
 					matrix.rotate(angle, arrow.getWidth() / 2, 0);
-					matrix.translate(px + (x - px) / 2 - arrow.getWidth() / 2, py + (y - py) / 2);
+					matrix.translate(0, -arrow.getHeight() / 2);
 					gpaintIcon.drawImage(arrow, matrix, null);
 					dist = 0;
 				} else {

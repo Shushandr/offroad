@@ -3,10 +3,10 @@ package net.sourceforge.offroad;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Properties;
 
 import net.osmand.plus.api.SettingsAPI;
@@ -75,11 +75,12 @@ final class OffRoadSettings implements SettingsAPI {
 	}
 
 	private OsmWindow mOsmWindow;
-	private Properties mPreferences;
+	private HashMap<String, Properties> mPreferencesHash = new HashMap<>();
+	private static final String SHARED_PREFERENCES_NAME = "net.osmand.settings"; //$NON-NLS-1$
 
 	public OffRoadSettings(OsmWindow ctx) {
 		mOsmWindow = ctx;
-		mPreferences = readDefaultPreferences();
+		mPreferencesHash.put(SHARED_PREFERENCES_NAME, readDefaultPreferences());
 	}
 	
 	public Properties readDefaultPreferences() {
@@ -101,12 +102,16 @@ final class OffRoadSettings implements SettingsAPI {
 	}
 
 	private Properties getPreferences(Object pPref) {
-		return mPreferences;
+		return (Properties) pPref;
 	}
 
 	@Override
 	public Object getPreferenceObject(String pKey) {
-		return getPreferences(pKey);
+		if(!mPreferencesHash.containsKey(pKey)){
+			System.out.println("Create prefs for " +pKey);
+			mPreferencesHash.put((String) pKey, new Properties());
+		}
+		return mPreferencesHash.get(pKey);
 	}
 
 	@Override
@@ -163,7 +168,7 @@ final class OffRoadSettings implements SettingsAPI {
 	public void save() {
 		try {
 			FileOutputStream stream = new FileOutputStream(mOsmWindow.getAppPath(OFFROAD_PROPERTIES));
-			mPreferences.store(stream, "");
+			mPreferencesHash.get(SHARED_PREFERENCES_NAME).store(stream, "");
 			stream.close();
 			System.out.println("Settings saved.");
 		} catch (IOException e) {
