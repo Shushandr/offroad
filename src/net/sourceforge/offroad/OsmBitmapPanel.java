@@ -20,17 +20,19 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 
+import net.osmand.ValueHolder;
 import net.osmand.binary.OsmandIndex;
 import net.osmand.binary.OsmandIndex.MapLevel;
 import net.osmand.data.LatLon;
 import net.osmand.data.QuadPoint;
 import net.osmand.data.RotatedTileBox;
 import net.osmand.data.RotatedTileBox.RotatedTileBoxBuilder;
+import net.osmand.plus.routing.RoutingHelper.IRouteInformationListener;
 import net.osmand.plus.views.OsmandMapLayer.DrawSettings;
 import net.osmand.plus.views.RouteLayer;
 
 @SuppressWarnings("serial")
-public class OsmBitmapPanel extends JPanel {
+public class OsmBitmapPanel extends JPanel implements IRouteInformationListener {
 	private class GenerationThread extends Thread {
 		private final RotatedTileBox mTileCopy;
 		private BufferedImage mNewBitmap;
@@ -78,7 +80,7 @@ public class OsmBitmapPanel extends JPanel {
 	private Color color = Color.black;
 	private ArrayList<Point> points = new ArrayList<Point>();
 	private int colorIndex = 0;
-	private OsmWindow mWin;
+	private OsmWindow mContext;
 	private RotatedTileBox mTileBox;
 	private double scale = 1.0d;
 	private int originX = 0;
@@ -92,20 +94,21 @@ public class OsmBitmapPanel extends JPanel {
 	private RouteLayer mRouteLayer;
 
 	public OsmBitmapPanel(OsmWindow pWin) {
-		mWin = pWin;
+		mContext = pWin;
 		clear(bImage);
 		LatLon latLon = new LatLon(51.03325, 13.64656);
 		int zoom = 17;
-		if(mWin.getSettings().isLastKnownMapLocation()){
-			latLon = mWin.getSettings().getLastKnownMapLocation();
-			zoom = mWin.getSettings().getLastKnownMapZoom();
+		if(mContext.getSettings().isLastKnownMapLocation()){
+			latLon = mContext.getSettings().getLastKnownMapLocation();
+			zoom = mContext.getSettings().getLastKnownMapZoom();
 		}
 		setTileBox(new RotatedTileBoxBuilder().setLocation(latLon.getLatitude(), latLon.getLongitude()).setZoom(zoom)
 				.setPixelDimensions(bImage.getWidth(), bImage.getHeight()).setRotate(0).setMapDensity(1d).build());
 		mCursorLength = (int) (15 * mTileBox.getMapDensity());
 		mStroke = new BasicStroke( (float) (2f * mTileBox.getMapDensity()));
-		mRouteLayer = new RouteLayer(mWin.getRoutingHelper());
+		mRouteLayer = new RouteLayer(mContext.getRoutingHelper());
 		mRouteLayer.initLayer(this);
+		mContext.getRoutingHelper().addListener(this);
 		Action updateCursorAction = new AbstractAction() {
 			public void actionPerformed(ActionEvent e) {
 				mShowCursor = !mShowCursor;
@@ -113,12 +116,13 @@ public class OsmBitmapPanel extends JPanel {
 			}
 		};
 		new Timer(1000, updateCursorAction).start();
+		
 
 	}
 
     public float getScaleCoefficient() {
         float scaleCoefficient = getDensity();
-        OsmWindow dm = mWin;
+        OsmWindow dm = mContext;
         if (Math.min(dm.widthPixels / (dm.density * 160), dm.heightPixels / (dm.density * 160)) > 2.5f) {
                 // large screen
                 scaleCoefficient *= 1.5f;
@@ -183,7 +187,7 @@ public class OsmBitmapPanel extends JPanel {
 		g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 		g2.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		mWin.loadMGap(g2, getTileBox());
+		mContext.loadMGap(g2, getTileBox());
 		try {
 			// rotate if needed
 			if (!mRouteLayer.drawInScreenPixels()) {
@@ -375,6 +379,23 @@ public class OsmBitmapPanel extends JPanel {
 	}
 
 	public OsmWindow getContext() {
-		return mWin;
+		return mContext;
+	}
+
+	@Override
+	public void newRouteIsCalculated(boolean pNewRoute, ValueHolder<Boolean> pShowToast) {
+		// is in UI thread
+		drawImage(bImage);
+		setImage(bImage);
+	}
+
+	@Override
+	public void routeWasCancelled() {
+		drawImage(bImage);
+		setImage(bImage);
+	}
+
+	@Override
+	public void routeWasFinished() {
 	}
 }

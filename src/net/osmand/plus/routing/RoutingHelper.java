@@ -6,6 +6,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.swing.SwingUtilities;
+
 import net.osmand.Location;
 import net.osmand.PlatformUtil;
 import net.osmand.ValueHolder;
@@ -155,21 +157,21 @@ public class RoutingHelper {
 		isDeviatedFromRoute = false;
 		evalWaitInterval = 0;
 //		app.getWaypointHelper().setNewRoute(route);
-//		app.runInUIThread(new Runnable() {
-//			@Override
-//			public void run() {
-//				Iterator<WeakReference<IRouteInformationListener>> it = listeners.iterator();
-//				while(it.hasNext()) {
-//					WeakReference<IRouteInformationListener> ref = it.next();
-//					IRouteInformationListener l = ref.get();
-//					if(l == null) {
-//						it.remove();
-//					} else {
-//						l.routeWasCancelled();	
-//					}
-//				}
-//			}
-//		});
+		app.runInUIThread(new Runnable() {
+			@Override
+			public void run() {
+				Iterator<WeakReference<IRouteInformationListener>> it = listeners.iterator();
+				while(it.hasNext()) {
+					WeakReference<IRouteInformationListener> ref = it.next();
+					IRouteInformationListener l = ref.get();
+					if(l == null) {
+						it.remove();
+					} else {
+						l.routeWasCancelled();	
+					}
+				}
+			}
+		});
 		this.finalLocation = newFinalLocation;
 		this.intermediatePoints = newIntermediatePoints;
 		if(currentRunningJob instanceof RouteRecalculationThread) {
@@ -636,31 +638,31 @@ public class RoutingHelper {
 		// FIXME: Implement?
 //		app.getWaypointHelper().setNewRoute(res);
 
-//		app.runInUIThread(new Runnable() {
-//			@Override
-//			public void run() {
-//				ValueHolder<Boolean> showToast = new ValueHolder<Boolean>();
-//				showToast.value = true;
-//				Iterator<WeakReference<IRouteInformationListener>> it = listeners.iterator();
-//				while (it.hasNext()) {
-//					WeakReference<IRouteInformationListener> ref = it.next();
-//					IRouteInformationListener l = ref.get();
-//					if (l == null) {
-//						it.remove();
-//					} else {
-//						l.newRouteIsCalculated(newRoute, showToast);
-//					}
-//				}
-//				if (showToast.value) {
-//					String msg = app.getString(R.string.new_route_calculated_dist) + ": "
-//							+ OsmAndFormatter.getFormattedDistance(res.getWholeDistance(), app);
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				ValueHolder<Boolean> showToast = new ValueHolder<Boolean>();
+				showToast.value = true;
+				Iterator<WeakReference<IRouteInformationListener>> it = listeners.iterator();
+				while (it.hasNext()) {
+					WeakReference<IRouteInformationListener> ref = it.next();
+					IRouteInformationListener l = ref.get();
+					if (l == null) {
+						it.remove();
+					} else {
+						l.newRouteIsCalculated(newRoute, showToast);
+					}
+				}
+				if (showToast.value) {
+					String msg = app.getString(R.string.new_route_calculated_dist) + ": "
+							+ OsmAndFormatter.getFormattedDistance(res.getWholeDistance(), app);
 //					if (OsmandPlugin.isDevelopment() && res.getRoutingTime() != 0f) {
 //						msg += " (" + Algorithms.formatDuration((int) res.getRoutingTime()) + ")";
 //					}
-//					app.showToastMessage(msg);
-//				}
-//			}
-//		});
+					app.showToastMessage(msg);
+				}
+			}
+		});
 	}
 	
 	public int getLeftDistance(){

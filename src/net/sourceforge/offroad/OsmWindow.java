@@ -28,6 +28,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.UIManager;
 
@@ -93,6 +94,7 @@ public class OsmWindow {
 	private RoutingHelper mRoutingHelper;
 	private GeocodingLookupService mGeocodingLookupService;
 	private MapPoiTypes mMapPoiTypes;
+	private int mDontUpdateStatusLabelCounter;
 
 	public void createAndShowUI() {
 		mDrawPanel = new OsmBitmapPanel(this);
@@ -419,6 +421,10 @@ public class OsmWindow {
 
 		@Override
 		public void actionPerformed(ActionEvent pE) {
+			if(mDontUpdateStatusLabelCounter>0){
+				mDontUpdateStatusLabelCounter--;
+				return;
+			}
 			// calculate the distance to the cursor
 			MouseEvent e = getLastMouseEvent();
 			LatLon cursorPosition = mDrawPanel.getCursorPosition();
@@ -502,6 +508,15 @@ public class OsmWindow {
 	
 	public RenderingRulesStorage getRenderingRulesStorage() {
 		return mRenderingRulesStorage;
+	}
+
+	public void showToastMessage(String pMsg) {
+		mStatusLabel.setText(pMsg);
+		mDontUpdateStatusLabelCounter = 4;
+	}
+
+	public void runInUIThread(Runnable pRunnable) {
+		SwingUtilities.invokeLater(pRunnable);
 	}
 
 }
