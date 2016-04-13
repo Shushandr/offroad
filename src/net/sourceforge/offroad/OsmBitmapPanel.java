@@ -11,9 +11,12 @@ import java.awt.Stroke;
 import java.awt.event.ActionEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 
+import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JPanel;
@@ -397,5 +400,13 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 
 	@Override
 	public void routeWasFinished() {
+	}
+
+	public void saveImage(File pSelectedFile) {
+	    try {
+			ImageIO.write(bImage, "png", pSelectedFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }

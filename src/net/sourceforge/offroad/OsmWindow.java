@@ -8,6 +8,7 @@ import java.awt.Font;
 import java.awt.Frame;
 import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -21,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.swing.AbstractAction;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -127,6 +129,21 @@ public class OsmWindow {
 		mFrame.setResizable(true);
 		mFrame.addComponentListener(mAdapter);
 		JMenuBar menubar = new JMenuBar();
+		JMenu jFileMenu = new JMenu("File");
+		JMenuItem saveItem = new JMenuItem("Save...");
+		saveItem.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent pE) {
+				JFileChooser chooser = new JFileChooser();
+				int showSaveDialog = chooser.showSaveDialog(mFrame);
+				if(showSaveDialog == JFileChooser.APPROVE_OPTION){
+					mDrawPanel.saveImage(chooser.getSelectedFile());
+				}
+			}
+		});
+		jFileMenu.add(saveItem);
+		menubar.add(jFileMenu);
 		JMenu jSearchMenu = new JMenu("Search");
 		JMenuItem findItem = new JMenuItem("Find...");
 		findItem.addActionListener(new SearchAddressAction(this));
