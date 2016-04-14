@@ -264,9 +264,8 @@ public class RouteLayer extends OsmandMapLayer {
 					if (o == null) {
 						first = true;
 						gactionPaint.draw(pth);
-//						canvas.drawPath(pth, actionPaint);
 						double angleRad = Math.atan2(y - py, x - px);
-						double angle = (angleRad * 180 / Math.PI) + 90f;
+						double angle = (angleRad + Math.PI/2);
 						double distSegment = Math.sqrt((y - py) * (y - py) + (x - px) * (x - px));
 						if (distSegment == 0) {
 							continue;
@@ -275,10 +274,9 @@ public class RouteLayer extends OsmandMapLayer {
 						float pdx = x - px;
 						float pdy = y - py;
 						matrix.setToTranslation(px + pdx - actionArrow.getWidth() / 2, py + pdy);
-						matrix.rotate((float) angle, actionArrow.getWidth() / 2, 0);
+						matrix.rotate(angle, actionArrow.getWidth() / 2, 0);
 						matrix.translate(0, -actionArrow.getHeight() / 2);
 						gpaintIconAction.drawImage(actionArrow, matrix, null);
-//						canvas.drawBitmap(actionArrow, matrix, paintIconAction);
 					} else {
 						px = x;
 						py = y;
@@ -359,7 +357,7 @@ public class RouteLayer extends OsmandMapLayer {
 			int x = lst.get(i + 2);
 			int y = lst.get(i + 3);
 			float angleRad = (float) Math.atan2(y - py, x - px);
-			float angle = (float) (angleRad * 180 / Math.PI) + 90f;
+			float angle = (float) (angleRad + Math.PI/2);
 			float distSegment = (float) Math.sqrt((y - py) * (y - py) + (x - px) * (x - px));
 			if(distSegment == 0) {
 				continue;
