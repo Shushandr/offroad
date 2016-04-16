@@ -38,3 +38,8 @@ Version History:
   - Offline routing
   - Several map animations (zoom, move)
   
+0_1_Alpha2:
+============
+* Corrected class paths
+* New feature integrated from OsmAnd:
+  - Routing

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project default="dist" name="OffRoad">
 
+	<property name="ver" value="0.1_Alpha2"/>
 	<property name="src" location="src"/>
 	<property name="res" location="res"/>
 	<property name="lib" location="lib"/>
@@ -12,8 +13,14 @@
 	<property name="java_target_version" value="1.8" />
 	<property name="build.compiler" value="modern" />
 	<property name="start.class" value="net.sourceforge.offroad.OsmWindow" />
+	<property name="post" location="post" />
 
-	<property name="classpath" value="${lib}/kxml2-2.3.0.jar:${lib}/junidecode-0.1.jar:${lib}/gnu-trove-osmand.jar:${lib}/commons-logging-1.1.1.jar"/>
+<!--	<property name="classpath" value="${lib}/kxml2-2.3.0.jar:${lib}/junidecode-0.1.jar:${lib}/gnu-trove-osmand.jar:${lib}/commons-logging-1.1.1.jar"/> -->
+	<path id="build-classpath">
+	    <fileset dir="${lib}">
+	        <include name="*.jar"/>
+	    </fileset>
+	</path>
 
 	<!-- - - - - - - - - - - - - - - - - - 
           target: init                      
@@ -26,11 +33,11 @@
 		<mkdir dir="${build}"/>
 		<javac includeantruntime="false" srcdir="${src}"
 			destdir="${build}"
-			classpath="${classpath}"
 			debug="true"
     	   source="${java_source_version}"
 	       target="${java_target_version}"
 			 >
+			<classpath refid="build-classpath"></classpath>
 		</javac>
 	</target>
 
@@ -40,13 +47,27 @@
 	        <zipfileset dir="${res}" includes="**"/>
 		</jar>
 		<tempfile prefix="manifest" property="temp.manifest.file"/>
+		<path id="jar-classpath">
+		    <fileset dir="${dist.lib}">
+		        <include name="*.jar"/>
+		    </fileset>
+		    <fileset dir="${dist}">
+		        <include name="*.jar"/>
+		    </fileset>
+		</path>
+		<manifestclasspath property="lib.list" jarfile="${OffRoad.jar}">
+		    <classpath refid="jar-classpath"/>
+		</manifestclasspath>
+
 		<manifest file="${temp.manifest.file}">
 			<attribute name="Built-By" value="${user.name}" />
-			<attribute name="Built-Number" value="0.1_Alpha2" />
+			<attribute name="Built-Number" value="${ver}" />
 			<attribute name="Created-By" value="OsmAnd team and Christian Foltin" />
 			<attribute name="Main-Class" value="${start.class}" />
-			<attribute name="Class-Path" value="OffRoad.jar . lib/commons-logging-1.1.1.jar lib/gnu-trove-osmand.jar lib/junidecode-0.1.jar lib/kxml2-2.3.0.jar lib/Resources.jar"/>
+<!--			<attribute name="Class-Path" value="OffRoad.jar . lib/commons-logging-1.1.1.jar lib/gnu-trove-osmand.jar lib/junidecode-0.1.jar lib/kxml2-2.3.0.jar lib/Resources.jar"/> -->
+			<attribute name="Class-Path" value="${lib.list}"/>
 		</manifest>
+		<exec command="cat"><arg  value="${temp.manifest.file}"/></exec>
 		<jar jarfile="${OffRoad.jar}"
 		     manifest="${temp.manifest.file}"
 			update="true">
@@ -58,7 +79,7 @@
 
 	<target name="dist" depends="jar">
 		<copy todir="${dist}">
-			<fileset dir="${src}">
+			<fileset dir=".">
 				<include name="LICENSE"/>
 			</fileset>
 		</copy>
@@ -81,17 +102,21 @@
           dir="${dist}" spawn="false" failonerror="false" maxmemory="256M">
 			<!--    <jvmarg value="-Djava.util.logging.config.file=logging.properties" /> -->
 			<classpath>
+				<path refid="build-classpath"></path>
 				<pathelement location="${OffRoad.jar}"/>
 				<fileset dir="${dist.lib}">
-		            <include name="commons-logging-1.1.1.jar"/>
+<!--		            <include name="commons-logging-1.1.1.jar"/>
 		            <include name="gnu-trove-osmand.jar"/>
 		            <include name="junidecode-0.1.jar"/>
-		            <include name="kxml2-2.3.0.jar"/>
+		            <include name="kxml2-2.3.0.jar"/> -->
 		            <include name="Resources.jar"/>
 				</fileset>
 			</classpath>
 		</java>
 	</target>
 
-	
+	<target name="post" depends="dist">
+		<zip destfile="${post}/OffRoad-bin-${ver}.zip" includes="lib/*.jar,*.jar,LICENSE" basedir="${dist}">
+		</zip>
+	</target>
 </project>

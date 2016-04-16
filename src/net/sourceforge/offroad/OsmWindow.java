@@ -376,10 +376,11 @@ public class OsmWindow {
 			String name = pIndex;
 			InputStream is = this.getClass().getResourceAsStream(name);
 			if(is == null){
-				name = File.separator+pIndex;
+				name = "/"+pIndex;
 				is = this.getClass().getResourceAsStream(name);
 				if(is == null){
 					System.err.println("ERROR: Resource not found: "  + pIndex);
+					printClassPath();
 				} else {
 					System.err.println("WARNING: Found path as " + name + " instead of " + pIndex);
 				}
@@ -393,7 +394,7 @@ public class OsmWindow {
 		if (pIndex == null) {
 			pIndex = "";
 		}
-		String pathname = System.getProperty("user.dir") + System.getProperty("file.separator") + pIndex;
+		String pathname = System.getProperty("user.dir") + File.separator + pIndex;
 		System.out.println("Searching for " + pathname);
 		return new File(pathname);
 	}
