@@ -7,6 +7,7 @@ import net.osmand.router.GeneralRouter.GeneralRouterProfile;
 import net.osmand.router.GeneralRouter.RouteAttributeContext;
 import net.osmand.router.GeneralRouter.RouteDataObjectAttribute;
 import net.osmand.util.Algorithms;
+import net.sourceforge.offroad.OsmWindow;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -166,7 +167,7 @@ public class RoutingConfiguration {
 	public static RoutingConfiguration.Builder getDefault() {
 		if (DEFAULT == null) {
 			try {
-				DEFAULT = parseFromInputStream(RoutingConfiguration.class.getResourceAsStream("routing.xml"));
+				DEFAULT = parseFromInputStream(OsmWindow.getInstance().getResource("routing.xml"));
 			} catch (Exception e) {
 				throw new IllegalStateException(e);
 			}

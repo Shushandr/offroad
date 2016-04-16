@@ -172,7 +172,7 @@ public class RendererRegistry {
 				is = new FileInputStream(fl);
 			} else {
 				copyFileForInternalStyle(name);
-				is = RenderingRulesStorage.class.getResourceAsStream(internalRenderers.get(name));
+				is = app.getResource(internalRenderers.get(name));
 			}
 		} else {
 			throw new IllegalArgumentException("Not found " + name); //$NON-NLS-1$
@@ -183,7 +183,7 @@ public class RendererRegistry {
 	public void copyFileForInternalStyle(String name) {
 		try {
 			FileOutputStream fout = new FileOutputStream(getFileForInternalStyle(name));
-			Algorithms.streamCopy(RenderingRulesStorage.class.getResourceAsStream(internalRenderers.get(name)),
+			Algorithms.streamCopy(app.getResource(internalRenderers.get(name)),
 					fout);
 			fout.close();
 		} catch (IOException e) {

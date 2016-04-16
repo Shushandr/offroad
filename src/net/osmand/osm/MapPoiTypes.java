@@ -4,6 +4,7 @@ import net.osmand.PlatformUtil;
 import net.osmand.StringMatcher;
 import net.osmand.data.Amenity;
 import net.osmand.util.Algorithms;
+import net.sourceforge.offroad.OsmWindow;
 
 import org.apache.commons.logging.Log;
 import org.xmlpull.v1.XmlPullParser;
@@ -260,7 +261,7 @@ public class MapPoiTypes {
 		}
 		try {
 			if (this.resourceName == null) {
-				is = MapPoiTypes.class.getResourceAsStream("poi_types.xml"); //$NON-NLS-1$
+				is = OsmWindow.getInstance().getResource("net/osmand/osm/poi_types.xml"); //$NON-NLS-1$
 			} else {
 				is = new FileInputStream(this.resourceName);
 			}

@@ -101,7 +101,7 @@ public class RouteLayer extends OsmandMapLayer {
 
 	public BufferedImage readImage(String image) {
 		try {
-			return ImageIO.read(this.getClass().getResourceAsStream("/drawable-xxhdpi/"
+			return ImageIO.read(view.getContext().getResource("drawable-xxhdpi/"
 					+ image));
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -204,8 +204,7 @@ public class RouteLayer extends OsmandMapLayer {
 			if(coloredArrowUp == null) {
 				BufferedImage originalArrowUp;
 				try {
-					InputStream is = this.getClass().getClassLoader()
-							.getResourceAsStream(File.separator + OsmWindow.OSMAND_ICONS_DIR + "h_arrow.png");
+					InputStream is = view.getContext().getResource(OsmWindow.OSMAND_ICONS_DIR + "h_arrow.png");
 					if (is != null) {
 						originalArrowUp = ImageIO.read(is);
 						coloredArrowUp = originalArrowUp;

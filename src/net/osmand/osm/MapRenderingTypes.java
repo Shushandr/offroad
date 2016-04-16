@@ -14,6 +14,7 @@ import java.util.Map.Entry;
 
 import net.osmand.PlatformUtil;
 import net.osmand.util.Algorithms;
+import net.sourceforge.offroad.OsmWindow;
 
 import org.apache.commons.logging.Log;
 import org.xmlpull.v1.XmlPullParser;
@@ -192,9 +193,9 @@ public abstract class MapRenderingTypes {
 		InputStream is;
 		try {
 			if(resourceName == null){
-				is = MapRenderingTypes.class.getResourceAsStream("rendering_types.xml"); //$NON-NLS-1$
+				is = OsmWindow.getInstance().getResource("rendering_types.xml"); //$NON-NLS-1$
 			} else {
-				is = new FileInputStream(resourceName);
+				is = OsmWindow.getInstance().getResource(resourceName);
 			}
 			long time = System.currentTimeMillis();
 			XmlPullParser parser = PlatformUtil.newXMLPullParser();

@@ -181,7 +181,7 @@ public class ResourceManager {
 			File file = context.getAppPath("regions.ocbf");
 			if (file != null) {
 				FileOutputStream fout = new FileOutputStream(file);
-				Algorithms.streamCopy(OsmandRegions.class.getResourceAsStream("regions.ocbf"), fout);
+				Algorithms.streamCopy(context.getResource("regions.ocbf"), fout);
 				fout.close();
 			}
 		} catch (Exception e) {
@@ -194,7 +194,7 @@ public class ResourceManager {
 			File file = context.getAppPath("poi_types.xml");
 			if (file != null) {
 				FileOutputStream fout = new FileOutputStream(file);
-				Algorithms.streamCopy(MapPoiTypes.class.getResourceAsStream("poi_types.xml"), fout);
+				Algorithms.streamCopy(context.getResource("poi_types.xml"), fout);
 				fout.close();
 			}
 		} catch (Exception e) {

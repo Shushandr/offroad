@@ -13,9 +13,10 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.text.MessageFormat;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -74,7 +75,7 @@ public class OsmWindow {
 
 	static final int MAX_ZOOM = 22;
 	public static final String RENDERING_STYLES_DIR = "rendering_styles/";
-	public static final String OSMAND_ICONS_DIR = "rendering_styles/style-icons/drawable-xxhdpi/";
+	public static final String OSMAND_ICONS_DIR = RENDERING_STYLES_DIR + "style-icons/drawable-xxhdpi/";
 	private static OsmWindow minstance = null;
 	private RenderingRulesStorage mRenderingRulesStorage;
 	private ResourceManager mResourceManager;
@@ -315,12 +316,16 @@ public class OsmWindow {
 	}
 
 	public RenderingRulesStorage initRenderingRulesStorage() throws XmlPullParserException, IOException {
-//		final String loc = getAppPath(RENDERING_STYLES_DIR).getAbsolutePath() + File.separator;
-		final String loc = File.separator +  RENDERING_STYLES_DIR; // + File.separator;
-		String defaultFile = loc + "default.render.xml";
+		final String loc = RENDERING_STYLES_DIR; 
+		String res = loc + "default.render.xml";
+		String defaultFile = res;
 		final Map<String, String> renderingConstants = new LinkedHashMap<String, String>();
-		InputStream is = this.getClass().getResourceAsStream(loc + "default.render.xml");
-//		System.out.println("Stream: " +is + ", loc " + loc);
+		InputStream is = getResource(res);
+		if(is == null){
+			System.err.println("Can't find resource " + res);
+			printClassPath();
+			System.exit(1);
+		}
 		try {
 			XmlPullParser parser = PlatformUtil.newXMLPullParser();
 			parser.setInput(is, "UTF-8");
@@ -345,25 +350,41 @@ public class OsmWindow {
 			public RenderingRulesStorage resolve(String name, RenderingRulesStorageResolver ref)
 					throws XmlPullParserException, IOException {
 				RenderingRulesStorage depends = new RenderingRulesStorage(name, renderingConstants);
-//				depends.parseRulesFromXmlInputStream(new FileInputStream(loc + name + ".render.xml"), ref);
-				depends.parseRulesFromXmlInputStream(this.getClass().getResourceAsStream(loc + name + ".render.xml"), ref);
+				depends.parseRulesFromXmlInputStream(getResource(loc + name + ".render.xml"), ref);
 				return depends;
 			}
 		};
-//		is = new FileInputStream(defaultFile);
-		is = this.getClass().getResourceAsStream(defaultFile);
+		is = getResource(defaultFile);
 		storage.parseRulesFromXmlInputStream(is, resolver);
 
 		return storage;
+	}
+	
+	static public void printClassPath() {
+		ClassLoader cl = ClassLoader.getSystemClassLoader();
+
+		URL[] urls = ((URLClassLoader) cl).getURLs();
+		System.out.println("Classpath:");
+		for (URL url : urls) {
+			System.out.println(url.getFile());
+		}
+
 	}
 
 	public InputStream getResource(String pIndex){
 		if(pIndex != null){
 			String name = pIndex;
-			if(!name.startsWith(File.separator)){
+			InputStream is = this.getClass().getResourceAsStream(name);
+			if(is == null){
 				name = File.separator+pIndex;
+				is = this.getClass().getResourceAsStream(name);
+				if(is == null){
+					System.err.println("ERROR: Resource not found: "  + pIndex);
+				} else {
+					System.err.println("WARNING: Found path as " + name + " instead of " + pIndex);
+				}
 			}
-			return this.getClass().getResourceAsStream(name);
+			return is;
 		}
 		return null;
 	}
@@ -477,6 +498,7 @@ public class OsmWindow {
 					throw new IllegalStateException(e);
 				}
 			} else {
+				System.err.println("Routing configuration not found!");
 				return RoutingConfiguration.getDefault();
 			}
 		} finally {
