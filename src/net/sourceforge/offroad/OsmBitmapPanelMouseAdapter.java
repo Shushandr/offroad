@@ -13,7 +13,13 @@ import java.awt.event.MouseWheelEvent;
 
 import javax.swing.Timer;
 
+import org.apache.commons.logging.Log;
+
+import net.osmand.PlatformUtil;
+
 public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements ComponentListener, KeyListener {
+	private final static Log log = PlatformUtil.getLog(OsmBitmapPanelMouseAdapter.class);
+
 	private class ZoomPerformer implements ActionListener {
 		private int mCounter;
 		private Point mPoint;
@@ -67,9 +73,10 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 
 	@Override
 	public void mouseDragged(MouseEvent e) {
-		if(isPopup(e)){
-			return;
-		}
+		// no button is pressed in that event. !?!
+//		if(isPopup(e)){
+//			return;
+//		}
 		Point point = e.getPoint();
 		point.translate(-startPoint.x, -startPoint.y);
 		drawPanel.dragImage(point);

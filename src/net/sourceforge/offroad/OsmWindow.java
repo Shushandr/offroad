@@ -20,6 +20,7 @@ import java.net.URLClassLoader;
 import java.text.MessageFormat;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.swing.AbstractAction;
@@ -34,7 +35,11 @@ import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.UIManager;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
 
+import org.apache.commons.logging.Log;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -63,6 +68,8 @@ import net.sourceforge.offroad.actions.DownloadAction;
 import net.sourceforge.offroad.actions.RouteAction;
 import net.sourceforge.offroad.actions.SearchAddressAction;
 import net.sourceforge.offroad.data.QuadRectExtendable;
+import net.sourceforge.offroad.res.ResourceTest;
+import net.sourceforge.offroad.res.Resources;
 
 /**
  * OffRoad
@@ -72,7 +79,9 @@ import net.sourceforge.offroad.data.QuadRectExtendable;
  * @date 26.03.2016
  */
 public class OsmWindow {
+	private final static Log log = PlatformUtil.getLog(OsmWindow.class);
 
+	
 	static final int MAX_ZOOM = 22;
 	public static final String RENDERING_STYLES_DIR = "rendering_styles/";
 	public static final String OSMAND_ICONS_DIR = RENDERING_STYLES_DIR + "style-icons/drawable-xxhdpi/";
@@ -98,6 +107,7 @@ public class OsmWindow {
 	private GeocodingLookupService mGeocodingLookupService;
 	private MapPoiTypes mMapPoiTypes;
 	private int mDontUpdateStatusLabelCounter;
+	private Resources mResourceStrings;
 
 	public void createAndShowUI() {
 		mDrawPanel = new OsmBitmapPanel(this);
@@ -236,13 +246,29 @@ public class OsmWindow {
 		mRegions = new OsmandRegions();
 		mResourceManager = new ResourceManager(this);
 		mResourceManager.indexingMaps(IProgress.EMPTY_PROGRESS);
-		scaleAllFonts(density);
+//		scaleAllFonts(density);
+		scaleAllFonts(2.0f);
 		startServer();
 		mRendererRegistry = new RendererRegistry(this);
 		mTargetPointsHelper = new TargetPointsHelper(this);
 		mRoutingHelper = new RoutingHelper(this);
 		mGeocodingLookupService = new GeocodingLookupService(this);
 		mMapPoiTypes = MapPoiTypes.getDefault();
+		// read resources:
+		String ct = Locale.getDefault().getCountry();
+		InputStream is = getResource("res/values-"+ct.toLowerCase()+"/strings.xml");
+		if(is == null){
+			is = getResource("res/values/strings.xml");
+		}
+		log.info("Trying to load resources " + is);
+		try {
+			JAXBContext jc = JAXBContext.newInstance(ResourceTest.class.getPackage().getName());
+			Unmarshaller u = jc.createUnmarshaller();
+			mResourceStrings = (Resources) u.unmarshal(is);
+		} catch (JAXBException e) {
+			e.printStackTrace();
+			mResourceStrings = new Resources();
+		}
 	}
 	
 //	private void initPoiTypes() {
@@ -404,7 +430,13 @@ public class OsmWindow {
 	}
 
 	public String getString(int pKey) {
-		return mStrings.hash.get(pKey);
+		String stringKey = mStrings.hash.get(pKey);
+		for (Resources.String str : mResourceStrings.getString()) {
+			if(str.getName() != null && str.getName().equals(stringKey)){
+				return str.getValue();
+			}
+		}
+		return stringKey;
 	}
 
 	public static OsmWindow getInstance() {
