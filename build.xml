@@ -26,7 +26,7 @@
           target: init                      
          - - - - - - - - - - - - - - - - - -->
 	<target name="init">
-		<echo>OffRoad version = ?.</echo>
+		<echo>OffRoad version = ${ver}.</echo>
 	</target>
 
 	<target name="build" depends="init">
@@ -46,6 +46,15 @@
 		<jar destfile="${dist.lib}/Resources.jar">
 	        <zipfileset dir="${res}" includes="**"/>
 		</jar>
+		<!-- third party libs -->
+		<copy todir="${dist.lib}">
+			<fileset dir="${lib}">
+	            <include name="commons-logging-1.1.1.jar"/>
+	            <include name="gnu-trove-osmand.jar"/>
+	            <include name="junidecode-0.1.jar"/>
+	            <include name="kxml2-2.3.0.jar"/>
+			</fileset>
+		</copy>
 		<tempfile prefix="manifest" property="temp.manifest.file"/>
 		<path id="jar-classpath">
 		    <fileset dir="${dist.lib}">
@@ -81,16 +90,6 @@
 		<copy todir="${dist}">
 			<fileset dir=".">
 				<include name="LICENSE"/>
-			</fileset>
-		</copy>
-		<!-- third party libs -->
-		<mkdir dir="${dist.lib}" />
-		<copy todir="${dist.lib}">
-			<fileset dir="${lib}">
-	            <include name="commons-logging-1.1.1.jar"/>
-	            <include name="gnu-trove-osmand.jar"/>
-	            <include name="junidecode-0.1.jar"/>
-	            <include name="kxml2-2.3.0.jar"/>
 			</fileset>
 		</copy>
 

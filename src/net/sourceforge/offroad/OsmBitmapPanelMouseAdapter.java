@@ -66,8 +66,11 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 		if(isPopup(e)){
 			return;
 		}
-		double delx = e.getX() - startPoint.getX();
-		double dely = e.getY() - startPoint.getY();
+		int delx = e.getX() - startPoint.x;
+		int dely = e.getY() - startPoint.y;
+		if(delx == 0 && dely == 0){
+			return;
+		}
 		drawPanel.moveImage(-(float) delx, -(float) dely);
 	}
 
