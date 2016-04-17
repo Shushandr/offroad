@@ -186,10 +186,8 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 
 	private void drawImage(BufferedImage pImage) {
 		clear(pImage);
-		Graphics2D g2 = pImage.createGraphics();
-		g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-		g2.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
-		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		Graphics2D graphics = pImage.createGraphics();
+		Graphics2D g2 = createGraphics(graphics);
 		mContext.loadMGap(g2, getTileBox());
 		try {
 			// rotate if needed
@@ -203,6 +201,15 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 			e.printStackTrace();
 		}
 		g2.dispose();
+		graphics.dispose();
+	}
+
+	public Graphics2D createGraphics(Graphics2D graphics) {
+		Graphics2D g2 = (Graphics2D) graphics.create();
+		g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+		g2.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		return g2;
 	}
 
 	@Override

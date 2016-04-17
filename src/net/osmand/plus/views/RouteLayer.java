@@ -82,28 +82,18 @@ public class RouteLayer extends OsmandMapLayer {
 	
 
 	private void initUI() {
-//		paint.setAntiAlias(true);
 		paint = new BasicStroke(0, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 0);
 		actionArrow = readImage("map_action_arrow.png"); 
-		
-//		actionPaint.setAntiAlias(true);
 		actionPaint = new BasicStroke(7 * view.getScaleCoefficient(), BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 0);
 		path = new Path2D.Double();
-		
-//		paintIcon.setAntiAlias(true);
 		paintIcon = new BasicStroke(3);
-		
-
-//		paintIconAction.setAntiAlias(true);
 		paintIconAction = new BasicStroke();
-		
 	}
 
 
 	public BufferedImage readImage(String image) {
 		try {
-			return ImageIO.read(view.getContext().getResource("drawable-xxhdpi/"
-					+ image));
+			return ImageIO.read(view.getContext().getResource(OsmWindow.IMAGE_PATH + image));
 		} catch (IOException e) {
 			e.printStackTrace();
 			return null;
@@ -131,14 +121,14 @@ public class RouteLayer extends OsmandMapLayer {
 			if (rrs != null) {
 				RenderingRuleSearchRequest req = new RenderingRuleSearchRequest(rrs);
 				req.setBooleanFilter(rrs.PROPS.R_NIGHT_MODE, isNight);
-				gpaint = (Graphics2D) pGraphics2d.create();
-				gactionPaint = (Graphics2D) pGraphics2d.create();
-				gpaintIcon = (Graphics2D) pGraphics2d.create();
+				gpaint = view.createGraphics(pGraphics2d);
+				gactionPaint = view.createGraphics(pGraphics2d);
+				gpaintIcon = view.createGraphics(pGraphics2d);
 				gpaintIcon.setColor(Color.black);
-				gpaintIconAction = (Graphics2D) pGraphics2d.create();
-				gpaint2 = (Graphics2D) pGraphics2d.create();
-				gpaint_1 = (Graphics2D) pGraphics2d.create();
-				gshadowPaint = (Graphics2D) pGraphics2d.create();
+				gpaintIconAction = view.createGraphics(pGraphics2d);
+				gpaint2 = view.createGraphics(pGraphics2d);
+				gpaint_1 = view.createGraphics(pGraphics2d);
+				gshadowPaint = view.createGraphics(pGraphics2d);
 				if (req.searchRenderingAttribute("route")) {
 					RenderingContext rc = new OsmandRenderer.RenderingContext();
 					rc.setDensityValue((float) tileBox.getMapDensity());

@@ -109,6 +109,9 @@ public class OsmWindow {
 	private int mDontUpdateStatusLabelCounter;
 	private Resources mResourceStrings;
 
+
+	public static final String IMAGE_PATH = "drawable-xxhdpi/";
+
 	public void createAndShowUI() {
 		mDrawPanel = new OsmBitmapPanel(this);
 		mAdapter = new OsmBitmapPanelMouseAdapter(mDrawPanel);
