@@ -22,6 +22,8 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.PropertyResourceBundle;
+import java.util.ResourceBundle;
 
 import javax.swing.AbstractAction;
 import javax.swing.JFileChooser;
@@ -83,8 +85,8 @@ public class OsmWindow {
 
 	
 	static final int MAX_ZOOM = 22;
-	public static final String RENDERING_STYLES_DIR = "rendering_styles/";
-	public static final String OSMAND_ICONS_DIR = RENDERING_STYLES_DIR + "style-icons/drawable-xxhdpi/";
+	public static final String RENDERING_STYLES_DIR = "rendering_styles/"; //$NON-NLS-1$
+	public static final String OSMAND_ICONS_DIR = RENDERING_STYLES_DIR + "style-icons/drawable-xxhdpi/"; //$NON-NLS-1$
 	private static OsmWindow minstance = null;
 	private RenderingRulesStorage mRenderingRulesStorage;
 	private ResourceManager mResourceManager;
@@ -110,7 +112,10 @@ public class OsmWindow {
 	private Resources mResourceStrings;
 
 
-	public static final String IMAGE_PATH = "drawable-xxhdpi/";
+	public static final String IMAGE_PATH = "drawable-xxhdpi/"; //$NON-NLS-1$
+
+
+	private PropertyResourceBundle mOffroadResources;
 
 	public void createAndShowUI() {
 		mDrawPanel = new OsmBitmapPanel(this);
@@ -119,13 +124,13 @@ public class OsmWindow {
 		mDrawPanel.addMouseMotionListener(mAdapter);
 		mDrawPanel.addMouseWheelListener(mAdapter);
 		
-		mStatusLabel = new JLabel("!");
+		mStatusLabel = new JLabel("!"); //$NON-NLS-1$
 		mStatusLabel.setPreferredSize(mStatusLabel.getPreferredSize());
 		mMouseMoveTimer = new Timer(500, new StatusLabelAction() );
 		mMouseMoveTimer.setRepeats(true);
 		mMouseMoveTimer.start();
 
-		mFrame = new JFrame("OffRoad");
+		mFrame = new JFrame(getOffRoadString("offroad.string4")); //$NON-NLS-1$
 		mFrame.addKeyListener(mAdapter);
 		mFrame.getContentPane().setLayout(new BorderLayout());
 		mFrame.getContentPane().add(mDrawPanel, BorderLayout.CENTER);
@@ -143,8 +148,8 @@ public class OsmWindow {
 		mFrame.setResizable(true);
 		mFrame.addComponentListener(mAdapter);
 		JMenuBar menubar = new JMenuBar();
-		JMenu jFileMenu = new JMenu("File");
-		JMenuItem saveItem = new JMenuItem("Save...");
+		JMenu jFileMenu = new JMenu(getOffRoadString("offroad.string5")); //$NON-NLS-1$
+		JMenuItem saveItem = new JMenuItem(getOffRoadString("offroad.string6")); //$NON-NLS-1$
 		saveItem.addActionListener(new ActionListener() {
 			
 			@Override
@@ -158,16 +163,16 @@ public class OsmWindow {
 		});
 		jFileMenu.add(saveItem);
 		menubar.add(jFileMenu);
-		JMenu jSearchMenu = new JMenu("Search");
-		JMenuItem findItem = new JMenuItem("Find...");
+		JMenu jSearchMenu = new JMenu(getOffRoadString("offroad.string7")); //$NON-NLS-1$
+		JMenuItem findItem = new JMenuItem(getOffRoadString("offroad.string8")); //$NON-NLS-1$
 		findItem.addActionListener(new SearchAddressAction(this));
-		findItem.setAccelerator(KeyStroke.getKeyStroke("control F"));
+		findItem.setAccelerator(KeyStroke.getKeyStroke("control F")); //$NON-NLS-1$
 		jSearchMenu.add(findItem);
 		menubar.add(jSearchMenu);
-		JMenu jDownloadMenu = new JMenu(getString("download"));
-		JMenuItem downloadItem = new JMenuItem("Download...");
+		JMenu jDownloadMenu = new JMenu(getOffRoadString("offroad.download")); //$NON-NLS-1$
+		JMenuItem downloadItem = new JMenuItem(getOffRoadString("offroad.string11")); //$NON-NLS-1$
 		downloadItem.addActionListener(new DownloadAction(this));
-		downloadItem.setAccelerator(KeyStroke.getKeyStroke("control D"));
+		downloadItem.setAccelerator(KeyStroke.getKeyStroke("control D")); //$NON-NLS-1$
 		jDownloadMenu.add(downloadItem);
 		menubar.add(jDownloadMenu);
 		JPopupMenu popupMenu = new JPopupMenu();
@@ -204,7 +209,7 @@ public class OsmWindow {
 	}
 
 	public void startServer() {
-		String portFile = getAppPath("port.txt").getAbsolutePath();
+		String portFile = getAppPath("port.txt").getAbsolutePath(); //$NON-NLS-1$
 		if (portFile == null) {
 			return;
 		}
@@ -212,9 +217,11 @@ public class OsmWindow {
 		mGeoServer.start();
 	}
 	
-	public String getString(String pString) {
-		// TODO: Translate
-		return pString;
+	public String getOffRoadString(String pString) {
+		if(mOffroadResources.containsKey(pString)){
+			return mOffroadResources.getString(pString);
+		}
+		return "TRANSLATE_ME:" + pString; //$NON-NLS-1$
 	}
 
 	public OsmBitmapPanel getDrawPanel() {
@@ -249,7 +256,7 @@ public class OsmWindow {
 		mRegions = new OsmandRegions();
 		mResourceManager = new ResourceManager(this);
 		mResourceManager.indexingMaps(IProgress.EMPTY_PROGRESS);
-		if(System.getProperty("HIDPI")!=null){
+		if(System.getProperty("HIDPI")!=null){ //$NON-NLS-1$
 			scaleAllFonts(1.3f);
 		} else {
 			scaleAllFonts(density);
@@ -261,12 +268,13 @@ public class OsmWindow {
 		mGeocodingLookupService = new GeocodingLookupService(this);
 		mMapPoiTypes = MapPoiTypes.getDefault();
 		// read resources:
-		String ct = Locale.getDefault().getCountry();
-		InputStream is = getResource("res/values-"+ct.toLowerCase()+"/strings.xml");
+		Locale locale = Locale.getDefault();
+		String ct = locale.getCountry().toLowerCase();
+		InputStream is = getResource("res/values-"+ct+"/strings.xml"); //$NON-NLS-1$ //$NON-NLS-2$
 		if(is == null){
-			is = getResource("res/values/strings.xml");
+			is = getResource("res/values/strings.xml"); //$NON-NLS-1$
 		}
-		log.info("Trying to load resources " + is);
+		log.info("Trying to load resources " + is); //$NON-NLS-1$
 		try {
 			JAXBContext jc = JAXBContext.newInstance(ResourceTest.class.getPackage().getName());
 			Unmarshaller u = jc.createUnmarshaller();
@@ -275,7 +283,29 @@ public class OsmWindow {
 			e.printStackTrace();
 			mResourceStrings = new Resources();
 		}
+		// get offroad strings:
+		try {
+			mOffroadResources = getLanguageResources(ct);
+			if(mOffroadResources==null){
+				mOffroadResources = getLanguageResources("en"); //$NON-NLS-1$
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
+	
+	private PropertyResourceBundle getLanguageResources(String lang)
+			throws IOException {
+		InputStream is = getResource("res/OffRoad_Resources_" + lang //$NON-NLS-1$
+				+ ".properties"); //$NON-NLS-1$
+		if (is == null) {
+			return null;
+		}
+		PropertyResourceBundle bundle = new PropertyResourceBundle(is);
+		is.close();
+		return bundle;
+	}
+
 	
 //	private void initPoiTypes() {
 //		if (getAppPath("poi_types.xml").exists()) {
@@ -307,7 +337,7 @@ public class OsmWindow {
 
 	public String getLangTranslation(String l) {
 		try {
-			java.lang.reflect.Field f = R.string.class.getField("lang_" + l);
+			java.lang.reflect.Field f = R.string.class.getField("lang_" + l); //$NON-NLS-1$
 			if (f != null) {
 				Integer in = (Integer) f.get(null);
 				return getString(in);
@@ -324,7 +354,7 @@ public class OsmWindow {
 			Object next = i.next();
 			if (next instanceof String) {
 				String key = (String) next;
-				if (key.endsWith(".font")) {
+				if (key.endsWith(".font")) { //$NON-NLS-1$
 					Font font = UIManager.getFont(key);
 					Font biggerFont = font.deriveFont(pScale * font.getSize2D());
 					// change ui default to bigger font
@@ -349,26 +379,26 @@ public class OsmWindow {
 
 	public RenderingRulesStorage initRenderingRulesStorage() throws XmlPullParserException, IOException {
 		final String loc = RENDERING_STYLES_DIR; 
-		String res = loc + "default.render.xml";
+		String res = loc + "default.render.xml"; //$NON-NLS-1$
 		String defaultFile = res;
 		final Map<String, String> renderingConstants = new LinkedHashMap<String, String>();
 		InputStream is = getResource(res);
 		if(is == null){
-			System.err.println("Can't find resource " + res);
+			System.err.println("Can't find resource " + res); //$NON-NLS-1$
 			printClassPath();
 			System.exit(1);
 		}
 		try {
 			XmlPullParser parser = PlatformUtil.newXMLPullParser();
-			parser.setInput(is, "UTF-8");
+			parser.setInput(is, "UTF-8"); //$NON-NLS-1$
 			int tok;
 			while ((tok = parser.next()) != XmlPullParser.END_DOCUMENT) {
 				if (tok == XmlPullParser.START_TAG) {
 					String tagName = parser.getName();
-					if (tagName.equals("renderingConstant")) {
-						if (!renderingConstants.containsKey(parser.getAttributeValue("", "name"))) {
-							renderingConstants.put(parser.getAttributeValue("", "name"),
-									parser.getAttributeValue("", "value"));
+					if (tagName.equals("renderingConstant")) { //$NON-NLS-1$
+						if (!renderingConstants.containsKey(parser.getAttributeValue("", "name"))) { //$NON-NLS-1$ //$NON-NLS-2$
+							renderingConstants.put(parser.getAttributeValue("", "name"), //$NON-NLS-1$ //$NON-NLS-2$
+									parser.getAttributeValue("", "value")); //$NON-NLS-1$ //$NON-NLS-2$
 						}
 					}
 				}
@@ -376,13 +406,13 @@ public class OsmWindow {
 		} finally {
 			is.close();
 		}
-		RenderingRulesStorage storage = new RenderingRulesStorage("default", renderingConstants);
+		RenderingRulesStorage storage = new RenderingRulesStorage("default", renderingConstants); //$NON-NLS-1$
 		final RenderingRulesStorageResolver resolver = new RenderingRulesStorageResolver() {
 			@Override
 			public RenderingRulesStorage resolve(String name, RenderingRulesStorageResolver ref)
 					throws XmlPullParserException, IOException {
 				RenderingRulesStorage depends = new RenderingRulesStorage(name, renderingConstants);
-				depends.parseRulesFromXmlInputStream(getResource(loc + name + ".render.xml"), ref);
+				depends.parseRulesFromXmlInputStream(getResource(loc + name + ".render.xml"), ref); //$NON-NLS-1$
 				return depends;
 			}
 		};
@@ -396,7 +426,7 @@ public class OsmWindow {
 		ClassLoader cl = ClassLoader.getSystemClassLoader();
 
 		URL[] urls = ((URLClassLoader) cl).getURLs();
-		System.out.println("Classpath:");
+		System.out.println("Classpath:"); //$NON-NLS-1$
 		for (URL url : urls) {
 			System.out.println(url.getFile());
 		}
@@ -408,13 +438,13 @@ public class OsmWindow {
 			String name = pIndex;
 			InputStream is = this.getClass().getResourceAsStream(name);
 			if(is == null){
-				name = "/"+pIndex;
+				name = "/"+pIndex; //$NON-NLS-1$
 				is = this.getClass().getResourceAsStream(name);
 				if(is == null){
-					System.err.println("ERROR: Resource not found: "  + pIndex);
+					System.err.println("ERROR: Resource not found: "  + pIndex); //$NON-NLS-1$
 					printClassPath();
 				} else {
-					System.err.println("WARNING: Found path as " + name + " instead of " + pIndex);
+					System.err.println("WARNING: Found path as " + name + " instead of " + pIndex); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 			}
 			return is;
@@ -424,10 +454,10 @@ public class OsmWindow {
 	
 	public File getAppPath(String pIndex) {
 		if (pIndex == null) {
-			pIndex = "";
+			pIndex = ""; //$NON-NLS-1$
 		}
-		String pathname = System.getProperty("user.home") + File.separator  + ".OffRoad" + File.separator + pIndex;
-		log.info("Searching for " + pathname);
+		String pathname = System.getProperty("user.home") + File.separator  + ".OffRoad" + File.separator + pIndex; //$NON-NLS-1$ //$NON-NLS-2$
+		log.info("Searching for " + pathname); //$NON-NLS-1$
 		return new File(pathname);
 	}
 
@@ -506,7 +536,7 @@ public class OsmWindow {
 			MouseEvent e = getLastMouseEvent();
 			LatLon cursorPosition = mDrawPanel.getCursorPosition();
 			if(e == null || cursorPosition == null){
-				mStatusLabel.setText("");
+				mStatusLabel.setText(""); //$NON-NLS-1$
 				return;
 			}
 			LatLon mousePosition = mDrawPanel.getTileBox().getLatLonFromPixel(e.getX(), e.getY());
@@ -515,7 +545,7 @@ public class OsmWindow {
 					new Double(cursorPosition.getLatitude()),
 					new Double(cursorPosition.getLongitude()) };
 			MessageFormat formatter = new MessageFormat(
-					"Distance (bee-line) between mouse and cursor: {0,number,###,###.###}km. Position: {1,number,###.####}, {2,number,###.####}.");
+					getOffRoadString("offroad.string47")); //$NON-NLS-1$
 			String message = formatter.format(messageArguments);
 			mStatusLabel.setText(message);
 		}
@@ -537,13 +567,13 @@ public class OsmWindow {
 					throw new IllegalStateException(e);
 				}
 			} else {
-				System.err.println("Routing configuration not found!");
+				System.err.println("Routing configuration not found!"); //$NON-NLS-1$
 				return RoutingConfiguration.getDefault();
 			}
 		} finally {
 			long te = System.currentTimeMillis();
 			if (te - tm > 30) {
-				System.err.println("Defalt routing config init took " + (te - tm) + " ms");
+				System.err.println("Defalt routing config init took " + (te - tm) + " ms"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		}
 	}
