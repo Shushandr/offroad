@@ -31,9 +31,11 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.text.DateFormat;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -88,6 +90,8 @@ public class DownloadAction extends OffRoadAction {
 			return this;
 		}
 	}
+    public static final MessageFormat formatGb = new MessageFormat("{0, number,#.##} GB", Locale.US);
+    public static final MessageFormat formatMb = new MessageFormat("{0, number,##.#} MB", Locale.US);
 
 	public class ArchiveSizeTableCellRenderer extends DefaultTableCellRenderer {
 		@Override
@@ -96,7 +100,7 @@ public class DownloadAction extends OffRoadAction {
 			super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 			if (value instanceof Double) {
 				Double d = (Double) value;
-				setText("" + ((int) d.doubleValue()) + " MB");
+				setText(formatMb.format(new Object[]{d.doubleValue()}));
 			}
 			return this;
 		}

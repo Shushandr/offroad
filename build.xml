@@ -96,23 +96,31 @@
 
 	</target>
 
+	
 	<target name="run" depends="dist">
+		<condition property="vmarg" value="NODPI">
+		   <not>  
+		      <isset property="vmarg"/>
+		   </not>
+		</condition>
+		<echo message="vmarg: ${vmarg}"></echo>
 		<java classname="${start.class}"
           fork="yes"
-          dir="${dist}" spawn="false" failonerror="false" maxmemory="256M">
-			<!--    <jvmarg value="-Djava.util.logging.config.file=logging.properties" /> -->
+          dir="${dist}" spawn="false" failonerror="false" maxmemory="1024M">
+			<jvmarg value="-D${vmarg}=true" /> 
 			<classpath>
 				<path refid="build-classpath"></path>
 				<pathelement location="${OffRoad.jar}"/>
 				<fileset dir="${dist.lib}">
-<!--		            <include name="commons-logging-1.1.1.jar"/>
-		            <include name="gnu-trove-osmand.jar"/>
-		            <include name="junidecode-0.1.jar"/>
-		            <include name="kxml2-2.3.0.jar"/> -->
 		            <include name="Resources.jar"/>
 				</fileset>
 			</classpath>
 		</java>
+	</target>
+
+	<target name="runh">
+		<property name="vmarg" value="HIDPI" ></property>
+		<antcall target="run" inheritall="true"></antcall>
 	</target>
 
 	<target name="post" depends="dist">

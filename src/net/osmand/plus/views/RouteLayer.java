@@ -3,13 +3,19 @@ package net.osmand.plus.views;
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Composite;
+import java.awt.CompositeContext;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.Stroke;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
-import java.io.File;
+import java.awt.image.ColorModel;
+import java.awt.image.DataBuffer;
+import java.awt.image.Raster;
+import java.awt.image.WritableRaster;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -19,14 +25,12 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
-import composite.BlendComposite;
 import gnu.trove.list.array.TIntArrayList;
 import net.osmand.Location;
 import net.osmand.data.QuadRect;
 import net.osmand.data.RotatedTileBox;
 import net.osmand.plus.render.OsmandRenderer;
 import net.osmand.plus.render.OsmandRenderer.RenderingContext;
-import net.osmand.plus.render.RenderingIcons;
 import net.osmand.plus.routing.RouteDirectionInfo;
 import net.osmand.plus.routing.RoutingHelper;
 import net.osmand.render.RenderingRuleSearchRequest;
@@ -154,9 +158,51 @@ public class RouteLayer extends OsmandMapLayer {
 					gactionPaint.setStroke(actionPaint);
 					osmandRenderer.updatePaint(req, gactionPaint, 2, false, rc);
 					// see http://www.curious-creature.com/2006/09/20/new-blendings-modes-for-java2d/
-					gpaintIconAction.setComposite(BlendComposite.Multiply);
-//					actionPaint.setColor(Color.WHITE);
+					final Color color = gactionPaint.getColor();
+					gpaintIconAction.setComposite(new Composite() {
+						
+						@Override
+						public CompositeContext createContext(ColorModel pSrcColorModel, ColorModel pDstColorModel, RenderingHints pHints) {
+							return new CompositeContext() {
 
+								@Override
+								public void dispose() {
+								}
+
+								@Override
+								public void compose(Raster src, Raster dstIn, WritableRaster dstOut) {
+						            if (src.getSampleModel().getDataType() != DataBuffer.TYPE_INT ||
+						                    dstIn.getSampleModel().getDataType() != DataBuffer.TYPE_INT ||
+						                    dstOut.getSampleModel().getDataType() != DataBuffer.TYPE_INT) {
+						                    throw new IllegalStateException(
+						                            "Source and destination must store pixels as INT.");
+						                }
+									int width = Math.min(src.getWidth(), dstIn.getWidth());
+									int height = Math.min(src.getHeight(), dstIn.getHeight());
+
+									int[] srcPixels = new int[width];
+									int[] dstPixels = new int[width];
+
+									for (int y = 0; y < height; y++) {
+										src.getDataElements(0, y, width, 1, srcPixels);
+										dstIn.getDataElements(0, y, width, 1, dstPixels);
+										for (int x = 0; x < width; x++) {
+											// pixels are stored as INT_ARGB
+											if((srcPixels[x] & 0xFFFFFF) != 0) {
+												// if there is a pixel, take the color of the arrow:
+												dstPixels[x] = ((int) (color.getAlpha()) & 0xFF) << 24 | ((int) (color.getRed()) & 0xFF) << 16
+														| ((int) (color.getGreen()) & 0xFF) << 8 | (int) (color.getBlue()) & 0xFF;
+											} else {
+												// don't change
+											}
+										}
+										dstOut.setDataElements(0, y, width, 1, dstPixels);
+									}
+								}
+
+							};
+						}
+					});
 //					paintIconAction.setColorFilter(new PorterDuffColorFilter(gactionPaint.getColor(), Mode.MULTIPLY));
 					
 					isPaint2 = osmandRenderer.updatePaint(req, gpaint2, 1, false, rc);

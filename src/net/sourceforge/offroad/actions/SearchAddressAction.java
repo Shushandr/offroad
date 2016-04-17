@@ -195,6 +195,8 @@ public class SearchAddressAction extends OffRoadAction {
 		mRegionStore.setNextStore(cityStore).setNextStore(streetStore)
 				.setNextStore(buildingStore);
 		mRegionStore.load(mContext.getSettings());
+		// select region:
+		mRegionStore.mTextField.selectAll();
 		mRegionStore.addSelectionListener();
 		mDialog.pack();
 		removeWaitingCursor();

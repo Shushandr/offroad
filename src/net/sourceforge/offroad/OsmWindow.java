@@ -246,8 +246,11 @@ public class OsmWindow {
 		mRegions = new OsmandRegions();
 		mResourceManager = new ResourceManager(this);
 		mResourceManager.indexingMaps(IProgress.EMPTY_PROGRESS);
-//		scaleAllFonts(density);
-		scaleAllFonts(2.0f);
+		if(System.getProperty("HIDPI")!=null){
+			scaleAllFonts(1.3f);
+		} else {
+			scaleAllFonts(density);
+		}
 		startServer();
 		mRendererRegistry = new RendererRegistry(this);
 		mTargetPointsHelper = new TargetPointsHelper(this);
