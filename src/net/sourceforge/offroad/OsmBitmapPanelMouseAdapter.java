@@ -35,10 +35,27 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 		}
 	}
 
+	private class RotatePerformer implements ActionListener {
+		private double mDegrees;
+		private Point mPoint;
+		
+		public void addWheelEvent(double pWheelRotation, Point pPoint) {
+			mDegrees += pWheelRotation;
+			mPoint = pPoint;
+		}
+		
+		public void actionPerformed(ActionEvent evt) {
+			drawPanel.rotateIncrement(mDegrees);
+			mDegrees = 0;
+		}
+	}
+	
 	private OsmBitmapPanel drawPanel;
 	private Point startPoint;
 	private Timer mZoomTimer;
 	private ZoomPerformer mZoomPerformer;
+	private Timer mRotateTimer;
+	private RotatePerformer mRotatePerformer;
 	private MouseEvent mMouseEvent;
 
 	public OsmBitmapPanelMouseAdapter(OsmBitmapPanel drawPanel) {
@@ -47,6 +64,9 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 		mZoomPerformer = new ZoomPerformer();
 		mZoomTimer = new Timer(delay, mZoomPerformer);
 		mZoomTimer.setRepeats(false);
+		mRotatePerformer = new RotatePerformer();
+		mRotateTimer = new Timer(delay, mRotatePerformer);
+		mRotateTimer.setRepeats(false);
 	}
 
 	@Override
@@ -72,6 +92,7 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 			return;
 		}
 		drawPanel.moveImage(-(float) delx, -(float) dely);
+		startPoint = null;
 	}
 
 	@Override
@@ -80,6 +101,9 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 //		if(isPopup(e)){
 //			return;
 //		}
+		if(startPoint == null){
+			return;
+		}
 		Point point = e.getPoint();
 		point.translate(-startPoint.x, -startPoint.y);
 		drawPanel.dragImage(point);
@@ -88,6 +112,13 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent pE) {
 		pE.consume();
+		if(pE.isControlDown()){
+			// rotate:
+			mRotatePerformer.addWheelEvent(pE.getPreciseWheelRotation(), pE.getPoint());
+			mRotateTimer.restart();
+			drawPanel.directRotateIncrement(pE.getPreciseWheelRotation());
+			return;
+		}
 		mZoomPerformer.addWheelEvent(pE.getWheelRotation(), pE.getPoint());
 		mZoomTimer.restart();
 	}

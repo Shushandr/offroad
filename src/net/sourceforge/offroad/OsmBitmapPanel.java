@@ -11,6 +11,7 @@ import java.awt.Stroke;
 import java.awt.event.ActionEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.awt.image.ImageObserver;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -95,6 +96,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 	private int mCursorLength = 20;
 	private BasicStroke mStroke;
 	private RouteLayer mRouteLayer;
+	private double mRotation = 0;
 
 	public OsmBitmapPanel(OsmWindow pWin) {
 		mContext = pWin;
@@ -151,6 +153,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		Graphics2D g2 = (Graphics2D) g;
 		AffineTransform at = g2.getTransform();
 		AffineTransform oldTransform = (AffineTransform) at.clone();
+		at.rotate(mRotation, getWidth()/2, getHeight()/2 );
 		at.translate(originX, originY);
 		at.scale(scale, scale);
 		g2.setTransform(at);
@@ -180,6 +183,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		scale = 1.0d;
 		originX = 0;
 		originY = 0;
+		mRotation = 0;
 		bImage = pImage;
 		repaint();
 	}
@@ -189,6 +193,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		Graphics2D graphics = pImage.createGraphics();
 		Graphics2D g2 = createGraphics(graphics);
 		mContext.loadMGap(g2, getTileBox());
+		// layers!
 		try {
 			// rotate if needed
 			if (!mRouteLayer.drawInScreenPixels()) {
@@ -292,11 +297,67 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 	}
 
 	public void moveImage(float pDeltaX, float pDeltaY) {
-		QuadPoint center = getTileBox().getCenterPixelPoint();
-		getTileBox().setLatLonCenter(getTileBox().getLatFromPixel(center.x + pDeltaX, center.y + pDeltaY),
-				getTileBox().getLonFromPixel(center.x + pDeltaX, center.y + pDeltaY));
-		drawImage(bImage);
-		setImage(bImage);
+		RotatedTileBox tb = getTileBox();
+		QuadPoint center = tb.getCenterPixelPoint();
+		double newLat = tb.getLatFromPixel(center.x + pDeltaX, center.y + pDeltaY);
+		double newLon = tb.getLonFromPixel(center.x + pDeltaX, center.y + pDeltaY);
+		if(false){
+			BufferedImage image = createImage();
+			// create new image
+			clear(image);
+			Graphics2D graphics2d = image.createGraphics();
+			if (pDeltaX > 0) {
+				float gapCenterXPoint = tb.getPixWidth()  + pDeltaX / 2;
+				float gapCenterYPoint = tb.getCenterPixelY() + pDeltaY;
+				double gapLat = tb.getLatFromPixel(gapCenterXPoint, gapCenterYPoint);
+				double gapLon = tb.getLonFromPixel(gapCenterXPoint, gapCenterYPoint);
+				RotatedTileBox gapXBox = new RotatedTileBoxBuilder().density(tb.getDensity()).setZoom(tb.getZoom())
+						.setPixelDimensions((int) pDeltaX, tb.getPixHeight()).setLocation(gapLat, gapLon).setMapDensity(tb.getMapDensity()).build();
+				float transX = tb.getPixWidth() - pDeltaX;
+				graphics2d.translate(transX, 0f);
+				mContext.loadMGap(graphics2d, gapXBox);
+				graphics2d.translate(-transX, 0f);
+			} 
+			if (pDeltaY > 0) {
+				float gapCenterXPoint = tb.getCenterPixelX() + pDeltaX;
+				float gapCenterYPoint = tb.getPixHeight() + pDeltaY/2;
+				double gapLat = tb.getLatFromPixel(gapCenterXPoint, gapCenterYPoint);
+				double gapLon = tb.getLonFromPixel(gapCenterXPoint, gapCenterYPoint);
+				RotatedTileBox gapYBox = new RotatedTileBoxBuilder().density(tb.getDensity()).setZoom(tb.getZoom())
+						.setPixelDimensions(tb.getPixWidth(), (int) pDeltaY).setLocation(gapLat, gapLon).setMapDensity(tb.getMapDensity()).build();
+				float transY = tb.getPixHeight() - pDeltaY;
+				graphics2d.translate(0, transY);
+				mContext.loadMGap(graphics2d, gapYBox);
+				graphics2d.translate(0, -transY);
+			} 
+			if (pDeltaX < 0) {
+				float gapCenterXPoint = pDeltaX / 2;
+				float gapCenterYPoint = tb.getCenterPixelY() + pDeltaY;
+				double gapLat = tb.getLatFromPixel(gapCenterXPoint, gapCenterYPoint);
+				double gapLon = tb.getLonFromPixel(gapCenterXPoint, gapCenterYPoint);
+				RotatedTileBox gapXBox = new RotatedTileBoxBuilder().density(tb.getDensity()).setZoom(tb.getZoom())
+						.setPixelDimensions((int) -pDeltaX, tb.getPixHeight()).setLocation(gapLat, gapLon).setMapDensity(tb.getMapDensity()).build();
+				mContext.loadMGap(graphics2d, gapXBox);
+			} 
+			if (pDeltaY < 0) {
+				float gapCenterXPoint = tb.getCenterPixelX() + pDeltaX;
+				float gapCenterYPoint = pDeltaY/2;
+				double gapLat = tb.getLatFromPixel(gapCenterXPoint, gapCenterYPoint);
+				double gapLon = tb.getLonFromPixel(gapCenterXPoint, gapCenterYPoint);
+				RotatedTileBox gapYBox = new RotatedTileBoxBuilder().density(tb.getDensity()).setZoom(tb.getZoom())
+						.setPixelDimensions(tb.getPixWidth(), (int) -pDeltaY).setLocation(gapLat, gapLon).setMapDensity(tb.getMapDensity()).build();
+				mContext.loadMGap(graphics2d, gapYBox);
+			} 
+			// copy the old image inside:
+			graphics2d.drawImage(bImage, (int) -pDeltaX, (int) -pDeltaY, bImage.getWidth(), bImage.getHeight(), null);
+			tb.setLatLonCenter(newLat, newLon);
+			graphics2d.dispose();
+			setImage(image);
+		} else {
+			tb.setLatLonCenter(newLat, newLon);
+			drawImage(bImage);
+			setImage(bImage);
+		}
 	}
 
 	public void moveImageAnimated(final float pDeltaX, final float pDeltaY) {
@@ -342,9 +403,14 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 	
 	
 	public BufferedImage newBitmap() {
-		BufferedImage image = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
+		BufferedImage image = createImage();
 		getTileBox().setPixelDimensions(getWidth(), getHeight());
 		drawImage(image);
+		return image;
+	}
+
+	public BufferedImage createImage() {
+		BufferedImage image = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
 		return image;
 	}
 
@@ -415,5 +481,19 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	
+	
+	public void rotateIncrement(double pPreciseWheelRotation) {
+		RotatedTileBox tb = getTileBox();
+		tb.setRotate((float) (tb.getRotate() + 10 * pPreciseWheelRotation));
+		drawImage(bImage);
+		setImage(bImage);
+	}
+
+	public void directRotateIncrement(double pPreciseWheelRotation) {
+		mRotation += Math.toRadians(10*pPreciseWheelRotation);
+		repaint();
 	}
 }
