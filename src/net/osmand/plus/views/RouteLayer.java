@@ -90,13 +90,10 @@ public class RouteLayer extends OsmandMapLayer {
 		actionPaint = new BasicStroke(7 * view.getScaleCoefficient(), BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 0);
 		path = new Path2D.Double();
 		
-//		paintIcon.setFilterBitmap(true);
 //		paintIcon.setAntiAlias(true);
-//		paintIcon.setColor(Color.BLACK);
 		paintIcon = new BasicStroke(3);
 		
 
-//		paintIconAction.setFilterBitmap(true);
 //		paintIconAction.setAntiAlias(true);
 		paintIconAction = new BasicStroke();
 		
