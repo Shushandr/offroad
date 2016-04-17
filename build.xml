@@ -104,17 +104,8 @@
 		   </not>
 		</condition>
 		<echo message="vmarg: ${vmarg}"></echo>
-		<java classname="${start.class}"
-          fork="yes"
-          dir="${dist}" spawn="false" failonerror="false" maxmemory="1024M">
+		<java fork="yes" dir="${dist}" spawn="false" failonerror="false" maxmemory="1024M" jar="${OffRoad.jar}">
 			<jvmarg value="-D${vmarg}=true" /> 
-			<classpath>
-				<path refid="build-classpath"></path>
-				<pathelement location="${OffRoad.jar}"/>
-				<fileset dir="${dist.lib}">
-		            <include name="Resources.jar"/>
-				</fileset>
-			</classpath>
 		</java>
 	</target>
 
@@ -126,5 +117,10 @@
 	<target name="post" depends="dist">
 		<zip destfile="${post}/OffRoad-bin-${ver}.zip" includes="lib/*.jar,*.jar,LICENSE" basedir="${dist}">
 		</zip>
+	</target>
+	
+	<target name="clean">
+		<delete dir="${build}"  quiet="true"/>
+		<delete dir="${dist}"  quiet="true"/>
 	</target>
 </project>

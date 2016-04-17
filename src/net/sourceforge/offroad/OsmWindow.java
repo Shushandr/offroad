@@ -426,8 +426,8 @@ public class OsmWindow {
 		if (pIndex == null) {
 			pIndex = "";
 		}
-		String pathname = System.getProperty("user.dir") + File.separator + pIndex;
-		System.out.println("Searching for " + pathname);
+		String pathname = System.getProperty("user.home") + File.separator  + ".OffRoad" + File.separator + pIndex;
+		log.info("Searching for " + pathname);
 		return new File(pathname);
 	}
 
