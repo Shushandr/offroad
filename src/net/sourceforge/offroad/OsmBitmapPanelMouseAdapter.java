@@ -57,9 +57,11 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 	private Timer mRotateTimer;
 	private RotatePerformer mRotatePerformer;
 	private MouseEvent mMouseEvent;
+	private OsmWindow mContext;
 
 	public OsmBitmapPanelMouseAdapter(OsmBitmapPanel drawPanel) {
 		this.drawPanel = drawPanel;
+		mContext = drawPanel.getContext();
 		int delay = 100; // milliseconds
 		mZoomPerformer = new ZoomPerformer();
 		mZoomTimer = new Timer(delay, mZoomPerformer);
@@ -145,7 +147,7 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 		if(isPopup(e)){
 			return;
 		}
-		drawPanel.setCursor(e.getPoint());
+		mContext.setCursor(e.getPoint());
 	}
 
 	@Override
@@ -155,6 +157,9 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 
 	@Override
 	public void keyPressed(KeyEvent pE) {
+		if(pE.isAltDown() || pE.isControlDown() || pE.isAltGraphDown()){
+			return;
+		}
 		int height = drawPanel.getHeight();
 		int width = drawPanel.getWidth();
 		switch (pE.getKeyCode()) {

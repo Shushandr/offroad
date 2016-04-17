@@ -7,6 +7,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Frame;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -23,7 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.PropertyResourceBundle;
-import java.util.ResourceBundle;
+import java.util.Vector;
 
 import javax.swing.AbstractAction;
 import javax.swing.JFileChooser;
@@ -67,6 +68,8 @@ import net.osmand.router.RoutingConfiguration;
 import net.osmand.router.RoutingConfiguration.Builder;
 import net.osmand.util.MapUtils;
 import net.sourceforge.offroad.actions.DownloadAction;
+import net.sourceforge.offroad.actions.NavigationBackAction;
+import net.sourceforge.offroad.actions.NavigationForwardAction;
 import net.sourceforge.offroad.actions.RouteAction;
 import net.sourceforge.offroad.actions.SearchAddressAction;
 import net.sourceforge.offroad.data.QuadRectExtendable;
@@ -81,6 +84,18 @@ import net.sourceforge.offroad.res.Resources;
  * @date 26.03.2016
  */
 public class OsmWindow {
+	public class MapPointStorage {
+
+		private LatLon mPoint;
+		private int mZoom;
+
+		public MapPointStorage(LatLon pPoint, int pZoom) {
+			mPoint = pPoint;
+			mZoom = pZoom;
+		}
+
+	}
+
 	private final static Log log = PlatformUtil.getLog(OsmWindow.class);
 
 	
@@ -116,6 +131,10 @@ public class OsmWindow {
 
 
 	private PropertyResourceBundle mOffroadResources;
+
+
+	private Vector<MapPointStorage> mPointStorage = new Vector<>();
+	private int mPointStorageIndex = -1;
 
 	public void createAndShowUI() {
 		mDrawPanel = new OsmBitmapPanel(this);
@@ -169,12 +188,25 @@ public class OsmWindow {
 		findItem.setAccelerator(KeyStroke.getKeyStroke("control F")); //$NON-NLS-1$
 		jSearchMenu.add(findItem);
 		menubar.add(jSearchMenu);
+		// Download
 		JMenu jDownloadMenu = new JMenu(getOffRoadString("offroad.download")); //$NON-NLS-1$
 		JMenuItem downloadItem = new JMenuItem(getOffRoadString("offroad.string11")); //$NON-NLS-1$
 		downloadItem.addActionListener(new DownloadAction(this));
 		downloadItem.setAccelerator(KeyStroke.getKeyStroke("control D")); //$NON-NLS-1$
 		jDownloadMenu.add(downloadItem);
 		menubar.add(jDownloadMenu);
+		// Navigation
+		JMenu jNavigationMenu = new JMenu(getOffRoadString("offroad.navigation")); //$NON-NLS-1$
+		JMenuItem navigationBackItem = new JMenuItem(getOffRoadString("offroad.back")); //$NON-NLS-1$
+		navigationBackItem.addActionListener(new NavigationBackAction(this));
+		navigationBackItem.setAccelerator(KeyStroke.getKeyStroke("alt LEFT")); //$NON-NLS-1$
+		jNavigationMenu.add(navigationBackItem);
+		JMenuItem navigationForwardItem = new JMenuItem(getOffRoadString("offroad.forward")); //$NON-NLS-1$
+		navigationForwardItem.addActionListener(new NavigationForwardAction(this));
+		navigationForwardItem.setAccelerator(KeyStroke.getKeyStroke("alt RIGHT")); //$NON-NLS-1$
+		jNavigationMenu.add(navigationForwardItem);
+		menubar.add(jNavigationMenu);
+		
 		JPopupMenu popupMenu = new JPopupMenu();
 		JMenuItem routeMenu = new JMenuItem(new RouteAction(this));
 		popupMenu.add(routeMenu);
@@ -496,8 +528,8 @@ public class OsmWindow {
 
 	public void move(LatLon pLocation, QuadRectExtendable pQuadRectExtendable) {
 		// make sure that all points of the rect are in:
+		RotatedTileBox tileBox = mDrawPanel.getTileBox();
 		if (pQuadRectExtendable!= null) {
-			RotatedTileBox tileBox = mDrawPanel.getTileBox();
 			tileBox.setLatLonCenter(pLocation.getLatitude(), pLocation.getLongitude());
 			tileBox.setZoom(MAX_ZOOM);
 			while (!tileBox.containsLatLon(pQuadRectExtendable.left, pQuadRectExtendable.top)) {
@@ -507,8 +539,9 @@ public class OsmWindow {
 				tileBox.setZoom(tileBox.getZoom() - 1);
 			} 
 		}
-		mDrawPanel.move(pLocation);
+		mDrawPanel.move(pLocation, tileBox.getZoom());
 		mDrawPanel.setCursor(pLocation);
+		addPoint(pLocation);
 	}
 
 	public void setWaitingCursor(boolean waiting) {
@@ -625,6 +658,53 @@ public class OsmWindow {
 
 	public void runInUIThread(Runnable pRunnable) {
 		SwingUtilities.invokeLater(pRunnable);
+	}
+	
+	public void addPoint(LatLon pPoint){
+		MapPointStorage storage = new MapPointStorage(pPoint, getZoom());
+		if(mPointStorageIndex != mPointStorage.size()-1){
+			// remove all subsequent:
+			for(int i=mPointStorageIndex+1; i < mPointStorage.size() ; ++i){
+				mPointStorage.remove(i);
+			}
+		}
+		mPointStorage.add(storage);
+		mPointStorageIndex = mPointStorage.size()-1;
+	}
+
+	public int getZoom() {
+		return getDrawPanel().getTileBox().getZoom();
+	}
+
+	public void back() {
+		if(mPointStorage.isEmpty()){
+			return;
+		}
+		if(mPointStorageIndex <= 0 || mPointStorageIndex >= mPointStorage.size()){
+			return;
+		}
+		mPointStorageIndex--;
+		MapPointStorage pointStorage = mPointStorage.get(mPointStorageIndex);
+		mDrawPanel.move(pointStorage.mPoint, pointStorage.mZoom);
+		mDrawPanel.setCursor(pointStorage.mPoint);
+	}
+
+	public void forward() {
+		if(mPointStorage.isEmpty()){
+			return;
+		}
+		if(mPointStorageIndex < 0 || mPointStorageIndex >= mPointStorage.size()-1){
+			return;
+		}
+		mPointStorageIndex++;
+		MapPointStorage pointStorage = mPointStorage.get(mPointStorageIndex);
+		mDrawPanel.move(pointStorage.mPoint, pointStorage.mZoom);
+		mDrawPanel.setCursor(pointStorage.mPoint);
+	}
+	
+	public void setCursor(Point pPoint) {
+		mDrawPanel.setCursor(pPoint);
+		addPoint(mDrawPanel.getCursorPosition());
 	}
 
 }

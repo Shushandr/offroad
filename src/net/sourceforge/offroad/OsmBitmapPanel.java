@@ -227,16 +227,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 
 	public void zoomChange(final int pWheelRotation, final Point pNewCenter) {
 		int newZoom = getTileBox().getZoom() + pWheelRotation;
-		MapLevel mapInstance = OsmandIndex.MapLevel.getDefaultInstance();
-		int minZoom = mapInstance.hasMinzoom() ? mapInstance.getMinzoom() : 1;
-		if (newZoom < minZoom) {
-			newZoom = minZoom;
-		}
-		// FIXME: Magic number
-		int maxZoom = mapInstance.hasMaxzoom() ? mapInstance.getMaxzoom() : OsmWindow.MAX_ZOOM;
-		if (newZoom > maxZoom) {
-			newZoom = maxZoom;
-		}
+		newZoom = checkZoom(newZoom);
 
 		if (mAnimationThread != null && mAnimationThread.isAlive()) {
 			return;
@@ -293,6 +284,20 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		mAnimationThread.start();
 		mGenerationThread = new GenerationThread(tileCopy, mAnimationThread);
 		mGenerationThread.start();
+	}
+
+	public int checkZoom(int newZoom) {
+		MapLevel mapInstance = OsmandIndex.MapLevel.getDefaultInstance();
+		int minZoom = mapInstance.hasMinzoom() ? mapInstance.getMinzoom() : 1;
+		if (newZoom < minZoom) {
+			newZoom = minZoom;
+		}
+		// FIXME: Magic number
+		int maxZoom = mapInstance.hasMaxzoom() ? mapInstance.getMaxzoom() : OsmWindow.MAX_ZOOM;
+		if (newZoom > maxZoom) {
+			newZoom = maxZoom;
+		}
+		return newZoom;
 	}
 
 	public void moveImage(float pDeltaX, float pDeltaY) {
@@ -438,8 +443,10 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		repaint();
 	}
 
-	public void move(LatLon pLocation) {
+	public void move(LatLon pLocation, int pZoom) {
 		mTileBox.setLatLonCenter(pLocation.getLatitude(), pLocation.getLongitude());
+		int newZoom = checkZoom(pZoom);
+		getTileBox().setZoom(newZoom);
 		drawImage(bImage);
 		setImage(bImage);
 	}
