@@ -114,8 +114,14 @@
 	</target>
 
 	<target name="post" depends="dist">
-		<zip destfile="${post}/OffRoad-bin-${ver}.zip" includes="lib/*.jar,*.jar,LICENSE" basedir="${dist}">
+		<mkdir dir="${post}/${ver}" />
+		<zip destfile="${post}/${ver}/OffRoad-bin-${ver}.zip" includes="lib/*.jar,*.jar,LICENSE" basedir="${dist}">
 		</zip>
+		<copy todir="${post}/${ver}">
+			<fileset dir=".">
+				<include name="readme.txt"/>
+			</fileset>
+		</copy>
 	</target>
 	
 	<target name="clean">
@@ -126,9 +132,9 @@
 	<target name="release" depends="post">
 		<echo message="SCP to ${ver}"></echo>
 		<exec command="scp">
-			<arg value="${post}/OffRoad-bin-${ver}.zip"/>
-			<arg value="readme.txt"/>
-			<arg value="christianfoltin,offroadosm@frs.sourceforge.net:/home/frs/project/o/of/offroadosm/OffRoad_Unstable/${ver}/"/>
+			<arg value="-r"/>
+			<arg value="${post}/${ver}"/>
+			<arg value="christianfoltin,offroadosm@frs.sourceforge.net:/home/frs/project/o/of/offroadosm/OffRoad_Unstable/."/>
 		</exec>
 		<echo message="git tag ${ver}"></echo>
 		<exec command="git"><arg value="tag ${ver}"/></exec>
