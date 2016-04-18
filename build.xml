@@ -127,7 +127,7 @@
 		<echo message="SCP to ${ver}"></echo>
 		<exec command="scp">
 			<arg value="${post}/OffRoad-bin-${ver}.zip"/>
-			<arg value="${src}/readme.txt"/>
+			<arg value="readme.txt"/>
 			<arg value="christianfoltin,offroadosm@frs.sourceforge.net:/home/frs/project/o/of/offroadosm/OffRoad_Unstable/${ver}/"/>
 		</exec>
 		<echo message="git tag ${ver}"></echo>
