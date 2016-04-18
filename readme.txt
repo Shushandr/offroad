@@ -28,6 +28,18 @@ An offline map viewer based on OsmAnd.
 
 Version History:
 
+0_1_Alpha3:
+============
+* Moved map files to <HOME>/.OffRoad
+  - **Downloaded files must be moved**
+  - Navigation
+  - Internationalization started
+
+0_1_Alpha2:
+============
+* Corrected class paths
+* New feature integrated from OsmAnd:
+  - Routing
 
 0_1_Alpha1:
 ============
@@ -38,8 +50,3 @@ Version History:
   - Offline routing
   - Several map animations (zoom, move)
   
-0_1_Alpha2:
-============
-* Corrected class paths
-* New feature integrated from OsmAnd:
-  - Routing

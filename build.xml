@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project default="dist" name="OffRoad">
 
-	<property name="ver" value="0.1_Alpha2"/>
+	<property name="ver" value="0.1_Alpha3"/>
 	<property name="src" location="src"/>
 	<property name="res" location="res"/>
 	<property name="lib" location="lib"/>
@@ -122,4 +122,16 @@
 		<delete dir="${build}"  quiet="true"/>
 		<delete dir="${dist}"  quiet="true"/>
 	</target>
+	
+	<target name="release" depends="post">
+		<echo message="SCP to ${ver}"></echo>
+		<exec command="scp">
+			<arg value="${post}/OffRoad-bin-${ver}.zip"/>
+			<arg value="${src}/readme.txt"/>
+			<arg value="christianfoltin,offroadosm@frs.sourceforge.net:/home/frs/project/o/of/offroadosm/OffRoad_Unstable/${ver}/"/>
+		</exec>
+		<echo message="git tag ${ver}"></echo>
+		<exec comand="git"><arg value="tag ${ver}"/></exec>
+	</target>
+	
 </project>
