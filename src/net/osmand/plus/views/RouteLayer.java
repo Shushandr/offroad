@@ -162,7 +162,7 @@ public class RouteLayer extends OsmandMapLayer {
 						                    dstIn.getSampleModel().getDataType() != DataBuffer.TYPE_INT ||
 						                    dstOut.getSampleModel().getDataType() != DataBuffer.TYPE_INT) {
 						                    throw new IllegalStateException(
-						                            "Source and destination must store pixels as INT.");
+						                            "Source and destination must store pixels as INT: " + src.getSampleModel().getDataType() + "," + dstIn.getSampleModel().getDataType() + "," + dstOut.getSampleModel().getDataType());
 						                }
 									int width = Math.min(src.getWidth(), dstIn.getWidth());
 									int height = Math.min(src.getHeight(), dstIn.getHeight());

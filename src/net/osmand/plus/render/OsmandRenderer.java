@@ -774,7 +774,7 @@ public class OsmandRenderer {
 	
 	private void drawPolyline(BinaryMapDataObject obj, RenderingRuleSearchRequest render, Graphics2D pGraphics2d, RenderingContext rc, TagValuePair pair, int layer,
 			boolean drawOnlyShadow) {
-		if(render == null || pair == null){
+		if(render == null || pair == null ){
 			return;
 		}
 		int length = obj.getPointsLength();

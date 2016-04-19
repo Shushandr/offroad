@@ -900,7 +900,7 @@ public class RoutingHelper {
 			params.ctx = app;
 			if (params.type == RouteService.OSMAND) {
 				params.calculationProgress = new RouteCalculationProgress();
-//				updateProgress(params);
+				updateProgress(params);
 			}
 			synchronized (this) {
 				final Thread prevRunningJob = currentRunningJob;
@@ -938,33 +938,33 @@ public class RoutingHelper {
 	}
 	
 	
-//	private void updateProgress(final RouteCalculationParams params) {
-//		if(progressRoute != null ) {
-//			app.runInUIThread(new Runnable() {
-//				@Override
-//				public void run() {
-//					RouteCalculationProgress calculationProgress = params.calculationProgress;
-//					if (isRouteBeingCalculated()) {
-//						float p = Math.max(calculationProgress.distanceFromBegin, calculationProgress.distanceFromEnd);
-//						float all = calculationProgress.totalEstimatedDistance * 1.25f;
-//						if (all > 0) {
-//							int t = (int) Math.min(p * p / (all * all) * 100f, 99);
-//							progressRoute.updateProgress(t);
-//						}
-//						Thread t = currentRunningJob;
-//						if(t instanceof RouteRecalculationThread && ((RouteRecalculationThread) t).params != params) {
-//							// different calculation started
-//							return; 
-//						} else {
-//							updateProgress(params);
-//						}
-//					} else {
-//						progressRoute.finish();
-//					}
-//				}
-//			}, 300);
-//		}
-//	}
+	private void updateProgress(final RouteCalculationParams params) {
+		if(progressRoute != null ) {
+			app.runInUIThread(new Runnable() {
+				@Override
+				public void run() {
+					RouteCalculationProgress calculationProgress = params.calculationProgress;
+					if (isRouteBeingCalculated()) {
+						float p = Math.max(calculationProgress.distanceFromBegin, calculationProgress.distanceFromEnd);
+						float all = calculationProgress.totalEstimatedDistance * 1.25f;
+						if (all > 0) {
+							int t = (int) Math.min(p * p / (all * all) * 100f, 99);
+							progressRoute.updateProgress(t);
+						}
+						Thread t = currentRunningJob;
+						if(t instanceof RouteRecalculationThread && ((RouteRecalculationThread) t).params != params) {
+							// different calculation started
+							return; 
+						} else {
+							updateProgress(params);
+						}
+					} else {
+						progressRoute.finish();
+					}
+				}
+			}, 300);
+		}
+	}
 	
 	public void setProgressBar(RouteCalculationProgressCallback progressRoute) {
 		this.progressRoute = progressRoute;

@@ -127,6 +127,7 @@
 	<target name="clean">
 		<delete dir="${build}"  quiet="true"/>
 		<delete dir="${dist}"  quiet="true"/>
+		<delete dir="${post}/${ver}/"  quiet="true"/>
 	</target>
 	
 	<target name="release" depends="post">

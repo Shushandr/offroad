@@ -7,6 +7,9 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Frame;
 import java.awt.Graphics2D;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -33,7 +36,9 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JProgressBar;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
@@ -113,6 +118,8 @@ public class OsmWindow {
 	private OsmBitmapPanelMouseAdapter mAdapter;
 	private JFrame mFrame;
 	private JLabel mStatusLabel;
+	private JLabel mRouteProgressStatus;
+	private JProgressBar mRouteProgressBar;
 	private Timer mMouseMoveTimer;
 	private GeoServer mGeoServer;
 	public int widthPixels;
@@ -136,6 +143,9 @@ public class OsmWindow {
 	private Vector<MapPointStorage> mPointStorage = new Vector<>();
 	private int mPointStorageIndex = -1;
 
+
+	private JPanel mStatusBar;
+
 	public void createAndShowUI() {
 		mDrawPanel = new OsmBitmapPanel(this);
 		mAdapter = new OsmBitmapPanelMouseAdapter(mDrawPanel);
@@ -145,6 +155,18 @@ public class OsmWindow {
 		
 		mStatusLabel = new JLabel("!"); //$NON-NLS-1$
 		mStatusLabel.setPreferredSize(mStatusLabel.getPreferredSize());
+		mRouteProgressBar = new JProgressBar();
+		mRouteProgressBar.setMaximum(100);
+		mRouteProgressBar.setStringPainted(true);
+		mRouteProgressBar.setVisible(false);
+		mRouteProgressStatus = new JLabel("!");
+		mStatusBar=new JPanel();
+		mStatusBar.setLayout(new GridBagLayout());
+		mStatusBar.add(mStatusLabel, new GridBagConstraints(0, 0, 1, 1, 3, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+		mStatusBar.add(mRouteProgressStatus, new GridBagConstraints(1, 0, 1, 1, 0, 1, GridBagConstraints.EAST, GridBagConstraints.VERTICAL, new Insets(0, 0, 0, 0), 0, 0));
+		mStatusBar.add(mRouteProgressBar, new GridBagConstraints(2, 0, 1, 1, 1, 1, GridBagConstraints.EAST, GridBagConstraints.VERTICAL, new Insets(0, 0, 0, 0), 0, 0));
+		
+
 		mMouseMoveTimer = new Timer(500, new StatusLabelAction() );
 		mMouseMoveTimer.setRepeats(true);
 		mMouseMoveTimer.start();
@@ -153,7 +175,7 @@ public class OsmWindow {
 		mFrame.addKeyListener(mAdapter);
 		mFrame.getContentPane().setLayout(new BorderLayout());
 		mFrame.getContentPane().add(mDrawPanel, BorderLayout.CENTER);
-		mFrame.getContentPane().add(mStatusLabel, BorderLayout.SOUTH);
+		mFrame.getContentPane().add(mStatusBar, BorderLayout.SOUTH);
 		mFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		mFrame.addWindowListener(new WindowAdapter() {
 			@Override
@@ -411,7 +433,11 @@ public class OsmWindow {
 
 	public RenderingRulesStorage initRenderingRulesStorage() throws XmlPullParserException, IOException {
 		final String loc = RENDERING_STYLES_DIR; 
-		String res = loc + "default.render.xml"; //$NON-NLS-1$
+		String res; 
+		res = loc + "default.render.xml";
+//		res = loc + "LightRS.render.xml";
+//		res = loc + "UniRS.render.xml";
+//		res = loc + "regions.render.xml";
 		String defaultFile = res;
 		final Map<String, String> renderingConstants = new LinkedHashMap<String, String>();
 		InputStream is = getResource(res);
@@ -707,4 +733,29 @@ public class OsmWindow {
 		addPoint(mDrawPanel.getCursorPosition());
 	}
 
+	public void runInUIThread(Runnable pRunnable, int pDelay) {
+		Timer timer = new Timer(pDelay, new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent pE) {
+				pRunnable.run();
+			}
+		});
+		timer.setRepeats(false);
+		timer.start();
+	}
+
+	public void setProgress(int pPercent){
+		if(pPercent < 100){
+			mRouteProgressBar.setVisible(true);
+			mRouteProgressBar.setValue(pPercent);
+		} else {
+			mRouteProgressBar.setVisible(false);
+		}
+	}
+	
+	public void setStatus(String pStatus){
+		mRouteProgressStatus.setText(pStatus);
+	}
+	
 }

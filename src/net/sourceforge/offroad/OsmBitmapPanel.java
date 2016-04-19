@@ -149,13 +149,11 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 	@Override
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
-		Graphics2D g2 = (Graphics2D) g;
-		AffineTransform at = g2.getTransform();
-		AffineTransform oldTransform = (AffineTransform) at.clone();
-		at.rotate(mRotation, getWidth()/2, getHeight()/2 );
-		at.translate(originX, originY);
-		at.scale(scale, scale);
-		g2.setTransform(at);
+		Graphics2D gd2 = (Graphics2D) g;
+		Graphics2D g2 = createGraphics(gd2);
+		g2.rotate(mRotation, getWidth()/2, getHeight()/2 );
+		g2.translate(originX, originY);
+		g2.scale(scale, scale);
 		g2.drawImage(bImage, 0, 0, null);
 		// cursor:
 		Stroke oldStroke = g2.getStroke();
@@ -174,8 +172,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		}
 		g2.setColor(oldColor);
 		g2.setStroke(oldStroke);
-		g2.setTransform(oldTransform);
-
+		g2.dispose();
 	}
 
 	private void setImage(BufferedImage pImage) {
@@ -196,11 +193,11 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		try {
 			// rotate if needed
 			if (!mRouteLayer.drawInScreenPixels()) {
-				final QuadPoint c = mTileBox.getCenterPixelPoint();
-
-				g2.rotate(mTileBox.getRotate(), c.x, c.y);
+				final QuadPoint c = getTileBox().getCenterPixelPoint();
+				
+				g2.rotate(getTileBox().getRotate(), c.x, c.y);
 			}
-			mRouteLayer.onPrepareBufferImage(g2, mTileBox, new DrawSettings(false));
+			mRouteLayer.onPrepareBufferImage(g2, getTileBox(), new DrawSettings(false));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -466,15 +463,22 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 
 	@Override
 	public void newRouteIsCalculated(boolean pNewRoute, ValueHolder<Boolean> pShowToast) {
-		// is in UI thread
-		drawImage(bImage);
-		setImage(bImage);
+		drawLater();
 	}
 
 	@Override
 	public void routeWasCancelled() {
-		drawImage(bImage);
-		setImage(bImage);
+		drawLater();
+	}
+
+	public void drawLater() {
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				drawImage(bImage);
+				setImage(bImage);
+				repaint();
+			}
+		});
 	}
 
 	@Override

@@ -21,12 +21,14 @@ package net.sourceforge.offroad.actions;
 
 import java.awt.Point;
 import java.awt.event.ActionEvent;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 
 import javax.swing.Action;
 
 import net.osmand.Location;
 import net.osmand.data.LatLon;
+import net.osmand.plus.routing.RoutingHelper.RouteCalculationProgressCallback;
 import net.sourceforge.offroad.OsmBitmapPanel;
 import net.sourceforge.offroad.OsmWindow;
 
@@ -34,11 +36,12 @@ import net.sourceforge.offroad.OsmWindow;
  * @author foltin
  * @date 12.04.2016
  */
-public class RouteAction extends OffRoadAction {
+public class RouteAction extends OffRoadAction implements RouteCalculationProgressCallback {
 
 	public RouteAction(OsmWindow pCtx) {
 		super(pCtx);
 		this.putValue(Action.NAME, "route");
+		mContext.getRoutingHelper().setProgressBar(this);
 	}
 	
 	/* (non-Javadoc)
@@ -64,6 +67,20 @@ public class RouteAction extends OffRoadAction {
 	@Override
 	public void save() {
 
+	}
+
+	@Override
+	public void updateProgress(int pProgress) {
+		mContext.setProgress(pProgress);
+		mContext.setStatus("");
+	}
+
+	@Override
+	public void finish() {
+		mContext.setProgress(100);
+		float dist = mContext.getRoutingHelper().getRoute().getWholeDistance()/1000f;
+		String str = mContext.getOffRoadString("offroad.routing_finished");
+		mContext.setStatus(MessageFormat.format(str, new Object[] { dist }));
 	}
 
 }
