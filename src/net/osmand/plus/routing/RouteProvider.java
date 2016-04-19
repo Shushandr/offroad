@@ -759,7 +759,7 @@ public class RouteProvider {
 						SwingUtilities.invokeAndWait(new Runnable() {
 							@Override
 							public void run() {
-								JOptionPane.showMessageDialog(params.ctx.getDrawPanel(), R.string.complex_route_calculation_failed + e.getMessage());
+								JOptionPane.showMessageDialog(params.ctx.getDrawPanel(), params.ctx.getString(R.string.complex_route_calculation_failed) + " " + e.getMessage());
 							}
 						});
 					} catch (InvocationTargetException e1) {
