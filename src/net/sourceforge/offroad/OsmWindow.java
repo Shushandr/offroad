@@ -24,6 +24,7 @@ import java.net.URLClassLoader;
 import java.text.MessageFormat;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.PropertyResourceBundle;
@@ -43,8 +44,8 @@ import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.UIManager;
-import javax.swing.event.MenuEvent;
-import javax.swing.event.MenuListener;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -56,6 +57,7 @@ import org.xmlpull.v1.XmlPullParserException;
 import net.osmand.IProgress;
 import net.osmand.IndexConstants;
 import net.osmand.PlatformUtil;
+import net.osmand.data.Amenity;
 import net.osmand.data.LatLon;
 import net.osmand.data.RotatedTileBox;
 import net.osmand.map.OsmandRegions;
@@ -71,6 +73,7 @@ import net.osmand.plus.render.MapRenderRepositories;
 import net.osmand.plus.render.RendererRegistry;
 import net.osmand.plus.resources.ResourceManager;
 import net.osmand.plus.routing.RoutingHelper;
+import net.osmand.plus.views.POIMapLayer;
 import net.osmand.render.RenderingRulesStorage;
 import net.osmand.render.RenderingRulesStorage.RenderingRulesStorageResolver;
 import net.osmand.router.GeneralRouter;
@@ -96,6 +99,50 @@ import net.sourceforge.offroad.res.Resources;
  * @date 26.03.2016
  */
 public class OsmWindow {
+	private class PoiContextMenuListener implements PopupMenuListener {
+		
+		private JPopupMenu mMenu;
+		private Vector<JMenuItem> items = new Vector<>();
+
+		public PoiContextMenuListener(JPopupMenu pMenu) {
+			mMenu = pMenu;
+		}
+		
+		@Override
+		public void popupMenuWillBecomeVisible(PopupMenuEvent pE) {
+			RotatedTileBox tileBox = getDrawPanel().getTileBox();
+			List<Amenity> res = new Vector<Amenity>();
+			getDrawPanel().getPoiLayer().getAmenityFromPoint(tileBox, mAdapter.getMouseEvent().getPoint(), res);
+			System.out.println("res: " + res);
+			for (Amenity am : res) {
+				JMenuItem item = new JMenuItem(am.getName());
+				item.addActionListener(new ActionListener() {
+					
+					@Override
+					public void actionPerformed(ActionEvent pE) {
+						POIMapLayer.showDescriptionDialog(OsmWindow.this, getInstance(), am.getAdditionalInfo().toString(), am.toString());
+					}
+				});
+				items.add(item);
+				mMenu.add(item);
+			}
+		}
+
+		@Override
+		public void popupMenuWillBecomeInvisible(PopupMenuEvent pE) {
+			for (JMenuItem jMenuItem : items) {
+				mMenu.remove(jMenuItem);
+			}
+			items.clear();
+		}
+
+		@Override
+		public void popupMenuCanceled(PopupMenuEvent pE) {
+			// TODO Auto-generated method stub
+			
+		}
+	}
+
 	public class MapPointStorage {
 
 		private LatLon mPoint;
@@ -252,6 +299,7 @@ public class OsmWindow {
 		JMenuItem routeMenu = new JMenuItem(new RouteAction(this));
 		popupMenu.add(routeMenu);
 		mDrawPanel.setComponentPopupMenu(popupMenu);
+		popupMenu.addPopupMenuListener(new PoiContextMenuListener(popupMenu));
 //		findItem.addActionListener(new ActionListener() {
 //
 //			@Override

@@ -102,6 +102,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 	private double mRotation = 0;
 	private List<OsmandMapLayer> layers = new ArrayList<OsmandMapLayer>();
 	private Map<OsmandMapLayer, Float> zOrders = new HashMap<OsmandMapLayer, Float>();
+	private POIMapLayer mPoiLayer;
 
 	public OsmBitmapPanel(OsmWindow pWin) {
 		mContext = pWin;
@@ -118,7 +119,8 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		mStroke = new BasicStroke((float) (2f * mTileBox.getMapDensity()));
 		addLayer(new RouteLayer(mContext.getRoutingHelper()), 1);
 		addLayer(new MapTextLayer(), 2);
-		addLayer(new POIMapLayer(pWin), 3);
+		mPoiLayer = new POIMapLayer(pWin);
+		addLayer(mPoiLayer, 3);
 		for (OsmandMapLayer layer : layers) {
 			layer.initLayer(this);
 		}
@@ -586,6 +588,10 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 
 	public void refreshMap() {
 		drawLater();
+	}
+
+	public POIMapLayer getPoiLayer() {
+		return mPoiLayer;
 	}
 
 }
