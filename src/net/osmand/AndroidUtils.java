@@ -42,4 +42,16 @@ public class AndroidUtils {
 			return null;
 		}
 	}
+	
+	/**
+	 * @param string1
+	 *            input (or null)
+	 * @param string2
+	 *            input (or null)
+	 * @return true, if equal (that means: same text or both null)
+	 */
+	public static boolean safeEquals(String string1, String string2) {
+		return (string1 != null && string2 != null && string1.equals(string2))
+				|| (string1 == null && string2 == null);
+	}
 }

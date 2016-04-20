@@ -26,10 +26,15 @@ import java.awt.event.WindowEvent;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.Icon;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
+import javax.swing.JMenu;
 import javax.swing.KeyStroke;
 import javax.swing.WindowConstants;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
 
 import net.sourceforge.offroad.OsmWindow;
 
@@ -39,10 +44,19 @@ import net.sourceforge.offroad.OsmWindow;
  */
 public abstract class OffRoadAction extends AbstractAction {
 
+	public interface SelectableAction {
+
+	}
+
 	protected OsmWindow mContext;
 	protected JDialog mDialog;
-	
+
 	public OffRoadAction(OsmWindow pContext) {
+		this(pContext, null, null);
+	}
+
+	public OffRoadAction(OsmWindow pContext, String name, Icon icon) {
+		super(name, icon);
 		mContext = pContext;
 	}
 
@@ -55,7 +69,7 @@ public abstract class OffRoadAction extends AbstractAction {
 		// Register keystroke
 		dialog.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(keyStroke),
 				action.getValue(Action.NAME));
-	
+
 		// Register action
 		dialog.getRootPane().getActionMap().put(action.getValue(Action.NAME), action);
 	}
@@ -95,6 +109,44 @@ public abstract class OffRoadAction extends AbstractAction {
 				disposeDialog();
 			}
 		});
+	}
+
+	public boolean isSelected() {
+		return true;
+	}
+
+	public static class OffRoadMenuItem extends JCheckBoxMenuItem {
+		private JMenu mMenu;
+
+		public OffRoadMenuItem(PoiFilterAction pPoiFilterAction, JMenu pMenu) {
+			super(pPoiFilterAction);
+			mMenu = pMenu;
+			mMenu.addMenuListener(new MenuListener() {
+				
+				@Override
+				public void menuSelected(MenuEvent pE) {
+					OffRoadMenuItem.this.setSelected(OffRoadMenuItem.this.isSelected());
+				}
+				
+				@Override
+				public void menuDeselected(MenuEvent pE) {
+				}
+				
+				@Override
+				public void menuCanceled(MenuEvent pE) {
+				}
+			});
+		}
+
+		@Override
+		public boolean isSelected() {
+			Action action = getAction();
+			if (action instanceof SelectableAction && action instanceof OffRoadAction) {
+				OffRoadAction ora = (OffRoadAction) action;
+				return ora.isSelected();
+			}
+			return super.isSelected();
+		}
 	}
 
 }

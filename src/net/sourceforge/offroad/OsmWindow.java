@@ -43,6 +43,8 @@ import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.UIManager;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -78,6 +80,7 @@ import net.osmand.util.MapUtils;
 import net.sourceforge.offroad.actions.DownloadAction;
 import net.sourceforge.offroad.actions.NavigationBackAction;
 import net.sourceforge.offroad.actions.NavigationForwardAction;
+import net.sourceforge.offroad.actions.OffRoadAction.OffRoadMenuItem;
 import net.sourceforge.offroad.actions.PoiFilterAction;
 import net.sourceforge.offroad.actions.RouteAction;
 import net.sourceforge.offroad.actions.SearchAddressAction;
@@ -237,14 +240,11 @@ public class OsmWindow {
 		menubar.add(jNavigationMenu);
 		// PointOfInterest
 		JMenu jPointOfInterestMenu = new JMenu(getOffRoadString("offroad.PointOfInterest")); //$NON-NLS-1$
-		JMenuItem lPointOfInterestOffItem = new JMenuItem(getOffRoadString("offroad.poifilteroff"));
-		lPointOfInterestOffItem.addActionListener(new PoiFilterAction(this, null));
+		JMenuItem lPointOfInterestOffItem = new OffRoadMenuItem(new PoiFilterAction(this, null), jPointOfInterestMenu);
 		jPointOfInterestMenu.add(lPointOfInterestOffItem);
 		for (PoiUIFilter filter : mPoiFilters.getTopDefinedPoiFilters()) {
-			JMenuItem lPointOfInterestItem = new JMenuItem(filter.getName()); 
-			lPointOfInterestItem.addActionListener(new PoiFilterAction(this, filter.getFilterId()));
+			JMenuItem lPointOfInterestItem = new OffRoadMenuItem(new PoiFilterAction(this, filter), jPointOfInterestMenu); 
 			jPointOfInterestMenu.add(lPointOfInterestItem);
-			
 		}
 		menubar.add(jPointOfInterestMenu);
 		
