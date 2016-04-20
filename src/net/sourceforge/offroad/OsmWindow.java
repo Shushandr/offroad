@@ -16,12 +16,14 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.text.MessageFormat;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -31,6 +33,7 @@ import java.util.PropertyResourceBundle;
 import java.util.Vector;
 
 import javax.swing.AbstractAction;
+import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -90,6 +93,7 @@ import net.sourceforge.offroad.actions.SearchAddressAction;
 import net.sourceforge.offroad.data.QuadRectExtendable;
 import net.sourceforge.offroad.res.ResourceTest;
 import net.sourceforge.offroad.res.Resources;
+import net.sourceforge.offroad.ui.BlindIcon;
 
 /**
  * OffRoad
@@ -112,10 +116,12 @@ public class OsmWindow {
 		public void popupMenuWillBecomeVisible(PopupMenuEvent pE) {
 			RotatedTileBox tileBox = getDrawPanel().getTileBox();
 			List<Amenity> res = new Vector<Amenity>();
-			getDrawPanel().getPoiLayer().getAmenityFromPoint(tileBox, mAdapter.getMouseEvent().getPoint(), res);
+			POIMapLayer poiLayer = getDrawPanel().getPoiLayer();
+			poiLayer.getAmenityFromPoint(tileBox, mAdapter.getMouseEvent().getPoint(), res);
+			HashSet<Amenity> resSet = new HashSet<>(res);
 			System.out.println("res: " + res);
-			for (Amenity am : res) {
-				JMenuItem item = new JMenuItem(am.getName());
+			for (Amenity am : resSet) {
+				JMenuItem item = new JMenuItem(am.getName(), getImageIcon(poiLayer, am));
 				item.addActionListener(new ActionListener() {
 					
 					@Override
@@ -125,6 +131,15 @@ public class OsmWindow {
 				});
 				items.add(item);
 				mMenu.add(item);
+			}
+		}
+
+		public javax.swing.Icon getImageIcon(POIMapLayer poiLayer, Amenity am) {
+			BufferedImage bitmap = poiLayer.getBitmap(am);
+			if(bitmap != null)	{
+				return new ImageIcon(bitmap);
+			} else {
+				return new BlindIcon(20);
 			}
 		}
 
