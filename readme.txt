@@ -28,6 +28,10 @@ An offline map viewer based on OsmAnd.
 
 Version History:
 
+0_1_Alpha4:
+============
+* POI Layer added.
+
 0_1_Alpha3:
 ============
 * Moved map files to <HOME>/.OffRoad

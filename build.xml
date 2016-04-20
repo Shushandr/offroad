@@ -139,7 +139,10 @@
 			<arg value="christianfoltin,offroadosm@frs.sourceforge.net:/home/frs/project/o/of/offroadosm/OffRoad_Unstable/."/>
 		</exec>
 		<echo message="git tag ${ver}"></echo>
-		<exec command="git"><arg value="tag ${ver}"/></exec>
+		<exec command="git">
+			<arg value="tag"/>
+			<arg value="${ver}"/>
+		</exec>
 	</target>
 	
 </project>
