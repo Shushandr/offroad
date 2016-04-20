@@ -83,7 +83,7 @@ public class RouteLayer extends OsmandMapLayer {
 
 	private void initUI() {
 		paint = new BasicStroke(0, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 0);
-		actionArrow = readImage("map_action_arrow.png"); 
+		actionArrow = readImage("map_action_arrow", view); 
 		actionPaint = new BasicStroke(7 * view.getScaleCoefficient(), BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 0);
 		path = new Path2D.Double();
 		paintIcon = new BasicStroke(3);
@@ -91,14 +91,6 @@ public class RouteLayer extends OsmandMapLayer {
 	}
 
 
-	public BufferedImage readImage(String image) {
-		try {
-			return ImageIO.read(view.getContext().getResource(OsmWindow.IMAGE_PATH + image));
-		} catch (IOException e) {
-			e.printStackTrace();
-			return null;
-		}
-	}
 	
 	@Override
 	public void initLayer(OsmBitmapPanel view) {

@@ -62,6 +62,7 @@ import net.osmand.plus.ApplicationMode;
 import net.osmand.plus.GeocodingLookupService;
 import net.osmand.plus.OsmandSettings;
 import net.osmand.plus.TargetPointsHelper;
+import net.osmand.plus.poi.PoiFiltersHelper;
 import net.osmand.plus.render.MapRenderRepositories;
 import net.osmand.plus.render.RendererRegistry;
 import net.osmand.plus.resources.ResourceManager;
@@ -145,6 +146,9 @@ public class OsmWindow {
 
 
 	private JPanel mStatusBar;
+
+
+	private PoiFiltersHelper mPoiFilters;
 
 	public void createAndShowUI() {
 		mDrawPanel = new OsmBitmapPanel(this);
@@ -319,11 +323,11 @@ public class OsmWindow {
 		mRendererRegistry = new RendererRegistry(this);
 		mTargetPointsHelper = new TargetPointsHelper(this);
 		mRoutingHelper = new RoutingHelper(this);
+		mPoiFilters = new PoiFiltersHelper(this);
 		mGeocodingLookupService = new GeocodingLookupService(this);
 		mMapPoiTypes = MapPoiTypes.getDefault();
 		// read resources:
-		Locale locale = Locale.getDefault();
-		String ct = locale.getCountry().toLowerCase();
+		String ct = getCountry();
 		InputStream is = getResource("res/values-"+ct+"/strings.xml"); //$NON-NLS-1$ //$NON-NLS-2$
 		if(is == null){
 			is = getResource("res/values/strings.xml"); //$NON-NLS-1$
@@ -346,8 +350,9 @@ public class OsmWindow {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		prefs.SELECTED_POI_FILTER_FOR_MAP.set(mPoiFilters.getTopDefinedPoiFilters().get(0).getFilterId());
 	}
-	
+
 	private PropertyResourceBundle getLanguageResources(String lang)
 			throws IOException {
 		InputStream is = getResource("res/OffRoad_Resources_" + lang //$NON-NLS-1$
@@ -757,5 +762,21 @@ public class OsmWindow {
 	public void setStatus(String pStatus){
 		mRouteProgressStatus.setText(pStatus);
 	}
+
+	public String getLanguage() {
+		// FIXME: What is meant here?
+		return getCountry();
+	}
+
+	public String getCountry() {
+		Locale locale = Locale.getDefault();
+		String ct = locale.getCountry().toLowerCase();
+		return ct;
+	}
+
+	public PoiFiltersHelper getPoiFilters() {
+		return mPoiFilters;
+	}
 	
+
 }

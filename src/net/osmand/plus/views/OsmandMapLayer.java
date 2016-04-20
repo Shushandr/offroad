@@ -3,22 +3,32 @@ package net.osmand.plus.views;
 import java.awt.Graphics2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import javax.imageio.ImageIO;
 import javax.swing.JMenu;
 
+import org.apache.commons.logging.Log;
+
 import gnu.trove.list.array.TIntArrayList;
+import net.osmand.PlatformUtil;
 import net.osmand.data.LatLon;
 import net.osmand.data.QuadRect;
 import net.osmand.data.QuadTree;
 import net.osmand.data.RotatedTileBox;
 import net.osmand.util.MapAlgorithms;
 import net.sourceforge.offroad.OsmBitmapPanel;
+import net.sourceforge.offroad.OsmWindow;
 
 public abstract class OsmandMapLayer {
+	private final static Log log = PlatformUtil.getLog(OsmandMapLayer.class);
 
+	
 	protected List<LatLon> fullObjectsLatLon;
 	protected List<LatLon> smallObjectsLatLon;
 
@@ -311,4 +321,18 @@ public abstract class OsmandMapLayer {
 
 	}
 
+	
+	public BufferedImage readImage(String image, OsmBitmapPanel view) {
+		try {
+			InputStream resource = view.getContext().getResource(OsmWindow.IMAGE_PATH + image + ".png");
+			if(resource == null){
+				log.error("Resource " + image + " not found!");
+				return null;
+			}
+			return ImageIO.read(resource);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 }
