@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Properties;
 
@@ -26,7 +27,11 @@ final class OffRoadSettings implements SettingsAPI {
 
 		@Override
 		public SettingsEditor putString(String pKey, String pValue) {
-			properties.setProperty(pKey, pValue);
+			if (pValue != null) {
+				properties.setProperty(pKey, pValue);
+			} else {
+				properties.remove(pKey);
+			}
 			return this;
 		}
 
@@ -65,6 +70,7 @@ final class OffRoadSettings implements SettingsAPI {
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			try {
 				properties.store(out , "");
+				mPref.clear();
 				mPref.load(new ByteArrayInputStream(out.toByteArray()));
 				return true;
 			} catch (IOException e) {
@@ -98,7 +104,9 @@ final class OffRoadSettings implements SettingsAPI {
 
 	@Override
 	public String getString(Object pPref, String pKey, String pDefValue) {
-		return getPreferences(pPref).getProperty(pKey, pDefValue);
+		String res = getPreferences(pPref).getProperty(pKey, pDefValue);
+		System.out.println("PREFS: " + pKey + "="+res);
+		return res;
 	}
 
 	private Properties getPreferences(Object pPref) {
@@ -119,6 +127,7 @@ final class OffRoadSettings implements SettingsAPI {
 		try {
 			return Long.parseLong(getString(pPref, pKey, ""+pDefValue));
 		} catch (NumberFormatException nfe) {
+			nfe.printStackTrace();
 			return pDefValue;
 		}
 	}
@@ -128,6 +137,7 @@ final class OffRoadSettings implements SettingsAPI {
 		try {
 			return Integer.parseInt(getString(pPref, pKey, ""+pDefValue));
 		} catch (NumberFormatException nfe) {
+			nfe.printStackTrace();
 			return pDefValue;
 		}
 	}
@@ -137,6 +147,7 @@ final class OffRoadSettings implements SettingsAPI {
 		try {
 			return Float.parseFloat(getString(pPref, pKey, ""+pDefValue));
 		} catch (NumberFormatException nfe) {
+			nfe.printStackTrace();
 			return pDefValue;
 		}
 	}
@@ -146,6 +157,7 @@ final class OffRoadSettings implements SettingsAPI {
 		try {
 			return Boolean.parseBoolean(getString(pPref, pKey, ""+pDefValue));
 		} catch (NumberFormatException nfe) {
+			nfe.printStackTrace();
 			return pDefValue;
 		}
 	}
@@ -155,11 +167,20 @@ final class OffRoadSettings implements SettingsAPI {
 		Properties copy  = new Properties();
 		if (pPref instanceof Properties) {
 			Properties props = (Properties) pPref;
-			copy = new Properties(props);
+			copyProperties(props, copy);
 		}
 		return new OffRoadSettingsEditor(copy, getPreferences(pPref));
 	}
-
+	
+	public static void copyProperties(Properties src_prop, Properties dest_prop)
+	  {
+	      for (Enumeration propertyNames = src_prop.propertyNames();
+	           propertyNames.hasMoreElements(); )
+	      {
+	          Object key = propertyNames.nextElement();
+	          dest_prop.put(key, src_prop.get(key));
+	      }
+	  }
 	@Override
 	public boolean contains(Object pPref, String pKey) {
 		return getPreferences(pPref).containsKey(pKey);
@@ -170,6 +191,11 @@ final class OffRoadSettings implements SettingsAPI {
 			FileOutputStream stream = new FileOutputStream(mOsmWindow.getAppPath(OFFROAD_PROPERTIES));
 			mPreferencesHash.get(SHARED_PREFERENCES_NAME).store(stream, "");
 			stream.close();
+//			for (String key : mPreferencesHash.keySet()) {
+//				FileOutputStream streamL = new FileOutputStream(mOsmWindow.getAppPath(key+".priv.properties"));
+//				mPreferencesHash.get(key).store(streamL, "");
+//				streamL.close();
+//			}
 			System.out.println("Settings saved.");
 		} catch (IOException e) {
 			e.printStackTrace();

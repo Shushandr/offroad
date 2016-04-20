@@ -57,12 +57,14 @@ import net.osmand.PlatformUtil;
 import net.osmand.data.LatLon;
 import net.osmand.data.RotatedTileBox;
 import net.osmand.map.OsmandRegions;
+import net.osmand.osm.AbstractPoiType;
 import net.osmand.osm.MapPoiTypes;
 import net.osmand.plus.ApplicationMode;
 import net.osmand.plus.GeocodingLookupService;
 import net.osmand.plus.OsmandSettings;
 import net.osmand.plus.TargetPointsHelper;
 import net.osmand.plus.poi.PoiFiltersHelper;
+import net.osmand.plus.poi.PoiUIFilter;
 import net.osmand.plus.render.MapRenderRepositories;
 import net.osmand.plus.render.RendererRegistry;
 import net.osmand.plus.resources.ResourceManager;
@@ -76,6 +78,7 @@ import net.osmand.util.MapUtils;
 import net.sourceforge.offroad.actions.DownloadAction;
 import net.sourceforge.offroad.actions.NavigationBackAction;
 import net.sourceforge.offroad.actions.NavigationForwardAction;
+import net.sourceforge.offroad.actions.PoiFilterAction;
 import net.sourceforge.offroad.actions.RouteAction;
 import net.sourceforge.offroad.actions.SearchAddressAction;
 import net.sourceforge.offroad.data.QuadRectExtendable;
@@ -216,10 +219,10 @@ public class OsmWindow {
 		menubar.add(jSearchMenu);
 		// Download
 		JMenu jDownloadMenu = new JMenu(getOffRoadString("offroad.download")); //$NON-NLS-1$
-		JMenuItem downloadItem = new JMenuItem(getOffRoadString("offroad.string11")); //$NON-NLS-1$
-		downloadItem.addActionListener(new DownloadAction(this));
-		downloadItem.setAccelerator(KeyStroke.getKeyStroke("control D")); //$NON-NLS-1$
-		jDownloadMenu.add(downloadItem);
+		JMenuItem lDownloadItem = new JMenuItem(getOffRoadString("offroad.string11")); //$NON-NLS-1$
+		lDownloadItem.addActionListener(new DownloadAction(this));
+		lDownloadItem.setAccelerator(KeyStroke.getKeyStroke("control D")); //$NON-NLS-1$
+		jDownloadMenu.add(lDownloadItem);
 		menubar.add(jDownloadMenu);
 		// Navigation
 		JMenu jNavigationMenu = new JMenu(getOffRoadString("offroad.navigation")); //$NON-NLS-1$
@@ -232,6 +235,18 @@ public class OsmWindow {
 		navigationForwardItem.setAccelerator(KeyStroke.getKeyStroke("alt RIGHT")); //$NON-NLS-1$
 		jNavigationMenu.add(navigationForwardItem);
 		menubar.add(jNavigationMenu);
+		// PointOfInterest
+		JMenu jPointOfInterestMenu = new JMenu(getOffRoadString("offroad.PointOfInterest")); //$NON-NLS-1$
+		JMenuItem lPointOfInterestOffItem = new JMenuItem(getOffRoadString("offroad.poifilteroff"));
+		lPointOfInterestOffItem.addActionListener(new PoiFilterAction(this, null));
+		jPointOfInterestMenu.add(lPointOfInterestOffItem);
+		for (PoiUIFilter filter : mPoiFilters.getTopDefinedPoiFilters()) {
+			JMenuItem lPointOfInterestItem = new JMenuItem(filter.getName()); 
+			lPointOfInterestItem.addActionListener(new PoiFilterAction(this, filter.getFilterId()));
+			jPointOfInterestMenu.add(lPointOfInterestItem);
+			
+		}
+		menubar.add(jPointOfInterestMenu);
 		
 		JPopupMenu popupMenu = new JPopupMenu();
 		JMenuItem routeMenu = new JMenuItem(new RouteAction(this));
@@ -305,6 +320,7 @@ public class OsmWindow {
 	}
 
 	public OsmWindow() {
+		initStrings();
 		prefs.APPLICATION_MODE.set(ApplicationMode.DEFAULT);
         Dimension size = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
         widthPixels = size.width;
@@ -326,21 +342,23 @@ public class OsmWindow {
 		mPoiFilters = new PoiFiltersHelper(this);
 		mGeocodingLookupService = new GeocodingLookupService(this);
 		mMapPoiTypes = MapPoiTypes.getDefault();
+		mMapPoiTypes.setPoiTranslator(new MapPoiTypes.PoiTranslator() {
+			@Override
+			public String getTranslation(AbstractPoiType type) {
+				if (type.getBaseLangType() != null) {
+					return getTranslation(type.getBaseLangType()) + " ("
+							+ getLangTranslation(type.getLang()).toLowerCase() + ")";
+				}
+				return getString("poi_" + type.getIconKeyName());
+			}
+		});
+	}
+
+	private void initStrings() {
 		// read resources:
 		String ct = getCountry();
-		InputStream is = getResource("res/values-"+ct+"/strings.xml"); //$NON-NLS-1$ //$NON-NLS-2$
-		if(is == null){
-			is = getResource("res/values/strings.xml"); //$NON-NLS-1$
-		}
-		log.info("Trying to load resources " + is); //$NON-NLS-1$
-		try {
-			JAXBContext jc = JAXBContext.newInstance(ResourceTest.class.getPackage().getName());
-			Unmarshaller u = jc.createUnmarshaller();
-			mResourceStrings = (Resources) u.unmarshal(is);
-		} catch (JAXBException e) {
-			e.printStackTrace();
-			mResourceStrings = new Resources();
-		}
+		loadStrings(ct, "strings.xml");
+		loadStrings(ct, "phrases.xml");
 		// get offroad strings:
 		try {
 			mOffroadResources = getLanguageResources(ct);
@@ -350,7 +368,27 @@ public class OsmWindow {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		prefs.SELECTED_POI_FILTER_FOR_MAP.set(mPoiFilters.getTopDefinedPoiFilters().get(0).getFilterId());
+	}
+
+	private void loadStrings(String ct, String fileName) {
+		InputStream is = getResource("res/values-" + ct + "/" + fileName);
+		if (is == null) {
+			is = getResource("res/values/" + fileName); // $NON-NLS-1$
+		}
+		log.info("Trying to load resources " + is); //$NON-NLS-1$
+		Resources resourceStrings;
+		try {
+			JAXBContext jc = JAXBContext.newInstance(ResourceTest.class.getPackage().getName());
+			Unmarshaller u = jc.createUnmarshaller();
+			resourceStrings = (Resources) u.unmarshal(is);
+		} catch (JAXBException e) {
+			e.printStackTrace();
+			resourceStrings = new Resources();
+		}
+		if(mResourceStrings == null){
+			mResourceStrings = new Resources();
+		}
+		mResourceStrings.getString().addAll(resourceStrings.getString());
 	}
 
 	private PropertyResourceBundle getLanguageResources(String lang)
@@ -365,46 +403,8 @@ public class OsmWindow {
 		return bundle;
 	}
 
-	
-//	private void initPoiTypes() {
-//		if (getAppPath("poi_types.xml").exists()) {
-//			poiTypes.init(getAppPath("poi_types.xml").getAbsolutePath());
-//		} else {
-//			poiTypes.init();
-//		}
-//		poiTypes.setPoiTranslator(new MapPoiTypes.PoiTranslator() {
-//
-//			@Override
-//			public String getTranslation(AbstractPoiType type) {
-//				if (type.getBaseLangType() != null) {
-//					return getTranslation(type.getBaseLangType()) + " ("
-//							+ getLangTranslation(type.getLang()).toLowerCase() + ")";
-//				}
-//				try {
-//					Field f = R.string.class.getField("poi_" + type.getIconKeyName());
-//					if (f != null) {
-//						Integer in = (Integer) f.get(null);
-//						return getString(in);
-//					}
-//				} catch (Exception e) {
-//					System.err.println("No translation for " + type.getIconKeyName() + " " + e.getMessage());
-//				}
-//				return null;
-//			}
-//		});
-//	}
-
 	public String getLangTranslation(String l) {
-		try {
-			java.lang.reflect.Field f = R.string.class.getField("lang_" + l); //$NON-NLS-1$
-			if (f != null) {
-				Integer in = (Integer) f.get(null);
-				return getString(in);
-			}
-		} catch (Exception e) {
-			System.err.println(e.getMessage());
-		}
-		return l;
+		return getString("lang_" + l);
 	}
 
 	public static void scaleAllFonts(float pScale) {
@@ -519,9 +519,14 @@ public class OsmWindow {
 		if (pIndex == null) {
 			pIndex = ""; //$NON-NLS-1$
 		}
-		String pathname = System.getProperty("user.home") + File.separator  + ".OffRoad" + File.separator + pIndex; //$NON-NLS-1$ //$NON-NLS-2$
+		String pathname = getAppPathName(pIndex);
 		log.info("Searching for " + pathname); //$NON-NLS-1$
 		return new File(pathname);
+	}
+
+	public static String getAppPathName(String pIndex) {
+		String pathname = System.getProperty("user.home") + File.separator  + ".OffRoad" + File.separator + pIndex; //$NON-NLS-1$ //$NON-NLS-2$
+		return pathname;
 	}
 
 	public OsmandSettings getSettings() {
@@ -530,11 +535,17 @@ public class OsmWindow {
 
 	public String getString(int pKey) {
 		String stringKey = mStrings.hash.get(pKey);
+		return getString(stringKey);
+	}
+
+	public String getString(String stringKey) {
 		for (Resources.String str : mResourceStrings.getString()) {
 			if(str.getName() != null && str.getName().equals(stringKey)){
+				log.debug("String " + stringKey + "=" + str.getValue()) ;
 				return str.getValue();
 			}
 		}
+		log.error("String key " + stringKey + " not found!");
 		return stringKey;
 	}
 

@@ -487,13 +487,18 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 	}
 
 	public void drawLater() {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				drawImage(bImage);
-				setImage(bImage);
-				repaint();
-			}
-		});
+		if(mGenerationThread != null && mGenerationThread.isAlive()){
+			return;
+		}
+		mGenerationThread = new GenerationThread(getTileBox(), null);
+		mGenerationThread.start();
+//		SwingUtilities.invokeLater(new Runnable() {
+//			public void run() {
+//				drawImage(bImage);
+//				setImage(bImage);
+//				repaint();
+//			}
+//		});
 	}
 
 	@Override
@@ -580,8 +585,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 	}
 
 	public void refreshMap() {
-		// FIXME: Complete redraw??
-		repaint();
+		drawLater();
 	}
 
 }
