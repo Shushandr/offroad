@@ -203,7 +203,7 @@ public class OsmWindow {
 	private Resources mResourceStrings;
 
 
-	public static final String IMAGE_PATH = "drawable-xxhdpi/"; //$NON-NLS-1$
+	public static final String IMAGE_PATH = "drawable-xhdpi/"; //$NON-NLS-1$
 
 
 	private PropertyResourceBundle mOffroadResources;

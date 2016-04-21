@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project default="dist" name="OffRoad">
 
-	<property name="ver" value="0.1_Alpha4"/>
+	<property name="ver" value="0.1_Alpha5"/>
 	<property name="src" location="src"/>
 	<property name="res" location="res"/>
 	<property name="lib" location="lib"/>
@@ -15,11 +15,11 @@
 	<property name="start.class" value="net.sourceforge.offroad.OsmWindow" />
 	<property name="post" location="post" />
 
-<!--	<property name="classpath" value="${lib}/kxml2-2.3.0.jar:${lib}/junidecode-0.1.jar:${lib}/gnu-trove-osmand.jar:${lib}/commons-logging-1.1.1.jar"/> -->
+	<!--	<property name="classpath" value="${lib}/kxml2-2.3.0.jar:${lib}/junidecode-0.1.jar:${lib}/gnu-trove-osmand.jar:${lib}/commons-logging-1.1.1.jar"/> -->
 	<path id="build-classpath">
-	    <fileset dir="${lib}">
-	        <include name="*.jar"/>
-	    </fileset>
+		<fileset dir="${lib}">
+			<include name="*.jar"/>
+		</fileset>
 	</path>
 
 	<!-- - - - - - - - - - - - - - - - - - 
@@ -37,35 +37,36 @@
     	   source="${java_source_version}"
 	       target="${java_target_version}"
 			 >
-			<classpath refid="build-classpath"></classpath>
+			<classpath refid="build-classpath">
+			</classpath>
 		</javac>
 	</target>
 
 	<target name="jar" depends="build">
 		<mkdir dir="${dist.lib}" />
 		<jar destfile="${dist.lib}/Resources.jar">
-	        <zipfileset dir="${res}" includes="**"/>
+			<zipfileset dir="${res}" includes="**"/>
 		</jar>
 		<!-- third party libs -->
 		<copy todir="${dist.lib}">
 			<fileset dir="${lib}">
-	            <include name="commons-logging-1.1.1.jar"/>
-	            <include name="gnu-trove-osmand.jar"/>
-	            <include name="junidecode-0.1.jar"/>
-	            <include name="kxml2-2.3.0.jar"/>
+				<include name="commons-logging-1.1.1.jar"/>
+				<include name="gnu-trove-osmand.jar"/>
+				<include name="junidecode-0.1.jar"/>
+				<include name="kxml2-2.3.0.jar"/>
 			</fileset>
 		</copy>
 		<tempfile prefix="manifest" property="temp.manifest.file"/>
 		<path id="jar-classpath">
-		    <fileset dir="${dist.lib}">
-		        <include name="*.jar"/>
-		    </fileset>
-		    <fileset dir="${dist}">
-		        <include name="*.jar"/>
-		    </fileset>
+			<fileset dir="${dist.lib}">
+				<include name="*.jar"/>
+			</fileset>
+			<fileset dir="${dist}">
+				<include name="*.jar"/>
+			</fileset>
 		</path>
 		<manifestclasspath property="lib.list" jarfile="${OffRoad.jar}">
-		    <classpath refid="jar-classpath"/>
+			<classpath refid="jar-classpath"/>
 		</manifestclasspath>
 
 		<manifest file="${temp.manifest.file}">
@@ -73,10 +74,12 @@
 			<attribute name="Built-Number" value="${ver}" />
 			<attribute name="Created-By" value="OsmAnd team and Christian Foltin" />
 			<attribute name="Main-Class" value="${start.class}" />
-<!--			<attribute name="Class-Path" value="OffRoad.jar . lib/commons-logging-1.1.1.jar lib/gnu-trove-osmand.jar lib/junidecode-0.1.jar lib/kxml2-2.3.0.jar lib/Resources.jar"/> -->
+			<!--			<attribute name="Class-Path" value="OffRoad.jar . lib/commons-logging-1.1.1.jar lib/gnu-trove-osmand.jar lib/junidecode-0.1.jar lib/kxml2-2.3.0.jar lib/Resources.jar"/> -->
 			<attribute name="Class-Path" value="${lib.list}"/>
 		</manifest>
-		<exec command="cat"><arg  value="${temp.manifest.file}"/></exec>
+		<exec command="cat">
+			<arg  value="${temp.manifest.file}"/>
+		</exec>
 		<jar jarfile="${OffRoad.jar}"
 		     manifest="${temp.manifest.file}"
 			update="true">
@@ -95,23 +98,26 @@
 
 	</target>
 
-	
+
 	<target name="run" depends="dist">
 		<condition property="vmarg" value="NODPI">
-		   <not>  
-		      <isset property="vmarg"/>
-		   </not>
+			<not>
+				<isset property="vmarg"/>
+			</not>
 		</condition>
-		<echo message="vmarg: ${vmarg}"></echo>
+		<echo message="vmarg: ${vmarg}">
+		</echo>
 		<java fork="yes" dir="${dist}" spawn="false" failonerror="false" maxmemory="1024M" jar="${OffRoad.jar}">
-			<jvmarg value="-D${vmarg}=true" /> 
-		<!--	<jvmarg value="-Djava.util.logging.config.file=commons-logging.properties" /> --> 
+			<jvmarg value="-D${vmarg}=true" />
+			<!--	<jvmarg value="-Djava.util.logging.config.file=commons-logging.properties" /> -->
 		</java>
 	</target>
 
 	<target name="runh">
-		<property name="vmarg" value="HIDPI" ></property>
-		<antcall target="run" inheritall="true"></antcall>
+		<property name="vmarg" value="HIDPI" >
+		</property>
+		<antcall target="run" inheritall="true">
+		</antcall>
 	</target>
 
 	<target name="post" depends="dist">
@@ -124,25 +130,39 @@
 			</fileset>
 		</copy>
 	</target>
-	
+
 	<target name="clean">
 		<delete dir="${build}"  quiet="true"/>
 		<delete dir="${dist}"  quiet="true"/>
 		<delete dir="${post}/${ver}/"  quiet="true"/>
 	</target>
-	
+
 	<target name="release" depends="post">
-		<echo message="SCP to ${ver}"></echo>
+		<echo message="Test for readme.txt for containing ${ver}">
+		</echo>
+		<loadfile property="test.readme.updated" srcfile="readme.txt">
+			<filterchain>
+				<linecontainsregexp>
+					<regexp pattern="${ver}" />
+				</linecontainsregexp>
+			</filterchain>
+		</loadfile>
+
+		<fail unless="test.readme.updated" message="readme.txt not updated to version ${ver}." />
+
+		<echo message="SCP to ${ver}">
+		</echo>
 		<exec command="scp">
-			<arg value="-r"/>
-			<arg value="${post}/${ver}"/>
-			<arg value="christianfoltin,offroadosm@frs.sourceforge.net:/home/frs/project/o/of/offroadosm/OffRoad_Unstable/."/>
+			<arg value="-r" />
+			<arg value="${post}/${ver}" />
+			<arg value="christianfoltin,offroadosm@frs.sourceforge.net:/home/frs/project/o/of/offroadosm/OffRoad_Unstable/." />
 		</exec>
-		<echo message="git tag ${ver}"></echo>
+		<echo message="git tag ${ver}">
+		</echo>
 		<exec command="git">
 			<arg value="tag"/>
 			<arg value="${ver}"/>
 		</exec>
 	</target>
-	
+
 </project>
