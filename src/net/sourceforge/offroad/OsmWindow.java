@@ -62,6 +62,7 @@ import net.osmand.IndexConstants;
 import net.osmand.PlatformUtil;
 import net.osmand.data.Amenity;
 import net.osmand.data.LatLon;
+import net.osmand.data.PointDescription;
 import net.osmand.data.RotatedTileBox;
 import net.osmand.map.OsmandRegions;
 import net.osmand.osm.AbstractPoiType;
@@ -90,6 +91,7 @@ import net.sourceforge.offroad.actions.OffRoadAction.OffRoadMenuItem;
 import net.sourceforge.offroad.actions.PoiFilterAction;
 import net.sourceforge.offroad.actions.RouteAction;
 import net.sourceforge.offroad.actions.SearchAddressAction;
+import net.sourceforge.offroad.actions.ShowWikipediaAction;
 import net.sourceforge.offroad.data.QuadRectExtendable;
 import net.sourceforge.offroad.res.ResourceTest;
 import net.sourceforge.offroad.res.Resources;
@@ -121,12 +123,19 @@ public class OsmWindow {
 			HashSet<Amenity> resSet = new HashSet<>(res);
 			System.out.println("res: " + res);
 			for (Amenity am : resSet) {
-				JMenuItem item = new JMenuItem(am.getName(), getImageIcon(poiLayer, am));
+				String name = am.getName(getLanguage());
+				JMenuItem item = new JMenuItem(name, getImageIcon(poiLayer, am));
 				item.addActionListener(new ActionListener() {
 					
 					@Override
 					public void actionPerformed(ActionEvent pE) {
-						POIMapLayer.showDescriptionDialog(OsmWindow.this, getInstance(), am.getAdditionalInfo().toString(), am.toString());
+						if(am.getType().isWiki()){
+							POIMapLayer.showWikipediaDialog(OsmWindow.this, OsmWindow.this, am);
+						} else {
+							String locationName = PointDescription.getLocationName(OsmWindow.this,
+	                                am.getLocation().getLatitude(), am.getLocation().getLongitude(), true);
+							POIMapLayer.showDescriptionDialog(OsmWindow.this, getInstance(), am.getAdditionalInfo().toString(), name);
+						}
 					}
 				});
 				items.add(item);
@@ -838,8 +847,8 @@ public class OsmWindow {
 	}
 
 	public String getLanguage() {
-		// FIXME: What is meant here?
-		return getCountry();
+		Locale locale = Locale.getDefault();
+		return locale.getLanguage().toLowerCase();
 	}
 
 	public String getCountry() {
@@ -850,6 +859,11 @@ public class OsmWindow {
 
 	public PoiFiltersHelper getPoiFilters() {
 		return mPoiFilters;
+	}
+
+	public void showWikipedia(String pContent, String pTitle, String pArticle) {
+		ShowWikipediaAction action = new ShowWikipediaAction(this, pContent, pTitle, pArticle);
+		action.actionPerformed(null);
 	}
 	
 

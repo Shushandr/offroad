@@ -1,6 +1,5 @@
 package net.osmand.plus.views;
 
-import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -11,6 +10,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 
 import net.osmand.PlatformUtil;
@@ -314,11 +314,12 @@ public class POIMapLayer extends OsmandMapLayer implements /*ContextMenuLayer.IC
 		final String langSelected = lng;
 		String content = a.getDescription(langSelected);
 		String article = "https://" + langSelected.toLowerCase() + ".wikipedia.org/wiki/" + title.replace(' ', '_');
-		JOptionPane.showMessageDialog(null, article);
+		app.showWikipedia(content, title, article);
 	}
 
 	private static void showText(final OsmWindow ctx, final OsmWindow app, final String text, String title) {
-		JOptionPane.showMessageDialog(null, text, title, JOptionPane.INFORMATION_MESSAGE);
+		app.showWikipedia(text, title, "");
+//		JOptionPane.showMessageDialog(null, text, title, JOptionPane.INFORMATION_MESSAGE);
 	}
 
 	public String getObjectDescription(Object o) {
