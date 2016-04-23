@@ -33,16 +33,22 @@ import java.util.PropertyResourceBundle;
 import java.util.Vector;
 
 import javax.swing.AbstractAction;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.ImageIcon;
+import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JProgressBar;
+import javax.swing.JTextField;
+import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
@@ -60,6 +66,7 @@ import org.xmlpull.v1.XmlPullParserException;
 import net.osmand.IProgress;
 import net.osmand.IndexConstants;
 import net.osmand.PlatformUtil;
+import net.osmand.ResultMatcher;
 import net.osmand.data.Amenity;
 import net.osmand.data.LatLon;
 import net.osmand.data.PointDescription;
@@ -67,14 +74,17 @@ import net.osmand.data.RotatedTileBox;
 import net.osmand.map.OsmandRegions;
 import net.osmand.osm.AbstractPoiType;
 import net.osmand.osm.MapPoiTypes;
+import net.osmand.osm.PoiType;
 import net.osmand.plus.ApplicationMode;
 import net.osmand.plus.GeocodingLookupService;
 import net.osmand.plus.OsmandSettings;
 import net.osmand.plus.TargetPointsHelper;
+import net.osmand.plus.poi.NominatimPoiFilter;
 import net.osmand.plus.poi.PoiFiltersHelper;
 import net.osmand.plus.poi.PoiUIFilter;
 import net.osmand.plus.render.MapRenderRepositories;
 import net.osmand.plus.render.RendererRegistry;
+import net.osmand.plus.render.RenderingIcons;
 import net.osmand.plus.resources.ResourceManager;
 import net.osmand.plus.routing.RoutingHelper;
 import net.osmand.plus.views.POIMapLayer;
@@ -95,6 +105,7 @@ import net.sourceforge.offroad.actions.ShowWikipediaAction;
 import net.sourceforge.offroad.data.QuadRectExtendable;
 import net.sourceforge.offroad.res.ResourceTest;
 import net.sourceforge.offroad.res.Resources;
+import net.sourceforge.offroad.ui.AmenityTablePanel;
 import net.sourceforge.offroad.ui.BlindIcon;
 
 /**
@@ -124,7 +135,7 @@ public class OsmWindow {
 			System.out.println("res: " + res);
 			for (Amenity am : resSet) {
 				String name = am.getName(getLanguage());
-				JMenuItem item = new JMenuItem(name, getImageIcon(poiLayer, am));
+				JMenuItem item = new JMenuItem(name, getImageIcon(am));
 				item.addActionListener(new ActionListener() {
 					
 					@Override
@@ -143,8 +154,8 @@ public class OsmWindow {
 			}
 		}
 
-		public javax.swing.Icon getImageIcon(POIMapLayer poiLayer, Amenity am) {
-			BufferedImage bitmap = poiLayer.getBitmap(am);
+		public javax.swing.Icon getImageIcon(Amenity am) {
+			BufferedImage bitmap = getBitmap(am);
 			if(bitmap != null)	{
 				return new ImageIcon(bitmap);
 			} else {
@@ -162,8 +173,7 @@ public class OsmWindow {
 
 		@Override
 		public void popupMenuCanceled(PopupMenuEvent pE) {
-			// TODO Auto-generated method stub
-			
+			popupMenuWillBecomeInvisible(pE);
 		}
 	}
 
@@ -185,6 +195,7 @@ public class OsmWindow {
 	static final int MAX_ZOOM = 22;
 	public static final String RENDERING_STYLES_DIR = "rendering_styles/"; //$NON-NLS-1$
 	public static final String OSMAND_ICONS_DIR = RENDERING_STYLES_DIR + "style-icons/drawable-xxhdpi/"; //$NON-NLS-1$
+	public static final String IMAGE_PATH = "drawable-xhdpi/"; //$NON-NLS-1$
 	private static OsmWindow minstance = null;
 	private RenderingRulesStorage mRenderingRulesStorage;
 	private ResourceManager mResourceManager;
@@ -210,22 +221,20 @@ public class OsmWindow {
 	private MapPoiTypes mMapPoiTypes;
 	private int mDontUpdateStatusLabelCounter;
 	private Resources mResourceStrings;
-
-
-	public static final String IMAGE_PATH = "drawable-xhdpi/"; //$NON-NLS-1$
-
-
 	private PropertyResourceBundle mOffroadResources;
-
-
 	private Vector<MapPointStorage> mPointStorage = new Vector<>();
 	private int mPointStorageIndex = -1;
-
-
 	private JPanel mStatusBar;
-
-
 	private PoiFiltersHelper mPoiFilters;
+	private AmenityTablePanel mAmenityTable;
+
+
+	private JToolBar mToolBar;
+	private JTextField mSearchTextField;
+	private JComboBox<PoiUIFilter> mComboBox;
+	private DefaultComboBoxModel<PoiUIFilter> mComboBoxModel;
+	Vector<CursorPositionListener> mCursorPositionListeners = new Vector<>();
+	private PoiUIFilter mCurrentPoiFilter;
 
 	public void createAndShowUI() {
 		mDrawPanel = new OsmBitmapPanel(this);
@@ -252,9 +261,79 @@ public class OsmWindow {
 		mMouseMoveTimer.setRepeats(true);
 		mMouseMoveTimer.start();
 
+		mToolBar = new JToolBar(JToolBar.HORIZONTAL);
+		mToolBar.setLayout(new GridBagLayout());
+		mToolBar.add(new JLabel(getOffRoadString("offroad.search")), new GridBagConstraints(0, 0, 1, 1, 0, 1, GridBagConstraints.WEST, GridBagConstraints.VERTICAL, new Insets(0, 0, 0, 0), 0, 0));
+		mSearchTextField = new JTextField();
+		mAmenityTable = new AmenityTablePanel(getInstance());
+		mSearchTextField.addActionListener(new ActionListener() {
+			
+
+			@Override
+			public void actionPerformed(ActionEvent pE) {
+				PoiUIFilter filter = getCurrentPoiUIFilter();
+				filter.setFilterByName(mSearchTextField.getText());
+				LatLon latLon = getCursorPosition();
+					latLon = getMouseLocation();
+					if(latLon == null){
+				}
+				setWaitingCursor(true);
+				List<Amenity> result = filter.initializeNewSearch(latLon.getLatitude(), latLon.getLongitude(), -1, new ResultMatcher<Amenity>() {
+					
+					@Override
+					public boolean publish(Amenity pObject) {
+						log.info("Adding " + pObject.getName(getLanguage()));
+						return true;
+					}
+					
+					@Override
+					public boolean isCancelled() {
+						return false;
+					}
+				});
+				mAmenityTable.setSearchResult(result);
+				getSettings().SELECTED_POI_FILTER_FOR_MAP.set(filter.getFilterId());
+				getDrawPanel().refreshMap();
+				setWaitingCursor(false);
+			}
+		});
+		mToolBar.add(mSearchTextField, new GridBagConstraints(1, 0, 1, 1, 3, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(10, 0, 10, 0), 0, 0));
+		mComboBox = new JComboBox<PoiUIFilter>();
+		mComboBoxModel = new DefaultComboBoxModel<PoiUIFilter>();
+		mCurrentPoiFilter = mPoiFilters.getSearchByNamePOIFilter();
+		mComboBoxModel.addElement(mCurrentPoiFilter);
+		mComboBoxModel.addElement(mPoiFilters.getNominatimAddressFilter());
+		mComboBoxModel.addElement(mPoiFilters.getNominatimPOIFilter());
+		mComboBox.setModel(mComboBoxModel);
+		mComboBox.setFocusable(false);
+		mComboBox.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent pE) {
+				if(mComboBox.getSelectedIndex() >= 0){
+					mCurrentPoiFilter = mComboBoxModel.getElementAt(mComboBox.getSelectedIndex());
+				}
+			}
+		});
+		mComboBox.setRenderer(new DefaultListCellRenderer(){
+			@Override
+			public Component getListCellRendererComponent(JList<?> pList, Object pValue, int pIndex,
+					boolean pIsSelected, boolean pCellHasFocus) {
+				super.getListCellRendererComponent(pList, pValue, pIndex, pIsSelected, pCellHasFocus);
+				if (pValue instanceof PoiUIFilter) {
+					PoiUIFilter filter = (PoiUIFilter) pValue;
+					setText(filter.getName());
+				}
+				return this;
+			}
+		});
+		mToolBar.add(mComboBox, new GridBagConstraints(2, 0, 1, 1, 0, 0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+
 		mFrame = new JFrame(getOffRoadString("offroad.string4")); //$NON-NLS-1$
 		mFrame.addKeyListener(mAdapter);
 		mFrame.getContentPane().setLayout(new BorderLayout());
+		mFrame.getContentPane().add(mToolBar, BorderLayout.NORTH);
+		mFrame.getContentPane().add(mAmenityTable, BorderLayout.WEST);
 		mFrame.getContentPane().add(mDrawPanel, BorderLayout.CENTER);
 		mFrame.getContentPane().add(mStatusBar, BorderLayout.SOUTH);
 		mFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -587,6 +666,25 @@ public class OsmWindow {
 		return null;
 	}
 	
+	public BufferedImage getBitmap(Amenity o) {
+		String id = null;
+		PoiType st = o.getType().getPoiTypeByKeyName(o.getSubType());
+		if (st != null) {
+			if (RenderingIcons.containsSmallIcon(st.getIconKeyName())) {
+				id = st.getIconKeyName();
+			} else if (RenderingIcons.containsSmallIcon(st.getOsmTag() + "_" + st.getOsmValue())) {
+				id = st.getOsmTag() + "_" + st.getOsmValue();
+			}
+		}
+		BufferedImage bmp = null;
+		if (id != null) {
+			bmp = RenderingIcons.getIcon(id, false);
+		}
+		return bmp;
+	}
+
+
+	
 	public File getAppPath(String pIndex) {
 		if (pIndex == null) {
 			pIndex = ""; //$NON-NLS-1$
@@ -654,8 +752,7 @@ public class OsmWindow {
 			} 
 		}
 		mDrawPanel.move(pLocation, tileBox.getZoom());
-		mDrawPanel.setCursor(pLocation);
-		addPoint(pLocation);
+		setCursorPosition(pLocation);
 	}
 
 	public void setWaitingCursor(boolean waiting) {
@@ -816,11 +913,33 @@ public class OsmWindow {
 		mDrawPanel.setCursor(pointStorage.mPoint);
 	}
 	
-	public void setCursor(Point pPoint) {
-		mDrawPanel.setCursor(pPoint);
-		addPoint(mDrawPanel.getCursorPosition());
+	public interface CursorPositionListener {
+		void cursorPositionChanged(LatLon pPosition);
 	}
 
+	
+	public void addCursorPositionListener(CursorPositionListener pListener){
+		mCursorPositionListeners.add(pListener);
+	}
+	public void removeCursorPositionListener(CursorPositionListener pListener){
+		mCursorPositionListeners.remove(pListener);
+	}
+			
+	
+	public void setCursorPosition(Point pPoint) {
+		mDrawPanel.setCursor(pPoint);
+		setCursorPosition(mDrawPanel.getCursorPosition());
+	}
+
+	public void setCursorPosition(LatLon pLoc) {
+		mDrawPanel.setCursor(pLoc);
+		addPoint(pLoc);
+		for (CursorPositionListener listener : mCursorPositionListeners) {
+			listener.cursorPositionChanged(pLoc);
+		}
+	}
+
+	
 	public void runInUIThread(Runnable pRunnable, int pDelay) {
 		Timer timer = new Timer(pDelay, new ActionListener() {
 			
@@ -865,6 +984,27 @@ public class OsmWindow {
 		ShowWikipediaAction action = new ShowWikipediaAction(this, pContent, pTitle, pArticle);
 		action.actionPerformed(null);
 	}
+
+	public LatLon getCursorPosition() {
+		return mDrawPanel.getCursorPosition();
+	}
 	
+	public LatLon getMouseLocation() {
+		MouseEvent lastMouseEvent = getLastMouseEvent();
+		Point destination;
+		if(lastMouseEvent == null){
+			destination = new Point(0,0);
+		} else {
+			destination = lastMouseEvent.getPoint();
+		}
+		LatLon destLatLon = mDrawPanel.getTileBox().getLatLonFromPixel(destination.x, destination.y);
+		return destLatLon;
+	}
+
+	public PoiUIFilter getCurrentPoiUIFilter() {
+		return mCurrentPoiFilter;
+	}
+
+
 
 }

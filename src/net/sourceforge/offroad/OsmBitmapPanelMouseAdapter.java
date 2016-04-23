@@ -147,7 +147,7 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 		if(isPopup(e)){
 			return;
 		}
-		mContext.setCursor(e.getPoint());
+		mContext.setCursorPosition(e.getPoint());
 	}
 
 	@Override

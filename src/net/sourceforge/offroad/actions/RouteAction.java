@@ -50,16 +50,15 @@ public class RouteAction extends OffRoadAction implements RouteCalculationProgre
 	@Override
 	public void actionPerformed(ActionEvent pE) {
 		// get destination point:
-		Point destination = mContext.getLastMouseEvent().getPoint();
-		OsmBitmapPanel drawPanel = mContext.getDrawPanel();
-		LatLon destLatLon = drawPanel.getTileBox().getLatLonFromPixel(destination.x, destination.y);
-		LatLon start = drawPanel.getCursorPosition();
+		LatLon destLatLon = mContext.getMouseLocation();
+		LatLon start =  mContext.getCursorPosition();
 		Location startLocation = new Location("");
 		startLocation.setLatitude(start.getLatitude());
 		startLocation.setLongitude(start.getLongitude());
 		System.out.println("Routing from " + startLocation + " to " + destLatLon);
 		mContext.getRoutingHelper().setFinalAndCurrentLocation(destLatLon, new ArrayList<LatLon>(), startLocation);
 	}
+
 
 	/* (non-Javadoc)
 	 * @see net.sourceforge.offroad.actions.OffRoadAction#save()

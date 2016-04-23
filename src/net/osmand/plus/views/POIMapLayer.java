@@ -235,7 +235,7 @@ public class POIMapLayer extends OsmandMapLayer implements /*ContextMenuLayer.IC
 						int y = (int) tileBox.getPixYFromLatLon(o.getLocation().getLatitude(), o.getLocation()
 								.getLongitude());
 						g2.drawImage(poiBackground, (int)(x - poiBackground.getWidth() / 2), (int)(y - poiBackground.getHeight() / 2), null);
-						BufferedImage bmp = getBitmap(o);
+						BufferedImage bmp = app.getBitmap(o);
 						if (bmp != null) {
 							g2.drawImage(bmp, (int)(x - bmp.getWidth() / 2), (int)(y - bmp.getHeight() / 2), null);
 						}
@@ -249,23 +249,6 @@ public class POIMapLayer extends OsmandMapLayer implements /*ContextMenuLayer.IC
 		g2.dispose();
 	}
 
-
-	public BufferedImage getBitmap(Amenity o) {
-		String id = null;
-		PoiType st = o.getType().getPoiTypeByKeyName(o.getSubType());
-		if (st != null) {
-			if (RenderingIcons.containsSmallIcon(st.getIconKeyName())) {
-				id = st.getIconKeyName();
-			} else if (RenderingIcons.containsSmallIcon(st.getOsmTag() + "_" + st.getOsmValue())) {
-				id = st.getOsmTag() + "_" + st.getOsmValue();
-			}
-		}
-		BufferedImage bmp = null;
-		if (id != null) {
-			bmp = RenderingIcons.getIcon(id, false);
-		}
-		return bmp;
-	}
 
 	@Override
 	public void onDraw(Graphics2D canvas, RotatedTileBox tileBox, DrawSettings settings) {
