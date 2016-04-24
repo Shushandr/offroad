@@ -28,6 +28,14 @@ An offline map viewer based on OsmAnd.
 
 Version History:
 
+0_1_Alpha6:
+============
+* Search bar à la browser added.
+	- POI offline search
+	- Nominatim address + POI search
+* Search result is displayed in a table in the main window
+* Wikipedia display added
+
 0_1_Alpha5:
 ============
 * Smaller icons used.

@@ -63,17 +63,35 @@ public class AmenityTablePanel extends JPanel implements CursorPositionListener 
 
 	private final static Log log = PlatformUtil.getLog(AmenityTablePanel.class);
 
+	public static class ImageHolder {
+		public BufferedImage image;
+		public Amenity item;
+		public ImageHolder(BufferedImage pImage, Amenity pItem) {
+			super();
+			image = pImage;
+			item = pItem;
+		}
+		
+	}
+	
 	public class ImageTableCellRenderer extends DefaultTableCellRenderer {
 
 		@Override
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
 				int row, int column) {
 			super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-			if (value instanceof BufferedImage) {
-				BufferedImage img = (BufferedImage) value;
-				setIcon(new ImageIcon(img));
+			if (value instanceof ImageHolder) {
+				ImageHolder holder = (ImageHolder) value;
+				BufferedImage img = holder.image;
+				if(img != null) {
+					setIcon(new ImageIcon(img));
+					setSize(new Dimension(img.getWidth(), img.getHeight()));
+				} else {
+					setIcon(new BlindIcon(20));
+					setSize(new Dimension(20, 20));
+				}
 				setText("");
-				setSize(new Dimension(img.getWidth(), img.getHeight()));
+				setToolTipText(holder.item.getType().getTranslation());
 			}
 			return this;
 		}
@@ -121,21 +139,13 @@ public class AmenityTablePanel extends JPanel implements CursorPositionListener 
 		private Vector<Amenity> mRows = new Vector<>();
 
 		public AmenityTableModel() {
-			mColumns.addElement(new AmenityTableColumn("icon", BufferedImage.class, item -> mContext.getBitmap(item),
+			mColumns.addElement(new AmenityTableColumn("icon", ImageHolder.class, item -> new ImageHolder(mContext.getBitmap(item), item),
 					new ImageTableCellRenderer()));
 			mColumns.addElement(new AmenityTableColumn("name", String.class,
 					item -> item.getName(mContext.getLanguage()), new DefaultTableCellRenderer()));
-			mColumns.addElement(new AmenityTableColumn("distance", Double.class, new AmenityToColumn() {
-
-				@Override
-				public Object get(Amenity item) {
-					LatLon cursorPosition = mContext.getCursorPosition();
-					if (cursorPosition == null) {
-						return null;
-					}
-					return MapUtils.getDistance(item.getLocation(), cursorPosition) / 1000d;
-				}
-			}, new DistanceTableCellRenderer()));
+			mColumns.addElement(new AmenityTableColumn("distance", Double.class,
+					item -> MapUtils.getDistance(item.getLocation(), mContext.getCursorPosition()) / 1000d,
+					new DistanceTableCellRenderer()));
 			for (AmenityTableColumn column : mColumns) {
 				mTable.setDefaultRenderer(column.mClass, column.mRenderer);
 			}
@@ -271,11 +281,13 @@ public class AmenityTablePanel extends JPanel implements CursorPositionListener 
 
 	@Override
 	public void cursorPositionChanged(LatLon pPosition) {
+		mContext.refreshSearchTable();
 		// recalculate distances.
 		int distanceColumn = mSourceModel.getDistanceColumn();
 		for (int i = 0; i < mSourceModel.getRowCount(); i++) {
 			mSourceModel.fireTableCellUpdated(i, distanceColumn);
 		}
+		// this removes the cell heights....
 //		mSourceModel.fireTableDataChanged();
 	}
 

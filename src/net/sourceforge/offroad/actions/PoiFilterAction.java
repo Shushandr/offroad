@@ -28,8 +28,7 @@ public class PoiFilterAction extends OffRoadAction implements SelectableAction {
 	
 	@Override
 	public void actionPerformed(ActionEvent pE) {
-		mContext.getSettings().SELECTED_POI_FILTER_FOR_MAP.set(mFilterId);
-		mContext.getDrawPanel().refreshMap();
+		mContext.setPoiFilter(mFilter);
 	}
 
 

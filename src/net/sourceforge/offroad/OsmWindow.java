@@ -13,6 +13,8 @@ import java.awt.Insets;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -20,6 +22,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.Authenticator;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.text.MessageFormat;
@@ -29,18 +32,17 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
 import java.util.PropertyResourceBundle;
 import java.util.Vector;
 
 import javax.swing.AbstractAction;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.DefaultListCellRenderer;
 import javax.swing.ImageIcon;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -79,7 +81,8 @@ import net.osmand.plus.ApplicationMode;
 import net.osmand.plus.GeocodingLookupService;
 import net.osmand.plus.OsmandSettings;
 import net.osmand.plus.TargetPointsHelper;
-import net.osmand.plus.poi.NominatimPoiFilter;
+import net.osmand.plus.inapp.util.Base64;
+import net.osmand.plus.inapp.util.Base64DecoderException;
 import net.osmand.plus.poi.PoiFiltersHelper;
 import net.osmand.plus.poi.PoiUIFilter;
 import net.osmand.plus.render.MapRenderRepositories;
@@ -107,6 +110,7 @@ import net.sourceforge.offroad.res.ResourceTest;
 import net.sourceforge.offroad.res.Resources;
 import net.sourceforge.offroad.ui.AmenityTablePanel;
 import net.sourceforge.offroad.ui.BlindIcon;
+import net.sourceforge.offroad.ui.PoiFilterRenderer;
 
 /**
  * OffRoad
@@ -196,7 +200,17 @@ public class OsmWindow {
 	public static final String RENDERING_STYLES_DIR = "rendering_styles/"; //$NON-NLS-1$
 	public static final String OSMAND_ICONS_DIR = RENDERING_STYLES_DIR + "style-icons/drawable-xxhdpi/"; //$NON-NLS-1$
 	public static final String IMAGE_PATH = "drawable-xhdpi/"; //$NON-NLS-1$
-	private static OsmWindow minstance = null;
+	public static final String PROXY_PORT = "proxy.port";
+	public static final String PROXY_HOST = "proxy.host";
+	public static final String PROXY_PASSWORD = "proxy.password";
+	public static final String PROXY_USER = "proxy.user";
+	public static final String PROXY_IS_AUTHENTICATED = "proxy.is_authenticated";
+	public static final String PROXY_USE_SETTINGS = "proxy.use_settings";
+	public static final String PROXY_EXCEPTION = "proxy.exception";
+
+
+	private static final String OFFROAD_PROPERTIES = "offroad";
+	private static OsmWindow sInstance = null;
 	private RenderingRulesStorage mRenderingRulesStorage;
 	private ResourceManager mResourceManager;
 	private OffRoadSettings settings = new OffRoadSettings(this);
@@ -267,35 +281,41 @@ public class OsmWindow {
 		mSearchTextField = new JTextField();
 		mAmenityTable = new AmenityTablePanel(getInstance());
 		mSearchTextField.addActionListener(new ActionListener() {
-			
-
 			@Override
 			public void actionPerformed(ActionEvent pE) {
-				PoiUIFilter filter = getCurrentPoiUIFilter();
-				filter.setFilterByName(mSearchTextField.getText());
-				LatLon latLon = getCursorPosition();
-					latLon = getMouseLocation();
-					if(latLon == null){
-				}
-				setWaitingCursor(true);
-				List<Amenity> result = filter.initializeNewSearch(latLon.getLatitude(), latLon.getLongitude(), -1, new ResultMatcher<Amenity>() {
-					
-					@Override
-					public boolean publish(Amenity pObject) {
-						log.info("Adding " + pObject.getName(getLanguage()));
-						return true;
-					}
-					
-					@Override
-					public boolean isCancelled() {
-						return false;
-					}
-				});
-				mAmenityTable.setSearchResult(result);
-				getSettings().SELECTED_POI_FILTER_FOR_MAP.set(filter.getFilterId());
-				getDrawPanel().refreshMap();
-				setWaitingCursor(false);
+				setPoiFilter(getCurrentPoiUIFilter());
 			}
+		});
+		mSearchTextField.addKeyListener(new KeyListener() {
+			
+			@Override
+			public void keyTyped(KeyEvent pE) {
+			}
+			
+			@Override
+			public void keyReleased(KeyEvent pE) {
+			}
+			
+			@Override
+			public void keyPressed(KeyEvent pE) {
+				if(!pE.isControlDown()){
+					return;
+				}
+				switch (pE.getKeyCode()) {
+				case KeyEvent.VK_UP:
+					if(mComboBox.getSelectedIndex()>0){
+						mComboBox.setSelectedIndex(mComboBox.getSelectedIndex()-1);
+					}
+					pE.consume();
+					return;
+				case KeyEvent.VK_DOWN:
+					if(mComboBox.getSelectedIndex()<mComboBox.getItemCount()-1){
+						mComboBox.setSelectedIndex(mComboBox.getSelectedIndex()+1);
+					}
+					pE.consume();
+					return;
+				}
+		}
 		});
 		mToolBar.add(mSearchTextField, new GridBagConstraints(1, 0, 1, 1, 3, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(10, 0, 10, 0), 0, 0));
 		mComboBox = new JComboBox<PoiUIFilter>();
@@ -315,18 +335,7 @@ public class OsmWindow {
 				}
 			}
 		});
-		mComboBox.setRenderer(new DefaultListCellRenderer(){
-			@Override
-			public Component getListCellRendererComponent(JList<?> pList, Object pValue, int pIndex,
-					boolean pIsSelected, boolean pCellHasFocus) {
-				super.getListCellRendererComponent(pList, pValue, pIndex, pIsSelected, pCellHasFocus);
-				if (pValue instanceof PoiUIFilter) {
-					PoiUIFilter filter = (PoiUIFilter) pValue;
-					setText(filter.getName());
-				}
-				return this;
-			}
-		});
+		mComboBox.setRenderer(new PoiFilterRenderer());
 		mToolBar.add(mComboBox, new GridBagConstraints(2, 0, 1, 1, 0, 0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 
 		mFrame = new JFrame(getOffRoadString("offroad.string4")); //$NON-NLS-1$
@@ -369,6 +378,18 @@ public class OsmWindow {
 		findItem.addActionListener(new SearchAddressAction(this));
 		findItem.setAccelerator(KeyStroke.getKeyStroke("control F")); //$NON-NLS-1$
 		jSearchMenu.add(findItem);
+		JMenuItem gotoSearchFieldItem = new JMenuItem(getOffRoadString("offroad.gotoSearchField")); //$NON-NLS-1$
+		gotoSearchFieldItem.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent pE) {
+				mSearchTextField.selectAll();
+				mSearchTextField.requestFocus();
+			}
+		});
+		gotoSearchFieldItem.setAccelerator(KeyStroke.getKeyStroke("control K")); //$NON-NLS-1$
+		jSearchMenu.add(gotoSearchFieldItem);
+		
 		menubar.add(jSearchMenu);
 		// Download
 		JMenu jDownloadMenu = new JMenu(getOffRoadString("offroad.download")); //$NON-NLS-1$
@@ -403,29 +424,6 @@ public class OsmWindow {
 		popupMenu.add(routeMenu);
 		mDrawPanel.setComponentPopupMenu(popupMenu);
 		popupMenu.addPopupMenuListener(new PoiContextMenuListener(popupMenu));
-//		findItem.addActionListener(new ActionListener() {
-//
-//			@Override
-//			public void actionPerformed(ActionEvent pE) {
-//				String search = JOptionPane.showInputDialog("Search item");
-//				QuadRect bounds = mDrawPanel.getTileBox().getLatLonBounds();
-//				mResourceManager.searchAmenitiesByName(search, bounds.top, bounds.left, bounds.bottom, bounds.right,
-//						mDrawPanel.getTileBox().getLatitude(), mDrawPanel.getTileBox().getLongitude(),
-//						new ResultMatcher<Amenity>() {
-//
-//							@Override
-//							public boolean publish(Amenity pObject) {
-//								System.out.println("found: " + pObject);
-//								return true;
-//							}
-//
-//							@Override
-//							public boolean isCancelled() {
-//								return false;
-//							}
-//						});
-//			}
-//		});
 		mFrame.setJMenuBar(menubar);
 		mFrame.pack();
 		mFrame.setLocationRelativeTo(null);
@@ -472,12 +470,16 @@ public class OsmWindow {
 
 	public OsmWindow() {
 		initStrings();
+		setupProxy();
 		prefs.APPLICATION_MODE.set(ApplicationMode.DEFAULT);
-        Dimension size = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
-        widthPixels = size.width;
-        heightPixels = size.height;
-        density = java.awt.Toolkit.getDefaultToolkit().getScreenResolution()/96f;
 		mStrings = new R.string();
+	}
+
+	private void init() throws XmlPullParserException, IOException {
+		Dimension size = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
+		widthPixels = size.width;
+		heightPixels = size.height;
+		density = java.awt.Toolkit.getDefaultToolkit().getScreenResolution()/96f;
 		mRegions = new OsmandRegions();
 		mResourceManager = new ResourceManager(this);
 		mResourceManager.indexingMaps(IProgress.EMPTY_PROGRESS);
@@ -503,7 +505,9 @@ public class OsmWindow {
 				return getString("poi_" + type.getIconKeyName());
 			}
 		});
+		mRenderingRulesStorage = initRenderingRulesStorage();
 	}
+
 
 	private void initStrings() {
 		// read resources:
@@ -520,6 +524,28 @@ public class OsmWindow {
 			e.printStackTrace();
 		}
 	}
+
+	private void setupProxy() {
+		// proxy settings
+		Properties props = (Properties) settings.getPreferenceObject(OFFROAD_PROPERTIES);
+		if("true".equals(props.getProperty(PROXY_USE_SETTINGS))) {
+			if ("true".equals(props.getProperty(PROXY_IS_AUTHENTICATED))) {
+				try {
+					Authenticator.setDefault(new ProxyAuthenticator(props
+							.getProperty(PROXY_USER), new String(Base64.decode(props
+							.getProperty(PROXY_PASSWORD)))));
+				} catch (Base64DecoderException e) {
+					e.printStackTrace();
+				}
+			}
+			System.setProperty("http.proxyHost", props.getProperty(PROXY_HOST));
+			System.setProperty("http.proxyPort", props.getProperty(PROXY_PORT));
+			System.setProperty("https.proxyHost", props.getProperty(PROXY_HOST));
+			System.setProperty("https.proxyPort", props.getProperty(PROXY_PORT));
+			System.setProperty("http.nonProxyHosts", props.getProperty(PROXY_EXCEPTION));
+		}
+	}
+
 
 	private void loadStrings(String ct, String fileName) {
 		InputStream is = getResource("res/values-" + ct + "/" + fileName);
@@ -581,10 +607,6 @@ public class OsmWindow {
 
 	public MapRenderRepositories getRenderer() {
 		return mResourceManager.getRenderer();
-	}
-
-	private void init() throws XmlPullParserException, IOException {
-		mRenderingRulesStorage = initRenderingRulesStorage();
 	}
 
 	public RenderingRulesStorage initRenderingRulesStorage() throws XmlPullParserException, IOException {
@@ -720,10 +742,10 @@ public class OsmWindow {
 	}
 
 	public static OsmWindow getInstance() {
-		if (minstance == null) {
-			minstance = new OsmWindow();
+		if (sInstance == null) {
+			sInstance = new OsmWindow();
 		}
-		return minstance;
+		return sInstance;
 	}
 
 	public OsmandRegions getRegions() {
@@ -986,7 +1008,12 @@ public class OsmWindow {
 	}
 
 	public LatLon getCursorPosition() {
-		return mDrawPanel.getCursorPosition();
+		LatLon cursorPosition = mDrawPanel.getCursorPosition();
+		if(cursorPosition == null){
+			cursorPosition = getCenterPosition();
+			setCursorPosition(cursorPosition);
+		}
+		return cursorPosition;
 	}
 	
 	public LatLon getMouseLocation() {
@@ -1003,6 +1030,50 @@ public class OsmWindow {
 
 	public PoiUIFilter getCurrentPoiUIFilter() {
 		return mCurrentPoiFilter;
+	}
+
+	public LatLon getCenterPosition() {
+		return mDrawPanel.getTileBox().getCenterLatLon();
+	}
+
+	/**
+	 * @param filter == null: means, clear filter and table
+	 */
+	public void setPoiFilter(PoiUIFilter filter) {
+		String filterId = null;
+		if (filter != null) {
+			filterId = filter.getFilterId();
+		}
+		getSettings().SELECTED_POI_FILTER_FOR_MAP.set(filterId);
+		refreshSearchTable();
+		getDrawPanel().refreshMap();
+	}
+
+	public void refreshSearchTable() {
+		setWaitingCursor(true);
+		List<Amenity> result = new Vector<>();
+		String filterId = getSettings().SELECTED_POI_FILTER_FOR_MAP.get();
+		if (filterId != null) {
+			PoiUIFilter filter = getPoiFilters().getFilterById(filterId);
+			filter.setFilterByName(mSearchTextField.getText());
+			LatLon latLon = getCursorPosition();
+			result = filter.initializeNewSearch(latLon.getLatitude(), latLon.getLongitude(), -1,
+					new ResultMatcher<Amenity>() {
+
+						@Override
+						public boolean publish(Amenity pObject) {
+							log.debug("Adding " + pObject.getName(getLanguage()));
+							return true;
+						}
+
+						@Override
+						public boolean isCancelled() {
+							return false;
+						}
+					});
+		}
+		mAmenityTable.setSearchResult(result);
+		setWaitingCursor(false);
 	}
 
 

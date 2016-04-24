@@ -6,6 +6,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Properties;
@@ -14,6 +18,7 @@ import net.osmand.plus.api.SettingsAPI;
 
 final class OffRoadSettings implements SettingsAPI {
 	
+	private static final String OTHER_PROPERTIES_POSTFIX = ".priv.properties";
 	private static final String OFFROAD_PROPERTIES = "offroad.properties";
 
 	private static final class OffRoadSettingsEditor implements SettingsEditor {
@@ -87,6 +92,31 @@ final class OffRoadSettings implements SettingsAPI {
 	public OffRoadSettings(OsmWindow ctx) {
 		mOsmWindow = ctx;
 		mPreferencesHash.put(SHARED_PREFERENCES_NAME, readDefaultPreferences());
+		load();
+	}
+
+	public void load() {
+		Path dir = Paths.get(mOsmWindow.getAppPath("").getAbsolutePath());
+		try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "*"+OTHER_PROPERTIES_POSTFIX)) {
+			for (Path entry : stream) {
+				Properties props = new Properties();
+				try {
+					InputStream in = new FileInputStream(entry.toFile());
+					props.load(in);
+					in.close();
+				} catch (Exception ex) {
+					ex.printStackTrace();
+					System.err.println("Panic! Error while loading offroad properties.");
+				}
+				String key = entry.toFile().getName().replaceFirst(OTHER_PROPERTIES_POSTFIX, "");
+				System.out.println("Read file " + entry + " and put as " + key);
+				mPreferencesHash.put(key, props);
+			}
+		} catch (IOException x) {
+			// IOException can never be thrown by the iteration.
+			// In this snippet, it can // only be thrown by newDirectoryStream.
+			System.err.println(x);
+		}
 	}
 	
 	public Properties readDefaultPreferences() {
@@ -191,11 +221,14 @@ final class OffRoadSettings implements SettingsAPI {
 			FileOutputStream stream = new FileOutputStream(mOsmWindow.getAppPath(OFFROAD_PROPERTIES));
 			mPreferencesHash.get(SHARED_PREFERENCES_NAME).store(stream, "");
 			stream.close();
-//			for (String key : mPreferencesHash.keySet()) {
-//				FileOutputStream streamL = new FileOutputStream(mOsmWindow.getAppPath(key+".priv.properties"));
-//				mPreferencesHash.get(key).store(streamL, "");
-//				streamL.close();
-//			}
+			for (String key : mPreferencesHash.keySet()) {
+				if(key.equals(SHARED_PREFERENCES_NAME)){
+					continue;
+				}
+				FileOutputStream streamL = new FileOutputStream(mOsmWindow.getAppPath(key+OTHER_PROPERTIES_POSTFIX));
+				mPreferencesHash.get(key).store(streamL, "");
+				streamL.close();
+			}
 			System.out.println("Settings saved.");
 		} catch (IOException e) {
 			e.printStackTrace();

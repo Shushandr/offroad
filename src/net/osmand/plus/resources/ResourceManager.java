@@ -31,8 +31,6 @@ import net.osmand.binary.BinaryMapIndexReader.SearchPoiTypeFilter;
 import net.osmand.binary.CachedOsmandIndexes;
 import net.osmand.data.Amenity;
 import net.osmand.data.TransportStop;
-import net.osmand.map.OsmandRegions;
-import net.osmand.osm.MapPoiTypes;
 import net.osmand.osm.PoiCategory;
 import net.osmand.plus.render.MapRenderRepositories;
 import net.osmand.util.Algorithms;

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project default="dist" name="OffRoad">
 
-	<property name="ver" value="0.1_Alpha5"/>
+	<property name="ver" value="0.1_Alpha6"/>
 	<property name="src" location="src"/>
 	<property name="res" location="res"/>
 	<property name="lib" location="lib"/>
