@@ -977,6 +977,8 @@ public class RoutingHelper {
 		
 		public void finish();
 		
+		public void showError(String pMessage);
+		
 	}
 
 
@@ -986,12 +988,14 @@ public class RoutingHelper {
 	
 	private void showMessage(final String msg){
 		System.err.println(msg);
-//		app.runInUIThread(new Runnable() {
-//			@Override
-//			public void run() {
-//				app.showToastMessage(msg);
-//			}
-//		});
+		if (progressRoute != null) {
+			app.runInUIThread(new Runnable() {
+				@Override
+				public void run() {
+					progressRoute.showError(msg);
+				}
+			});
+		}
 	}
 	
 	

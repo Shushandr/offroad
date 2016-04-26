@@ -19,17 +19,15 @@
 
 package net.sourceforge.offroad.actions;
 
-import java.awt.Point;
 import java.awt.event.ActionEvent;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 
 import javax.swing.Action;
 
 import net.osmand.Location;
 import net.osmand.data.LatLon;
+import net.osmand.plus.ApplicationMode;
 import net.osmand.plus.routing.RoutingHelper.RouteCalculationProgressCallback;
-import net.sourceforge.offroad.OsmBitmapPanel;
 import net.sourceforge.offroad.OsmWindow;
 
 /**
@@ -38,9 +36,12 @@ import net.sourceforge.offroad.OsmWindow;
  */
 public class RouteAction extends OffRoadAction implements RouteCalculationProgressCallback {
 
-	public RouteAction(OsmWindow pCtx) {
+	private ApplicationMode mMode;
+
+	public RouteAction(OsmWindow pCtx, ApplicationMode pMode) {
 		super(pCtx);
-		this.putValue(Action.NAME, "route");
+		mMode = pMode;
+		this.putValue(Action.NAME, mContext.getOffRoadString("offroad.route", new Object[]{pMode.getStringKey()}));
 		mContext.getRoutingHelper().setProgressBar(this);
 	}
 	
@@ -56,6 +57,7 @@ public class RouteAction extends OffRoadAction implements RouteCalculationProgre
 		startLocation.setLatitude(start.getLatitude());
 		startLocation.setLongitude(start.getLongitude());
 		System.out.println("Routing from " + startLocation + " to " + destLatLon);
+		mContext.getRoutingHelper().setAppMode(mMode);
 		mContext.getRoutingHelper().setFinalAndCurrentLocation(destLatLon, new ArrayList<LatLon>(), startLocation);
 	}
 
@@ -78,8 +80,12 @@ public class RouteAction extends OffRoadAction implements RouteCalculationProgre
 	public void finish() {
 		mContext.setProgress(100);
 		float dist = mContext.getRoutingHelper().getRoute().getWholeDistance()/1000f;
-		String str = mContext.getOffRoadString("offroad.routing_finished");
-		mContext.setStatus(MessageFormat.format(str, new Object[] { dist }));
+		mContext.setStatus(mContext.getOffRoadString("offroad.routing_finished", new Object[]{dist}));
+	}
+
+	@Override
+	public void showError(String pMessage) {
+		mContext.showToastMessage(pMessage);
 	}
 
 }

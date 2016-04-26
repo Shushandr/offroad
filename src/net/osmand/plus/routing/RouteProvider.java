@@ -619,8 +619,6 @@ public class RouteProvider {
 		router.setUseFastRecalculation(settings.USE_FAST_RECALCULATION.get());
 		
 		RoutingConfiguration.Builder config = params.ctx.getDefaultRoutingConfig();
-		// FIXME: Remove me!
-		params.mode = ApplicationMode.CAR;
 		GeneralRouter generalRouter = OsmWindow.getRouter(config, params.mode);
 		if(generalRouter == null) {
 			return applicationModeNotSupported(params);

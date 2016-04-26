@@ -278,6 +278,7 @@ public class OsmWindow {
 		mToolBar = new JToolBar(JToolBar.HORIZONTAL);
 		mToolBar.setLayout(new GridBagLayout());
 		mToolBar.add(new JLabel(getOffRoadString("offroad.search")), new GridBagConstraints(0, 0, 1, 1, 0, 1, GridBagConstraints.WEST, GridBagConstraints.VERTICAL, new Insets(0, 0, 0, 0), 0, 0));
+		
 		mSearchTextField = new JTextField();
 		mAmenityTable = new AmenityTablePanel(getInstance());
 		mSearchTextField.addActionListener(new ActionListener() {
@@ -420,8 +421,9 @@ public class OsmWindow {
 		menubar.add(jPointOfInterestMenu);
 		
 		JPopupMenu popupMenu = new JPopupMenu();
-		JMenuItem routeMenu = new JMenuItem(new RouteAction(this));
-		popupMenu.add(routeMenu);
+		popupMenu.add(new JMenuItem(new RouteAction(this, ApplicationMode.CAR)));
+		popupMenu.add(new JMenuItem(new RouteAction(this, ApplicationMode.BICYCLE)));
+		popupMenu.add(new JMenuItem(new RouteAction(this, ApplicationMode.PEDESTRIAN)));
 		mDrawPanel.setComponentPopupMenu(popupMenu);
 		popupMenu.addPopupMenuListener(new PoiContextMenuListener(popupMenu));
 		mFrame.setJMenuBar(menubar);
@@ -1074,6 +1076,12 @@ public class OsmWindow {
 		}
 		mAmenityTable.setSearchResult(result);
 		setWaitingCursor(false);
+	}
+
+	public String getOffRoadString(String pString, Object[] pObjects) {
+		MessageFormat formatter = new MessageFormat(
+				getOffRoadString(pString)); //$NON-NLS-1$
+		return formatter.format(pObjects);
 	}
 
 
