@@ -41,7 +41,7 @@ public class RouteAction extends OffRoadAction implements RouteCalculationProgre
 	public RouteAction(OsmWindow pCtx, ApplicationMode pMode) {
 		super(pCtx);
 		mMode = pMode;
-		this.putValue(Action.NAME, mContext.getOffRoadString("offroad.route", new Object[]{pMode.getStringKey()}));
+		this.putValue(Action.NAME, mContext.getOffRoadString("offroad.route", new Object[]{pMode.toHumanStringCtx()}));
 		mContext.getRoutingHelper().setProgressBar(this);
 	}
 	

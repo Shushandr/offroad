@@ -22,8 +22,8 @@ import net.osmand.data.QuadRect;
 import net.osmand.data.QuadTree;
 import net.osmand.data.RotatedTileBox;
 import net.osmand.util.MapAlgorithms;
-import net.sourceforge.offroad.OsmBitmapPanel;
 import net.sourceforge.offroad.OsmWindow;
+import net.sourceforge.offroad.ui.OsmBitmapPanel;
 
 public abstract class OsmandMapLayer {
 	private final static Log log = PlatformUtil.getLog(OsmandMapLayer.class);

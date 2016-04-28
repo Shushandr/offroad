@@ -15,7 +15,7 @@ import javax.swing.text.Style;
 import gnu.trove.set.hash.TIntHashSet;
 import net.osmand.data.LatLon;
 import net.osmand.data.RotatedTileBox;
-import net.sourceforge.offroad.OsmBitmapPanel;
+import net.sourceforge.offroad.ui.OsmBitmapPanel;
 
 public class MapTextLayer extends OsmandMapLayer {
 	

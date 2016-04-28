@@ -1,4 +1,4 @@
-package net.sourceforge.offroad;
+package net.sourceforge.offroad.ui;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -17,6 +17,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
@@ -39,43 +41,10 @@ import net.osmand.plus.views.OsmandMapLayer;
 import net.osmand.plus.views.OsmandMapLayer.DrawSettings;
 import net.osmand.plus.views.POIMapLayer;
 import net.osmand.plus.views.RouteLayer;
+import net.sourceforge.offroad.OsmWindow;
 
 @SuppressWarnings("serial")
 public class OsmBitmapPanel extends JPanel implements IRouteInformationListener {
-	private class GenerationThread extends Thread {
-		private final RotatedTileBox mTileCopy;
-		private BufferedImage mNewBitmap;
-		private Thread mWaitForThread;
-
-		private GenerationThread(RotatedTileBox pTileCopy, Thread pWaitForThread) {
-			mTileCopy = pTileCopy;
-			mWaitForThread = pWaitForThread;
-		}
-
-		@Override
-		public void run() {
-			// generate in background
-			setTileBox(mTileCopy);
-			mNewBitmap = newBitmap();
-			// wait
-			if (mWaitForThread != null && mWaitForThread.isAlive()) {
-				try {
-					mWaitForThread.join();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-			// activate in foreground
-			SwingUtilities.invokeLater(new Runnable() {
-
-				@Override
-				public void run() {
-					setImage(mNewBitmap);
-				}
-			});
-		}
-	}
-
 	private static final int ST_WIDTH = 1400;
 	private static final int ST_HEIGHT = 1000;
 	private static final Color BACKGROUND_COLOR = Color.white;
@@ -90,10 +59,11 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 	private int colorIndex = 0;
 	private OsmWindow mContext;
 	private RotatedTileBox mTileBox;
-	private double scale = 1.0d;
-	private int originX = 0;
-	private int originY = 0;
-	private Thread mAnimationThread;
+	private RotatedTileBox mCurrentTileBox;
+	double scale = 1.0d;
+	int originX = 0;
+	int originY = 0;
+	private OffRoadUIThread mAnimationThread;
 	private GenerationThread mGenerationThread;
 	private boolean mShowCursor;
 	private LatLon mCursorPosition = null;
@@ -103,6 +73,8 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 	private List<OsmandMapLayer> layers = new ArrayList<OsmandMapLayer>();
 	private Map<OsmandMapLayer, Float> zOrders = new HashMap<OsmandMapLayer, Float>();
 	private POIMapLayer mPoiLayer;
+	private ExecutorService mThreadPool;
+	private OffRoadUIThread mLastThread;
 
 	public OsmBitmapPanel(OsmWindow pWin) {
 		mContext = pWin;
@@ -115,6 +87,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		}
 		setTileBox(new RotatedTileBoxBuilder().setLocation(latLon.getLatitude(), latLon.getLongitude()).setZoom(zoom)
 				.setPixelDimensions(bImage.getWidth(), bImage.getHeight()).setRotate(0).setMapDensity(1d).build());
+		mCurrentTileBox = mTileBox;
 		mCursorLength = (int) (15 * mTileBox.getMapDensity());
 		mStroke = new BasicStroke((float) (2f * mTileBox.getMapDensity()));
 		addLayer(new RouteLayer(mContext.getRoutingHelper()), 1);
@@ -132,6 +105,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 			}
 		};
 		new Timer(1000, updateCursorAction).start();
+		mThreadPool = Executors.newFixedThreadPool(4);
 	}
 
 	public float getScaleCoefficient() {
@@ -145,7 +119,9 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 	}
 
 	public float getDensity() {
-		return mTileBox.getDensity();
+		synchronized (mTileBox) {
+			return mTileBox.getDensity();
+		}
 	}
 
 	private void clear(BufferedImage pImage) {
@@ -168,10 +144,10 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		Stroke oldStroke = g2.getStroke();
 		Color oldColor = g2.getColor();
 		// do cursor
-		if (mCursorPosition != null && mShowCursor && getTileBox().containsLatLon(mCursorPosition)) {
-			int posx = (int) getTileBox().getPixXFromLatLon(mCursorPosition.getLatitude(),
+		if (mCursorPosition != null && mShowCursor && mCurrentTileBox.containsLatLon(mCursorPosition)) {
+			int posx = (int) mCurrentTileBox.getPixXFromLatLon(mCursorPosition.getLatitude(),
 					mCursorPosition.getLongitude());
-			int posy = (int) getTileBox().getPixYFromLatLon(mCursorPosition.getLatitude(),
+			int posy = (int) mCurrentTileBox.getPixYFromLatLon(mCursorPosition.getLatitude(),
 					mCursorPosition.getLongitude());
 			int size_h = mCursorLength;
 			g2.setStroke(mStroke);
@@ -184,7 +160,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		g2.dispose();
 	}
 
-	private void setImage(BufferedImage pImage) {
+	void setImage(BufferedImage pImage) {
 		scale = 1.0d;
 		originX = 0;
 		originY = 0;
@@ -193,12 +169,12 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		repaint();
 	}
 
-	private void drawImage(BufferedImage pImage) {
+	private void drawImage(BufferedImage pImage, RotatedTileBox pTileBox) {
 		clear(pImage);
 		Graphics2D graphics = pImage.createGraphics();
 		Graphics2D g2 = createGraphics(graphics);
-		mContext.loadMGap(g2, getTileBox());
-		final QuadPoint c = getTileBox().getCenterPixelPoint();
+		mContext.loadMGap(g2, pTileBox);
+		final QuadPoint c = pTileBox.getCenterPixelPoint();
 		DrawSettings settings = new DrawSettings(false);
 		for (int i = 0; i < layers.size(); i++) {
 			Graphics2D glayer = createGraphics(g2);
@@ -206,9 +182,9 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 				OsmandMapLayer layer = layers.get(i);
 				// rotate if needed
 				if (!layer.drawInScreenPixels()) {
-					glayer.rotate(getTileBox().getRotate(), c.x, c.y);
+					glayer.rotate(pTileBox.getRotate(), c.x, c.y);
 				}
-				layer.onPrepareBufferImage(glayer, getTileBox(), settings);
+				layer.onPrepareBufferImage(glayer, pTileBox, settings);
 				// canvas.restore();
 			} catch (IndexOutOfBoundsException e) {
 				// skip it
@@ -238,17 +214,10 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 	}
 
 	public void zoomChange(final int pWheelRotation, final Point pNewCenter) {
-		int newZoom = getTileBox().getZoom() + pWheelRotation;
+		final RotatedTileBox tileCopy = copyLatestTileBox();
+		int newZoom = tileCopy.getZoom() + pWheelRotation;
 		newZoom = checkZoom(newZoom);
-
-		if (mAnimationThread != null && mAnimationThread.isAlive()) {
-			return;
-		}
-		if (mGenerationThread != null && mGenerationThread.isAlive()) {
-			return;
-		}
-		LatLon latLonNewCenter = getTileBox().getLatLonFromPixel(pNewCenter.x, pNewCenter.y);
-		final RotatedTileBox tileCopy = getTileBox().copy();
+		LatLon latLonNewCenter = tileCopy.getLatLonFromPixel(pNewCenter.x, pNewCenter.y);
 		tileCopy.setZoom(newZoom);
 		final float deltaX = tileCopy.getPixXFromLatLon(latLonNewCenter.getLatitude(), latLonNewCenter.getLongitude())
 				- pNewCenter.x;
@@ -261,41 +230,37 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		double lonFromPixel = tileCopy.getLonFromPixel(tileCopy.getCenterPixelX() + deltaX,
 				tileCopy.getCenterPixelY() + deltaY);
 		tileCopy.setLatLonCenter(latFromPixel, lonFromPixel);
-		mAnimationThread = new Thread() {
+		mAnimationThread = new ZoomAnimationThread(this, pWheelRotation, pNewCenter);
+		queue(mAnimationThread);
+		mGenerationThread = new GenerationThread(this, tileCopy);
+		queue(mGenerationThread);
+	}
 
-			@Override
-			public void run() {
-				double dest = Math.pow(2, pWheelRotation);
-				double start = 1.0d;
-				int it = 10;
-				double delta = (dest - start) / it;
-				for (int i = 0; i < it; ++i) {
-					scale = start + i * delta;
-					// this is not correct. involve the size of the image.
-					originX = (int) (pNewCenter.x - (pNewCenter.x) * scale);
-					originY = (int) (pNewCenter.y - (pNewCenter.y) * scale);
-					// System.out.println("Wheel= " + pWheelRotation + ",
-					// Setting scale to " + scale + ", delta = " + delta +
-					// ", dest=" + dest);
-					try {
-						SwingUtilities.invokeAndWait(new Runnable() {
+	private RotatedTileBox copyLatestTileBox() {
+		synchronized (mTileBox) {
+			return mTileBox.copy();
+		}
+	}
 
-							@Override
-							public void run() {
-								repaint();
-							}
-						});
-						Thread.sleep(50);
-					} catch (InvocationTargetException | InterruptedException e) {
-						e.printStackTrace();
-					}
+	private void queue(OffRoadUIThread pThread) {
+		synchronized (mTileBox) {
+			if(pThread.getDestinationTileBox() != null){
+				mTileBox = pThread.getDestinationTileBox().copy();
+			}
+		}
+		if(mLastThread != null){
+			synchronized(mLastThread){
+				if(!mLastThread.hasFinished()){
+					mLastThread.setNextThread(pThread);
+				} else {
+					pThread.shouldContinue();
 				}
 			}
-
-		};
-		mAnimationThread.start();
-		mGenerationThread = new GenerationThread(tileCopy, mAnimationThread);
-		mGenerationThread.start();
+		} else {
+			pThread.shouldContinue();
+		}
+		mLastThread = pThread;
+		mThreadPool.execute(pThread);
 	}
 
 	public int checkZoom(int newZoom) {
@@ -304,7 +269,6 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		if (newZoom < minZoom) {
 			newZoom = minZoom;
 		}
-		// FIXME: Magic number
 		int maxZoom = mapInstance.hasMaxzoom() ? mapInstance.getMaxzoom() : OsmWindow.MAX_ZOOM;
 		if (newZoom > maxZoom) {
 			newZoom = maxZoom;
@@ -313,7 +277,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 	}
 
 	public void moveImage(float pDeltaX, float pDeltaY) {
-		RotatedTileBox tb = getTileBox();
+		RotatedTileBox tb = copyLatestTileBox();
 		QuadPoint center = tb.getCenterPixelPoint();
 		double newLat = tb.getLatFromPixel(center.x + pDeltaX, center.y + pDeltaY);
 		double newLon = tb.getLonFromPixel(center.x + pDeltaX, center.y + pDeltaY);
@@ -375,55 +339,28 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 			setImage(image);
 		} else {
 			tb.setLatLonCenter(newLat, newLon);
-			drawImage(bImage);
-			setImage(bImage);
+			queue(new GenerationThread(this, tb));
+//			drawImage(bImage);
+//			setImage(bImage);
 		}
 	}
 
 	public void moveImageAnimated(final float pDeltaX, final float pDeltaY) {
-		if (mAnimationThread != null && mAnimationThread.isAlive()) {
-			return;
-		}
-		if (mGenerationThread != null && mGenerationThread.isAlive()) {
-			return;
-		}
-		QuadPoint center = getTileBox().getCenterPixelPoint();
-		final RotatedTileBox tileCopy = getTileBox().copy();
-		tileCopy.setLatLonCenter(getTileBox().getLatFromPixel(center.x + pDeltaX, center.y + pDeltaY),
-				getTileBox().getLonFromPixel(center.x + pDeltaX, center.y + pDeltaY));
-		mAnimationThread = new Thread() {
-
-			@Override
-			public void run() {
-				int it = 10;
-				for (int i = 0; i < it; ++i) {
-					originX = -(int) pDeltaX * i / it;
-					originY = -(int) pDeltaY * i / it;
-					try {
-						SwingUtilities.invokeAndWait(new Runnable() {
-
-							@Override
-							public void run() {
-								repaint();
-							}
-						});
-						Thread.sleep(50);
-					} catch (InvocationTargetException | InterruptedException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-
-		};
-		mAnimationThread.start();
-		mGenerationThread = new GenerationThread(tileCopy, mAnimationThread);
-		mGenerationThread.start();
+		RotatedTileBox tileBox = copyLatestTileBox();
+		QuadPoint center = tileBox.getCenterPixelPoint();
+		final RotatedTileBox tileCopy = tileBox.copy();
+		tileCopy.setLatLonCenter(tileBox.getLatFromPixel(center.x + pDeltaX, center.y + pDeltaY),
+				tileBox.getLonFromPixel(center.x + pDeltaX, center.y + pDeltaY));
+		mAnimationThread = new MoveAnimationThread(this, pDeltaX, pDeltaY);
+		queue(mAnimationThread);
+		mGenerationThread = new GenerationThread(this, tileCopy);
+		queue(mGenerationThread);
 	}
 
-	public BufferedImage newBitmap() {
+	public BufferedImage newBitmap(RotatedTileBox pTileBox) {
 		BufferedImage image = createImage();
-		getTileBox().setPixelDimensions(getWidth(), getHeight());
-		drawImage(image);
+		pTileBox.setPixelDimensions(getWidth(), getHeight());
+		drawImage(image, pTileBox);
 		return image;
 	}
 
@@ -438,13 +375,10 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		repaint();
 	}
 
-	public void createNewBitmap() {
-		mGenerationThread = new GenerationThread(getTileBox(), null);
-		mGenerationThread.start();
-	}
-
 	public RotatedTileBox getTileBox() {
-		return mTileBox;
+		synchronized (mTileBox) {
+			return mTileBox.copy();
+		}
 	}
 
 	public void setTileBox(RotatedTileBox pTileBox) {
@@ -452,17 +386,19 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 	}
 
 	public void setCursor(Point pCursorPoint) {
-		mCursorPosition = mTileBox.getLatLonFromPixel(pCursorPoint.x, pCursorPoint.y);
+		synchronized (mTileBox) {
+			mCursorPosition = mTileBox.getLatLonFromPixel(pCursorPoint.x, pCursorPoint.y);
+		}
 		System.out.println("Setting cursor to " + mCursorPosition);
 		repaint();
 	}
 
 	public void move(LatLon pLocation, int pZoom) {
-		mTileBox.setLatLonCenter(pLocation.getLatitude(), pLocation.getLongitude());
+		RotatedTileBox tb = copyLatestTileBox();
+		tb.setLatLonCenter(pLocation.getLatitude(), pLocation.getLongitude());
 		int newZoom = checkZoom(pZoom);
-		getTileBox().setZoom(newZoom);
-		drawImage(bImage);
-		setImage(bImage);
+		tb.setZoom(newZoom);
+		queue(new GenerationThread(this, tb));
 	}
 
 	public void setCursor(LatLon pLocation) {
@@ -488,19 +424,11 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		drawLater();
 	}
 
+	/**
+	 */
 	public void drawLater() {
-		if(mGenerationThread != null && mGenerationThread.isAlive()){
-			return;
-		}
-		mGenerationThread = new GenerationThread(getTileBox(), null);
-		mGenerationThread.start();
-//		SwingUtilities.invokeLater(new Runnable() {
-//			public void run() {
-//				drawImage(bImage);
-//				setImage(bImage);
-//				repaint();
-//			}
-//		});
+		mGenerationThread = new GenerationThread(this, copyLatestTileBox());
+		queue(mGenerationThread);
 	}
 
 	@Override
@@ -516,10 +444,11 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 	}
 
 	public void rotateIncrement(double pPreciseWheelRotation) {
-		RotatedTileBox tb = getTileBox();
+		RotatedTileBox tb = copyLatestTileBox();
 		tb.setRotate((float) (tb.getRotate() + 10 * pPreciseWheelRotation));
-		drawImage(bImage);
-		setImage(bImage);
+		queue(new GenerationThread(this, tb));
+//		drawImage(bImage);
+//		setImage(bImage);
 	}
 
 	public void directRotateIncrement(double pPreciseWheelRotation) {
@@ -593,5 +522,29 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 	public POIMapLayer getPoiLayer() {
 		return mPoiLayer;
 	}
+
+	void repaintAndWait() {
+		try {
+			SwingUtilities.invokeAndWait(new Runnable() {
+
+				@Override
+				public void run() {
+					repaint();
+				}
+			});
+			Thread.sleep(50);
+		} catch (InvocationTargetException | InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public RotatedTileBox getCurrentTileBox() {
+		return mCurrentTileBox;
+	}
+
+	public void setCurrentTileBox(RotatedTileBox pCurrentTileBox) {
+		mCurrentTileBox = pCurrentTileBox;
+	}
+
 
 }

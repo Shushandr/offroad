@@ -110,6 +110,8 @@ import net.sourceforge.offroad.res.ResourceTest;
 import net.sourceforge.offroad.res.Resources;
 import net.sourceforge.offroad.ui.AmenityTablePanel;
 import net.sourceforge.offroad.ui.BlindIcon;
+import net.sourceforge.offroad.ui.OsmBitmapPanel;
+import net.sourceforge.offroad.ui.OsmBitmapPanelMouseAdapter;
 import net.sourceforge.offroad.ui.PoiFilterRenderer;
 
 /**
@@ -196,7 +198,7 @@ public class OsmWindow {
 	private final static Log log = PlatformUtil.getLog(OsmWindow.class);
 
 	
-	static final int MAX_ZOOM = 22;
+	public static final int MAX_ZOOM = 22;
 	public static final String RENDERING_STYLES_DIR = "rendering_styles/"; //$NON-NLS-1$
 	public static final String OSMAND_ICONS_DIR = RENDERING_STYLES_DIR + "style-icons/drawable-xxhdpi/"; //$NON-NLS-1$
 	public static final String IMAGE_PATH = "drawable-xhdpi/"; //$NON-NLS-1$

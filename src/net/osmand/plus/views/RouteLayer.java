@@ -35,8 +35,8 @@ import net.osmand.plus.routing.RouteDirectionInfo;
 import net.osmand.plus.routing.RoutingHelper;
 import net.osmand.render.RenderingRuleSearchRequest;
 import net.osmand.render.RenderingRulesStorage;
-import net.sourceforge.offroad.OsmBitmapPanel;
 import net.sourceforge.offroad.OsmWindow;
+import net.sourceforge.offroad.ui.OsmBitmapPanel;
 
 public class RouteLayer extends OsmandMapLayer {
 	

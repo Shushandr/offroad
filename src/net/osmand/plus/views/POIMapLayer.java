@@ -33,8 +33,8 @@ import net.osmand.plus.routing.RoutingHelper;
 import net.osmand.plus.routing.RoutingHelper.IRouteInformationListener;
 import net.osmand.plus.views.MapTextLayer.MapTextProvider;
 import net.osmand.util.Algorithms;
-import net.sourceforge.offroad.OsmBitmapPanel;
 import net.sourceforge.offroad.OsmWindow;
+import net.sourceforge.offroad.ui.OsmBitmapPanel;
 
 public class POIMapLayer extends OsmandMapLayer implements /*ContextMenuLayer.IContextMenuProvider,*/
 		MapTextProvider<Amenity>,  IRouteInformationListener {

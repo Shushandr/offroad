@@ -1,4 +1,4 @@
-package net.sourceforge.offroad;
+package net.sourceforge.offroad.ui;
 
 import java.awt.Point;
 import java.awt.event.ActionEvent;
@@ -16,6 +16,7 @@ import javax.swing.Timer;
 import org.apache.commons.logging.Log;
 
 import net.osmand.PlatformUtil;
+import net.sourceforge.offroad.OsmWindow;
 
 public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements ComponentListener, KeyListener {
 	private final static Log log = PlatformUtil.getLog(OsmBitmapPanelMouseAdapter.class);
@@ -127,7 +128,7 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 
 	@Override
 	public void componentResized(ComponentEvent pE) {
-		drawPanel.createNewBitmap();
+		drawPanel.drawLater();
 	}
 
 	@Override
