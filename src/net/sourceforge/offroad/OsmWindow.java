@@ -532,21 +532,19 @@ public class OsmWindow {
 	private void setupProxy() {
 		// proxy settings
 		Properties props = (Properties) settings.getPreferenceObject(OFFROAD_PROPERTIES);
-		if("true".equals(props.getProperty(PROXY_USE_SETTINGS))) {
-			if ("true".equals(props.getProperty(PROXY_IS_AUTHENTICATED))) {
+		if("true".equals(settings.getString(props, PROXY_USE_SETTINGS, ""))) {
+			if ("true".equals(settings.getString(props, PROXY_IS_AUTHENTICATED, ""))) {
 				try {
-					Authenticator.setDefault(new ProxyAuthenticator(props
-							.getProperty(PROXY_USER), new String(Base64.decode(props
-							.getProperty(PROXY_PASSWORD)))));
+					Authenticator.setDefault(new ProxyAuthenticator(settings.getString(props, PROXY_USER, ""), new String(Base64.decode(settings.getString(props, PROXY_PASSWORD, "")))));
 				} catch (Base64DecoderException e) {
 					e.printStackTrace();
 				}
 			}
-			System.setProperty("http.proxyHost", props.getProperty(PROXY_HOST));
-			System.setProperty("http.proxyPort", props.getProperty(PROXY_PORT));
-			System.setProperty("https.proxyHost", props.getProperty(PROXY_HOST));
-			System.setProperty("https.proxyPort", props.getProperty(PROXY_PORT));
-			System.setProperty("http.nonProxyHosts", props.getProperty(PROXY_EXCEPTION));
+			System.setProperty("http.proxyHost", settings.getString(props, PROXY_HOST, ""));
+			System.setProperty("http.proxyPort", settings.getString(props, PROXY_PORT, ""));
+			System.setProperty("https.proxyHost", settings.getString(props, PROXY_HOST, ""));
+			System.setProperty("https.proxyPort", settings.getString(props, PROXY_PORT, ""));
+			System.setProperty("http.nonProxyHosts", settings.getString(props, PROXY_EXCEPTION, ""));
 		}
 	}
 
