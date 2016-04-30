@@ -15,8 +15,10 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -27,6 +29,9 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 
+import org.apache.commons.logging.Log;
+
+import net.osmand.PlatformUtil;
 import net.osmand.ValueHolder;
 import net.osmand.binary.OsmandIndex;
 import net.osmand.binary.OsmandIndex.MapLevel;
@@ -45,6 +50,8 @@ import net.sourceforge.offroad.OsmWindow;
 
 @SuppressWarnings("serial")
 public class OsmBitmapPanel extends JPanel implements IRouteInformationListener {
+	private final static Log log = PlatformUtil.getLog(OsmBitmapPanel.class);
+
 	private static final int ST_WIDTH = 1400;
 	private static final int ST_HEIGHT = 1000;
 	private static final Color BACKGROUND_COLOR = Color.white;
@@ -60,7 +67,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 	private OsmWindow mContext;
 	private RotatedTileBox mTileBox;
 	private RotatedTileBox mCurrentTileBox;
-	double scale = 1.0d;
+	float scale = 1.0f;
 	int originX = 0;
 	int originY = 0;
 	private OffRoadUIThread mAnimationThread;
@@ -75,6 +82,8 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 	private POIMapLayer mPoiLayer;
 	private ExecutorService mThreadPool;
 	private OffRoadUIThread mLastThread;
+	private InactivityListener mInactivityListener;
+	private CalculateUnzoomedPicturesAction mUnzoomedPicturesAction;
 
 	public OsmBitmapPanel(OsmWindow pWin) {
 		mContext = pWin;
@@ -108,6 +117,14 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		mThreadPool = Executors.newFixedThreadPool(4);
 	}
 
+	public void init() {
+		mUnzoomedPicturesAction = new CalculateUnzoomedPicturesAction();
+		mInactivityListener = new InactivityListener(mContext.getWindow(), mUnzoomedPicturesAction);
+		mInactivityListener.setIntervalInMillis(5000);
+		mInactivityListener.start();
+	}
+
+
 	public float getScaleCoefficient() {
 		float scaleCoefficient = getDensity();
 		OsmWindow dm = mContext;
@@ -139,15 +156,45 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		g2.rotate(mRotation, getWidth() / 2, getHeight() / 2);
 		g2.translate(originX, originY);
 		g2.scale(scale, scale);
+		// check for cached picture of bigger size to lay under:
+		RotatedTileBox ctb;
+		synchronized (mCurrentTileBox) {
+			ctb = mCurrentTileBox.copy();
+		}
+		if(scale < 1.0d || originX != 0 || originY != 0) {
+			LatLon screenLT = ctb.getLatLonFromPixel(-originX/scale, -originY/scale);
+			LatLon screenRB = ctb.getLatLonFromPixel(-originX/scale + getWidth()/scale, -originY/scale + getHeight()/scale);
+			L1: for(int biggerZoom = ctb.getZoom()-1; biggerZoom >= 1; --biggerZoom){
+				List<RotatedTileBox> tblist = mUnzoomedPicturesAction.getTileBoxesForZoom(biggerZoom);
+				// check for each, if the current image is contained
+				for (RotatedTileBox rtb : tblist) {
+					if (rtb.containsLatLon(screenLT) && rtb.containsLatLon(screenRB)) {
+						//						log.debug("Found bigger tile box " + rtb);
+						// draw this under it:
+						LatLon rtbLT = rtb.getLeftTopLatLon();
+						LatLon rtbRB = rtb.getRightBottomLatLon();
+						double x1 = ctb.getPixXFromLatLon(rtbLT.getLatitude(), rtbLT.getLongitude());
+						double y1 = ctb.getPixYFromLatLon(rtbLT.getLatitude(), rtbLT.getLongitude());
+						double x2 = ctb.getPixXFromLatLon(rtbRB.getLatitude(), rtbRB.getLongitude());
+						double y2=  ctb.getPixYFromLatLon(rtbRB.getLatitude(), rtbRB.getLongitude());
+						BufferedImage image = mUnzoomedPicturesAction.getImage(rtb);
+						if(image != null){
+							g2.drawImage(image, (int)x1, (int)y1, (int)x2, (int)y2, 0,0, image.getWidth(), image.getHeight(), null);
+							break L1;
+						}
+					}
+				}
+			}
+		}
 		g2.drawImage(bImage, 0, 0, null);
 		// cursor:
 		Stroke oldStroke = g2.getStroke();
 		Color oldColor = g2.getColor();
 		// do cursor
-		if (mCursorPosition != null && mShowCursor && mCurrentTileBox.containsLatLon(mCursorPosition)) {
-			int posx = (int) mCurrentTileBox.getPixXFromLatLon(mCursorPosition.getLatitude(),
+		if (mCursorPosition != null && mShowCursor && ctb.containsLatLon(mCursorPosition)) {
+			int posx = (int) ctb.getPixXFromLatLon(mCursorPosition.getLatitude(),
 					mCursorPosition.getLongitude());
-			int posy = (int) mCurrentTileBox.getPixYFromLatLon(mCursorPosition.getLatitude(),
+			int posy = (int) ctb.getPixYFromLatLon(mCursorPosition.getLatitude(),
 					mCursorPosition.getLongitude());
 			int size_h = mCursorLength;
 			g2.setStroke(mStroke);
@@ -160,8 +207,12 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		g2.dispose();
 	}
 
+	boolean contains(RotatedTileBox bigger, RotatedTileBox smaller) {
+		return bigger.containsLatLon(smaller.getLeftTopLatLon()) && bigger.containsLatLon(smaller.getRightBottomLatLon());
+	}
+
 	void setImage(BufferedImage pImage) {
-		scale = 1.0d;
+		scale = 1.0f;
 		originX = 0;
 		originY = 0;
 		mRotation = 0;
@@ -261,6 +312,8 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		}
 		mLastThread = pThread;
 		mThreadPool.execute(pThread);
+		// TODO: Do this for every thread start and end.
+		mInactivityListener.eventDispatched(null);
 	}
 
 	public int checkZoom(int newZoom) {
@@ -527,7 +580,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		return mPoiLayer;
 	}
 
-	void repaintAndWait() {
+	void repaintAndWait(int pWaitMillies) {
 		try {
 			SwingUtilities.invokeAndWait(new Runnable() {
 
@@ -536,7 +589,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 					repaint();
 				}
 			});
-			Thread.sleep(50);
+			Thread.sleep(pWaitMillies);
 		} catch (InvocationTargetException | InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -548,6 +601,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 
 	public void setCurrentTileBox(RotatedTileBox pCurrentTileBox) {
 		mCurrentTileBox = pCurrentTileBox;
+		mUnzoomedPicturesAction.setTileBox(pCurrentTileBox);
 	}
 
 	public void resizePanel() {
@@ -558,6 +612,77 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		diff.y = -(int) (centerPixelPoint.y - size.getHeight()/2f);
 		dragImage(diff);
 		drawLater();
+	}
+
+	public class CalculateUnzoomedPicturesAction extends AbstractAction {
+
+		private BinaryOrder mBinaryOrder;
+		private RotatedTileBox mTileBox2;
+		private HashMap<RotatedTileBox, BufferedImage> mImageStore = new HashMap<>();
+
+		public CalculateUnzoomedPicturesAction() {
+			mBinaryOrder = new BinaryOrder();
+		}
+
+		public BufferedImage getImage(RotatedTileBox pRtb) {
+			synchronized (mImageStore) {
+				return mImageStore.get(pRtb);
+			}
+		}
+
+		public List<RotatedTileBox> getTileBoxesForZoom(int pZoom) {
+			synchronized (mImageStore) {
+				ArrayList<RotatedTileBox> ret = new ArrayList<>();
+				for (RotatedTileBox rtb : mImageStore.keySet()) {
+					if (rtb.getZoom() == pZoom) {
+						ret.add(rtb);
+					}
+				}
+				return ret;
+			}
+		}
+
+		public void setTileBox(RotatedTileBox pTb){
+			synchronized (mImageStore) {
+				mTileBox2 = pTb;
+				mBinaryOrder.init(1, pTb.getZoom()-1);
+				for (Iterator it = mImageStore.entrySet().iterator(); it.hasNext();) {
+					Entry<RotatedTileBox, BufferedImage> entry = (Map.Entry<RotatedTileBox, BufferedImage>) it.next();
+					RotatedTileBox rtb = entry.getKey();
+					if(!contains(rtb, pTb)){
+						it.remove();
+					} else {
+						mBinaryOrder.alreadyDone(rtb.getZoom());
+					}
+				}
+				log.info("After setting a new tile box we have " + mImageStore.size() + " cache entries.");
+			}
+		}
+		
+		@Override
+		public void actionPerformed(ActionEvent pE) {
+			if(mBinaryOrder.hasNext()){
+				int nextZoom = mBinaryOrder.getNext();
+				// calculate image:
+				RotatedTileBox tb = mTileBox2.copy();
+				tb.setZoom(nextZoom);
+				queue(new GenerationThread(OsmBitmapPanel.this, tb){
+					@Override
+					public void runAfterThreadsBeforeHaveFinished() {
+						// instead of setting this, we store it:
+						synchronized (mImageStore) {
+							System.out.println("Adding zoom " + mTileCopy.getZoom() + " to the cache.");
+							mImageStore.put(mTileCopy, mNewBitmap);
+						}
+					}
+					@Override
+					public RotatedTileBox getDestinationTileBox() {
+						// the tile boxes calculated here are not relevant for display
+						return null;
+					}
+				});
+			}
+		}
 	}
 
 

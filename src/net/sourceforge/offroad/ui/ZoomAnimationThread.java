@@ -17,10 +17,10 @@ class ZoomAnimationThread extends OffRoadUIThread {
 
 	@Override
 	public void runAfterThreadsBeforeHaveFinished() {
-		double dest = Math.pow(2, mWheelRotation);
-		double start = 1.0d;
+		float dest = (float) Math.pow(2, mWheelRotation);
+		float start = 1.0f;
 		int it = 10;
-		double delta = (dest - start) / it;
+		float delta = (dest - start) / it;
 		for (int i = 0; i < it; ++i) {
 			mOsmBitmapPanel.scale = start + i * delta;
 			// this is not correct. involve the size of the image.
@@ -28,7 +28,7 @@ class ZoomAnimationThread extends OffRoadUIThread {
 			mOsmBitmapPanel.originY = (int) (mNewCenter.y - (mNewCenter.y) * mOsmBitmapPanel.scale);
 			System.out.println(this+" Wheel= " + mWheelRotation + ", Setting scale to " + mOsmBitmapPanel.scale + ", delta = "
 					+ delta + ", dest=" + dest);
-			mOsmBitmapPanel.repaintAndWait();
+			mOsmBitmapPanel.repaintAndWait(50);
 		}
 	}
 }

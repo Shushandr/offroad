@@ -10,8 +10,8 @@ class GenerationThread extends OffRoadUIThread {
 	/**
 	 * 
 	 */
-	private final RotatedTileBox mTileCopy;
-	private BufferedImage mNewBitmap;
+	protected final RotatedTileBox mTileCopy;
+	protected BufferedImage mNewBitmap;
 
 	GenerationThread(OsmBitmapPanel pOsmBitmapPanel, RotatedTileBox pTileCopy) {
 		super(pOsmBitmapPanel);

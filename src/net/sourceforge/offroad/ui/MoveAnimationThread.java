@@ -19,7 +19,7 @@ class MoveAnimationThread extends OffRoadUIThread {
 		for (int i = 0; i < it; ++i) {
 			mOsmBitmapPanel.originX = -(int) mDeltaX * i / it;
 			mOsmBitmapPanel.originY = -(int) mDeltaY * i / it;
-			mOsmBitmapPanel.repaintAndWait();
+			mOsmBitmapPanel.repaintAndWait(50);
 		}
 	}
 }

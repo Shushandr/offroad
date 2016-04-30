@@ -443,6 +443,7 @@ public class OsmWindow {
 		mDrawPanel.setComponentPopupMenu(popupMenu);
 		popupMenu.addPopupMenuListener(new PoiContextMenuListener(popupMenu));
 		mFrame.setJMenuBar(menubar);
+		mDrawPanel.init();
 		mFrame.pack();
 		mFrame.setLocationRelativeTo(null);
 		mFrame.setVisible(true);

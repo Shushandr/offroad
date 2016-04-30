@@ -64,4 +64,9 @@ public class QuadRect {
 		bottom -= dy;
 	}
 
+	@Override
+	public String toString() {
+		return "QuadRect [left=" + left + ", right=" + right + ", top=" + top + ", bottom=" + bottom + "]";
+	}
+
 }
