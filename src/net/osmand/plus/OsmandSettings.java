@@ -1998,6 +1998,11 @@ public class OsmandSettings {
 
 
 	public final OsmandPreference<String> SELECTED_POI_FILTER_FOR_MAP = new StringPreference("selected_poi_filter_for_map", null).makeGlobal().cache();
+	
+	/**
+	 * FC: holds the search string
+	 */
+	public final OsmandPreference<String> SELECTED_POI_FILTER_STRING_FOR_MAP = new StringPreference("selected_poi_filter_string_for_map", null).makeGlobal().cache();
 
 	public static final String VOICE_PROVIDER_NOT_USE = "VOICE_PROVIDER_NOT_USE";
 

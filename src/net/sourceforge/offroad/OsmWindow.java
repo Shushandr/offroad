@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.FocusTraversalPolicy;
 import java.awt.Font;
 import java.awt.Frame;
 import java.awt.Graphics2D;
@@ -34,6 +35,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.PropertyResourceBundle;
+import java.util.Queue;
 import java.util.Vector;
 
 import javax.swing.AbstractAction;
@@ -110,6 +112,7 @@ import net.sourceforge.offroad.res.ResourceTest;
 import net.sourceforge.offroad.res.Resources;
 import net.sourceforge.offroad.ui.AmenityTablePanel;
 import net.sourceforge.offroad.ui.BlindIcon;
+import net.sourceforge.offroad.ui.OffRoadUIThread;
 import net.sourceforge.offroad.ui.OsmBitmapPanel;
 import net.sourceforge.offroad.ui.OsmBitmapPanelMouseAdapter;
 import net.sourceforge.offroad.ui.PoiFilterRenderer;
@@ -249,6 +252,7 @@ public class OsmWindow {
 	private JTextField mSearchTextField;
 	private JComboBox<PoiUIFilter> mComboBox;
 	private DefaultComboBoxModel<PoiUIFilter> mComboBoxModel;
+	private boolean mSearchBarVisible = true;
 	Vector<CursorPositionListener> mCursorPositionListeners = new Vector<>();
 	private PoiUIFilter mCurrentPoiFilter;
 
@@ -282,14 +286,15 @@ public class OsmWindow {
 		mToolBar.add(new JLabel(getOffRoadString("offroad.search")), new GridBagConstraints(0, 0, 1, 1, 0, 1, GridBagConstraints.WEST, GridBagConstraints.VERTICAL, new Insets(0, 0, 0, 0), 0, 0));
 		
 		mSearchTextField = new JTextField();
+		mSearchTextField.setText(getSettings().SELECTED_POI_FILTER_STRING_FOR_MAP.get());
 		mAmenityTable = new AmenityTablePanel(getInstance());
-		mSearchTextField.addActionListener(new ActionListener() {
+		getSearchTextField().addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent pE) {
-				setPoiFilter(getCurrentPoiUIFilter());
+				setPoiFilter(getCurrentPoiUIFilter(), getSearchTextField().getText());
 			}
 		});
-		mSearchTextField.addKeyListener(new KeyListener() {
+		getSearchTextField().addKeyListener(new KeyListener() {
 			
 			@Override
 			public void keyTyped(KeyEvent pE) {
@@ -320,13 +325,16 @@ public class OsmWindow {
 				}
 		}
 		});
-		mToolBar.add(mSearchTextField, new GridBagConstraints(1, 0, 1, 1, 3, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(10, 0, 10, 0), 0, 0));
+		mToolBar.add(getSearchTextField(), new GridBagConstraints(1, 0, 1, 1, 3, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(10, 0, 10, 0), 0, 0));
 		mComboBox = new JComboBox<PoiUIFilter>();
 		mComboBoxModel = new DefaultComboBoxModel<PoiUIFilter>();
 		mCurrentPoiFilter = mPoiFilters.getSearchByNamePOIFilter();
 		mComboBoxModel.addElement(mCurrentPoiFilter);
 		mComboBoxModel.addElement(mPoiFilters.getNominatimAddressFilter());
 		mComboBoxModel.addElement(mPoiFilters.getNominatimPOIFilter());
+		for (PoiUIFilter filter : mPoiFilters.getTopDefinedPoiFilters()) {
+			mComboBoxModel.addElement(filter);
+		}
 		mComboBox.setModel(mComboBoxModel);
 		mComboBox.setFocusable(false);
 		mComboBox.addActionListener(new ActionListener() {
@@ -342,7 +350,6 @@ public class OsmWindow {
 		mToolBar.add(mComboBox, new GridBagConstraints(2, 0, 1, 1, 0, 0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 
 		mFrame = new JFrame(getOffRoadString("offroad.string4")); //$NON-NLS-1$
-		mFrame.addKeyListener(mAdapter);
 		mFrame.getContentPane().setLayout(new BorderLayout());
 		mFrame.getContentPane().add(mToolBar, BorderLayout.NORTH);
 		mFrame.getContentPane().add(mAmenityTable, BorderLayout.WEST);
@@ -359,7 +366,7 @@ public class OsmWindow {
 			}
 		});
 		mFrame.setResizable(true);
-		mFrame.addComponentListener(mAdapter);
+		mDrawPanel.addComponentListener(mAdapter);
 		JMenuBar menubar = new JMenuBar();
 		JMenu jFileMenu = new JMenu(getOffRoadString("offroad.string5")); //$NON-NLS-1$
 		JMenuItem saveItem = new JMenuItem(getOffRoadString("offroad.string6")); //$NON-NLS-1$
@@ -386,8 +393,8 @@ public class OsmWindow {
 			
 			@Override
 			public void actionPerformed(ActionEvent pE) {
-				mSearchTextField.selectAll();
-				mSearchTextField.requestFocus();
+				getSearchTextField().selectAll();
+				getSearchTextField().requestFocus();
 			}
 		});
 		gotoSearchFieldItem.setAccelerator(KeyStroke.getKeyStroke("control K")); //$NON-NLS-1$
@@ -401,23 +408,30 @@ public class OsmWindow {
 		lDownloadItem.setAccelerator(KeyStroke.getKeyStroke("control D")); //$NON-NLS-1$
 		jDownloadMenu.add(lDownloadItem);
 		menubar.add(jDownloadMenu);
+		// View
+		JMenu jViewMenu = new JMenu(getOffRoadString("offroad.view")); //$NON-NLS-1$
+		JMenuItem lViewItem = new JMenuItem(getOffRoadString("offroad.toggle_search")); //$NON-NLS-1$
+		lViewItem.addActionListener(item-> toggleSearchBar());
+		lViewItem.setAccelerator(KeyStroke.getKeyStroke("F11")); //$NON-NLS-1$
+		jViewMenu.add(lViewItem);
+		menubar.add(jViewMenu);
 		// Navigation
 		JMenu jNavigationMenu = new JMenu(getOffRoadString("offroad.navigation")); //$NON-NLS-1$
-		JMenuItem navigationBackItem = new JMenuItem(getOffRoadString("offroad.back")); //$NON-NLS-1$
-		navigationBackItem.addActionListener(new NavigationBackAction(this));
-		navigationBackItem.setAccelerator(KeyStroke.getKeyStroke("alt LEFT")); //$NON-NLS-1$
-		jNavigationMenu.add(navigationBackItem);
-		JMenuItem navigationForwardItem = new JMenuItem(getOffRoadString("offroad.forward")); //$NON-NLS-1$
-		navigationForwardItem.addActionListener(new NavigationForwardAction(this));
-		navigationForwardItem.setAccelerator(KeyStroke.getKeyStroke("alt RIGHT")); //$NON-NLS-1$
-		jNavigationMenu.add(navigationForwardItem);
+		addToMenu(jNavigationMenu, "offroad.up", item -> mDrawPanel.moveImageAnimated(0,-1f/3), "control UP");
+		addToMenu(jNavigationMenu, "offroad.down", item -> mDrawPanel.moveImageAnimated(0,1f/3), "control DOWN");
+		addToMenu(jNavigationMenu, "offroad.left", item -> mDrawPanel.moveImageAnimated(-1f/3,0), "control LEFT");
+		addToMenu(jNavigationMenu, "offroad.right", item -> mDrawPanel.moveImageAnimated(1f/3,0), "control RIGHT");
+		addToMenu(jNavigationMenu, "offroad.zomin", item -> mAdapter.addWheelEvent(-1, mDrawPanel.getCurrentTileBox()), "control PLUS");
+		addToMenu(jNavigationMenu, "offroad.zomout", item -> mAdapter.addWheelEvent(1, mDrawPanel.getCurrentTileBox()), "control MINUS");
+		addToMenu(jNavigationMenu, "offroad.back", new NavigationBackAction(this), "alt LEFT");
+		addToMenu(jNavigationMenu, "offroad.forward", new NavigationForwardAction(this), "alt RIGHT");
 		menubar.add(jNavigationMenu);
 		// PointOfInterest
 		JMenu jPointOfInterestMenu = new JMenu(getOffRoadString("offroad.PointOfInterest")); //$NON-NLS-1$
-		JMenuItem lPointOfInterestOffItem = new OffRoadMenuItem(new PoiFilterAction(this, null), jPointOfInterestMenu);
+		JMenuItem lPointOfInterestOffItem = new OffRoadMenuItem(new PoiFilterAction(this, null, true), jPointOfInterestMenu);
 		jPointOfInterestMenu.add(lPointOfInterestOffItem);
 		for (PoiUIFilter filter : mPoiFilters.getTopDefinedPoiFilters()) {
-			JMenuItem lPointOfInterestItem = new OffRoadMenuItem(new PoiFilterAction(this, filter), jPointOfInterestMenu); 
+			JMenuItem lPointOfInterestItem = new OffRoadMenuItem(new PoiFilterAction(this, filter, false), jPointOfInterestMenu); 
 			jPointOfInterestMenu.add(lPointOfInterestItem);
 		}
 		menubar.add(jPointOfInterestMenu);
@@ -432,6 +446,13 @@ public class OsmWindow {
 		mFrame.pack();
 		mFrame.setLocationRelativeTo(null);
 		mFrame.setVisible(true);
+	}
+
+	void addToMenu(JMenu jNavigationMenu, String name, ActionListener action, String keyStroke) {
+		JMenuItem navigationBackItem = new JMenuItem(getOffRoadString(name)); //$NON-NLS-1$
+		navigationBackItem.addActionListener(action);
+		navigationBackItem.setAccelerator(KeyStroke.getKeyStroke(keyStroke)); //$NON-NLS-1$
+		jNavigationMenu.add(navigationBackItem);
 	}
 
 	public void startServer() {
@@ -469,6 +490,7 @@ public class OsmWindow {
 		RotatedTileBox tileBox = mDrawPanel.getTileBox();
 		prefs.setLastKnownMapLocation(tileBox.getLatitude(), tileBox.getLongitude());
 		prefs.setLastKnownMapZoom(tileBox.getZoom());
+		getSettings().SELECTED_POI_FILTER_STRING_FOR_MAP.set(mSearchTextField.getText());
 		settings.save();
 	}
 
@@ -1040,13 +1062,15 @@ public class OsmWindow {
 
 	/**
 	 * @param filter == null: means, clear filter and table
+	 * @param pFilterText 
 	 */
-	public void setPoiFilter(PoiUIFilter filter) {
+	public void setPoiFilter(PoiUIFilter filter, String pFilterText) {
 		String filterId = null;
 		if (filter != null) {
 			filterId = filter.getFilterId();
 		}
 		getSettings().SELECTED_POI_FILTER_FOR_MAP.set(filterId);
+		getSettings().SELECTED_POI_FILTER_STRING_FOR_MAP.set(pFilterText);
 		refreshSearchTable();
 		getDrawPanel().refreshMap();
 	}
@@ -1057,7 +1081,8 @@ public class OsmWindow {
 		String filterId = getSettings().SELECTED_POI_FILTER_FOR_MAP.get();
 		if (filterId != null) {
 			PoiUIFilter filter = getPoiFilters().getFilterById(filterId);
-			filter.setFilterByName(mSearchTextField.getText());
+			String filterString = getSettings().SELECTED_POI_FILTER_STRING_FOR_MAP.get();
+			filter.setFilterByName(filterString);
 			LatLon latLon = getCursorPosition();
 			result = filter.initializeNewSearch(latLon.getLatitude(), latLon.getLongitude(), -1,
 					new ResultMatcher<Amenity>() {
@@ -1084,6 +1109,21 @@ public class OsmWindow {
 		return formatter.format(pObjects);
 	}
 
+	public JTextField getSearchTextField() {
+		return mSearchTextField;
+	}
 
+	void toggleSearchBar() {
+		if(mSearchBarVisible){
+			mFrame.getContentPane().remove(mToolBar);
+			mFrame.getContentPane().remove(mAmenityTable);
+		} else {
+			mFrame.getContentPane().add(mToolBar, BorderLayout.NORTH);
+			mFrame.getContentPane().add(mAmenityTable, BorderLayout.WEST);
+		}
+		mSearchBarVisible = ! mSearchBarVisible;
+		mFrame.revalidate();
+		mDrawPanel.requestFocus();
+	}
 
 }

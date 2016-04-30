@@ -1,5 +1,6 @@
 package net.sourceforge.offroad.ui;
 
+import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -16,12 +17,14 @@ import javax.swing.Timer;
 import org.apache.commons.logging.Log;
 
 import net.osmand.PlatformUtil;
+import net.osmand.data.QuadPoint;
+import net.osmand.data.RotatedTileBox;
 import net.sourceforge.offroad.OsmWindow;
 
-public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements ComponentListener, KeyListener {
+public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements ComponentListener {
 	private final static Log log = PlatformUtil.getLog(OsmBitmapPanelMouseAdapter.class);
 
-	private class ZoomPerformer implements ActionListener {
+	public class ZoomPerformer implements ActionListener {
 		private int mCounter;
 		private Point mPoint;
 
@@ -80,6 +83,10 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 		startPoint = e.getPoint();
 	}
 
+	public ZoomPerformer getZoomPerformer() {
+		return mZoomPerformer;
+	}
+	
 	public boolean isPopup(MouseEvent e) {
 		return e.getButton() != MouseEvent.BUTTON1;
 	}
@@ -128,7 +135,8 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 
 	@Override
 	public void componentResized(ComponentEvent pE) {
-		drawPanel.drawLater();
+		log.info("Resize event received: " + pE);
+		drawPanel.resizePanel();
 	}
 
 	@Override
@@ -152,46 +160,6 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 	}
 
 	@Override
-	public void keyTyped(KeyEvent pE) {
-		
-	}
-
-	@Override
-	public void keyPressed(KeyEvent pE) {
-		if(pE.isAltDown() || pE.isControlDown() || pE.isAltGraphDown()){
-			return;
-		}
-		int height = drawPanel.getHeight();
-		int width = drawPanel.getWidth();
-		switch (pE.getKeyCode()) {
-		case KeyEvent.VK_UP:
-			drawPanel.moveImageAnimated(0,-height/3);
-			return;
-		case KeyEvent.VK_DOWN:
-			drawPanel.moveImageAnimated(0,height/3);
-			return;
-		case KeyEvent.VK_LEFT:
-			drawPanel.moveImageAnimated(-width/3,0);
-			return;
-		case KeyEvent.VK_RIGHT:
-			drawPanel.moveImageAnimated(width/3,0);
-			return;
-		case KeyEvent.VK_MINUS:
-			mZoomPerformer.addWheelEvent(1, new Point(drawPanel.getTileBox().getCenterPixelX(), drawPanel.getTileBox().getCenterPixelY()));
-			mZoomTimer.restart();
-			return;
-		case KeyEvent.VK_PLUS:
-			mZoomPerformer.addWheelEvent(-1, new Point(drawPanel.getTileBox().getCenterPixelX(), drawPanel.getTileBox().getCenterPixelY()));
-			mZoomTimer.restart();
-			return;
-		}
-	}
-
-	@Override
-	public void keyReleased(KeyEvent pE) {
-	}
-	
-	@Override
 	public void mouseMoved(MouseEvent pE) {
 		setMouseEvent(pE);
 	}
@@ -202,6 +170,16 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 
 	public void setMouseEvent(MouseEvent pMouseEvent) {
 		mMouseEvent = pMouseEvent;
+	}
+
+	public Timer getZoomTimer() {
+		return mZoomTimer;
+	}
+
+	public void addWheelEvent(int pI, RotatedTileBox pCurrentTileBox) {
+		mZoomPerformer.addWheelEvent(pI, new Point(pCurrentTileBox.getCenterPixelX(), pCurrentTileBox.getCenterPixelY()));
+		mZoomTimer.restart();
+		
 	}
 	
 }

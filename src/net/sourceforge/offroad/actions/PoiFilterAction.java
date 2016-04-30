@@ -10,10 +10,12 @@ import net.sourceforge.offroad.actions.OffRoadAction.SelectableAction;
 public class PoiFilterAction extends OffRoadAction implements SelectableAction {
 	private PoiUIFilter mFilter;
 	private String mFilterId;
+	private boolean mUseTextFilter;
 
-	public PoiFilterAction(OsmWindow pContext, PoiUIFilter pFilter) {
+	public PoiFilterAction(OsmWindow pContext, PoiUIFilter pFilter, boolean pUseTextFilter) {
 		super(pContext, pFilter != null?pFilter.getName(): pContext.getOffRoadString("offroad.poifilteroff"), null);
 		mFilter = pFilter;
+		mUseTextFilter = pUseTextFilter;
 		mFilterId = null;
 		if(mFilter != null){
 			mFilterId = mFilter.getFilterId();
@@ -28,7 +30,7 @@ public class PoiFilterAction extends OffRoadAction implements SelectableAction {
 	
 	@Override
 	public void actionPerformed(ActionEvent pE) {
-		mContext.setPoiFilter(mFilter);
+		mContext.setPoiFilter(mFilter, mContext.getSearchTextField().getText());
 	}
 
 

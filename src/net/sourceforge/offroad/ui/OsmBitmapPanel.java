@@ -242,7 +242,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		}
 	}
 
-	private void queue(OffRoadUIThread pThread) {
+	public void queue(OffRoadUIThread pThread) {
 		synchronized (mTileBox) {
 			if(pThread.getDestinationTileBox() != null){
 				mTileBox = pThread.getDestinationTileBox().copy();
@@ -345,7 +345,10 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		}
 	}
 
-	public void moveImageAnimated(final float pDeltaX, final float pDeltaY) {
+	public void moveImageAnimated(float pDeltaX, float pDeltaY) {
+		pDeltaX *= getWidth();
+		pDeltaY *= getHeight();
+		System.out.println("Moving by  "  +pDeltaX + ", " + pDeltaY);
 		RotatedTileBox tileBox = copyLatestTileBox();
 		QuadPoint center = tileBox.getCenterPixelPoint();
 		final RotatedTileBox tileCopy = tileBox.copy();
@@ -359,7 +362,6 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 
 	public BufferedImage newBitmap(RotatedTileBox pTileBox) {
 		BufferedImage image = createImage();
-		pTileBox.setPixelDimensions(getWidth(), getHeight());
 		drawImage(image, pTileBox);
 		return image;
 	}
@@ -427,7 +429,9 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 	/**
 	 */
 	public void drawLater() {
-		mGenerationThread = new GenerationThread(this, copyLatestTileBox());
+		RotatedTileBox tb = copyLatestTileBox();
+		tb.setPixelDimensions(getWidth(), getHeight());
+		mGenerationThread = new GenerationThread(this, tb);
 		queue(mGenerationThread);
 	}
 
@@ -544,6 +548,16 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 
 	public void setCurrentTileBox(RotatedTileBox pCurrentTileBox) {
 		mCurrentTileBox = pCurrentTileBox;
+	}
+
+	public void resizePanel() {
+		Dimension size = getSize();
+		QuadPoint centerPixelPoint = getTileBox().getCenterPixelPoint();
+		Point diff = new Point();
+		diff.x = -(int) (centerPixelPoint.x - size.getWidth()/2f);
+		diff.y = -(int) (centerPixelPoint.y - size.getHeight()/2f);
+		dragImage(diff);
+		drawLater();
 	}
 
 
