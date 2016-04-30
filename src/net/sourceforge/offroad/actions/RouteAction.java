@@ -27,8 +27,10 @@ import javax.swing.Action;
 import net.osmand.Location;
 import net.osmand.data.LatLon;
 import net.osmand.plus.ApplicationMode;
+import net.osmand.plus.TargetPointsHelper;
 import net.osmand.plus.routing.RoutingHelper.RouteCalculationProgressCallback;
 import net.sourceforge.offroad.OsmWindow;
+import net.sourceforge.offroad.R;
 
 /**
  * @author foltin
@@ -50,15 +52,27 @@ public class RouteAction extends OffRoadAction implements RouteCalculationProgre
 	 */
 	@Override
 	public void actionPerformed(ActionEvent pE) {
+		// check for all points:
+		TargetPointsHelper helper = mContext.getTargetPointsHelper();
+		if(helper.getPointToStart() == null){
+			mContext.showToastMessage(mContext.getOffRoadString("offroad.start_position_undefined"));
+			return;
+		}
+		if(helper.getPointToNavigate() == null){
+			mContext.showToastMessage(mContext.getOffRoadString("offroad.destination_position_undefined"));
+			return;
+		}
 		// get destination point:
-		LatLon destLatLon = mContext.getMouseLocation();
-		LatLon start =  mContext.getCursorPosition();
-		Location startLocation = new Location("");
-		startLocation.setLatitude(start.getLatitude());
-		startLocation.setLongitude(start.getLongitude());
-		System.out.println("Routing from " + startLocation + " to " + destLatLon);
+//		LatLon destLatLon = mContext.getMouseLocation();
+//		LatLon start =  mContext.getCursorPosition();
+//		Location startLocation = new Location("");
+//		startLocation.setLatitude(start.getLatitude());
+//		startLocation.setLongitude(start.getLongitude());
+//		System.out.println("Routing from " + startLocation + " to " + destLatLon);
 		mContext.getRoutingHelper().setAppMode(mMode);
-		mContext.getRoutingHelper().setFinalAndCurrentLocation(destLatLon, new ArrayList<LatLon>(), startLocation);
+		mContext.getRoutingHelper().setFinalAndCurrentLocation(helper.getPointToNavigate().point,
+				helper.getIntermediatePointsLatLon(), helper.getPointToStartLocation());
+		//		helper.updateRouteAndRefresh(true);
 	}
 
 

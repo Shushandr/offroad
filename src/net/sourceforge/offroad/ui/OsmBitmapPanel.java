@@ -45,6 +45,7 @@ import net.osmand.plus.views.MapTextLayer;
 import net.osmand.plus.views.OsmandMapLayer;
 import net.osmand.plus.views.OsmandMapLayer.DrawSettings;
 import net.osmand.plus.views.POIMapLayer;
+import net.osmand.plus.views.PointNavigationLayer;
 import net.osmand.plus.views.RouteLayer;
 import net.sourceforge.offroad.OsmWindow;
 
@@ -103,6 +104,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		addLayer(new MapTextLayer(), 2);
 		mPoiLayer = new POIMapLayer(pWin);
 		addLayer(mPoiLayer, 3);
+		addLayer(new PointNavigationLayer(mContext), 4);
 		for (OsmandMapLayer layer : layers) {
 			layer.initLayer(this);
 		}
@@ -236,6 +238,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 					glayer.rotate(pTileBox.getRotate(), c.x, c.y);
 				}
 				layer.onPrepareBufferImage(glayer, pTileBox, settings);
+				layer.onDraw(glayer, pTileBox, settings);
 				// canvas.restore();
 			} catch (IndexOutOfBoundsException e) {
 				// skip it
@@ -617,7 +620,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 	public class CalculateUnzoomedPicturesAction extends AbstractAction {
 
 		private BinaryOrder mBinaryOrder;
-		private RotatedTileBox mTileBox2;
+		private RotatedTileBox myTileBox;
 		private HashMap<RotatedTileBox, BufferedImage> mImageStore = new HashMap<>();
 
 		public CalculateUnzoomedPicturesAction() {
@@ -644,7 +647,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 
 		public void setTileBox(RotatedTileBox pTb){
 			synchronized (mImageStore) {
-				mTileBox2 = pTb;
+				myTileBox = pTb;
 				mBinaryOrder.init(1, pTb.getZoom()-1);
 				for (Iterator it = mImageStore.entrySet().iterator(); it.hasNext();) {
 					Entry<RotatedTileBox, BufferedImage> entry = (Map.Entry<RotatedTileBox, BufferedImage>) it.next();
@@ -664,7 +667,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 			if(mBinaryOrder.hasNext()){
 				int nextZoom = mBinaryOrder.getNext();
 				// calculate image:
-				RotatedTileBox tb = mTileBox2.copy();
+				RotatedTileBox tb = myTileBox.copy();
 				tb.setZoom(nextZoom);
 				queue(new GenerationThread(OsmBitmapPanel.this, tb){
 					@Override

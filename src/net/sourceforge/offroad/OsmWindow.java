@@ -1,10 +1,10 @@
 package net.sourceforge.offroad;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.FocusTraversalPolicy;
 import java.awt.Font;
 import java.awt.Frame;
 import java.awt.Graphics2D;
@@ -35,7 +35,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.PropertyResourceBundle;
-import java.util.Queue;
 import java.util.Vector;
 
 import javax.swing.AbstractAction;
@@ -51,6 +50,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JProgressBar;
+import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
@@ -99,11 +99,14 @@ import net.osmand.router.GeneralRouter;
 import net.osmand.router.RoutingConfiguration;
 import net.osmand.router.RoutingConfiguration.Builder;
 import net.osmand.util.MapUtils;
+import net.sourceforge.offroad.actions.ClearRouteAction;
 import net.sourceforge.offroad.actions.DownloadAction;
 import net.sourceforge.offroad.actions.NavigationBackAction;
 import net.sourceforge.offroad.actions.NavigationForwardAction;
 import net.sourceforge.offroad.actions.OffRoadAction.OffRoadMenuItem;
 import net.sourceforge.offroad.actions.PoiFilterAction;
+import net.sourceforge.offroad.actions.PointNavigationAction;
+import net.sourceforge.offroad.actions.PointNavigationAction.HelperAction;
 import net.sourceforge.offroad.actions.RouteAction;
 import net.sourceforge.offroad.actions.SearchAddressAction;
 import net.sourceforge.offroad.actions.ShowWikipediaAction;
@@ -112,7 +115,6 @@ import net.sourceforge.offroad.res.ResourceTest;
 import net.sourceforge.offroad.res.Resources;
 import net.sourceforge.offroad.ui.AmenityTablePanel;
 import net.sourceforge.offroad.ui.BlindIcon;
-import net.sourceforge.offroad.ui.OffRoadUIThread;
 import net.sourceforge.offroad.ui.OsmBitmapPanel;
 import net.sourceforge.offroad.ui.OsmBitmapPanelMouseAdapter;
 import net.sourceforge.offroad.ui.PoiFilterRenderer;
@@ -417,6 +419,10 @@ public class OsmWindow {
 		menubar.add(jViewMenu);
 		// Navigation
 		JMenu jNavigationMenu = new JMenu(getOffRoadString("offroad.navigation")); //$NON-NLS-1$
+		jNavigationMenu.add(new JMenuItem(new RouteAction(this, ApplicationMode.CAR)));
+		jNavigationMenu.add(new JMenuItem(new RouteAction(this, ApplicationMode.BICYCLE)));
+		jNavigationMenu.add(new JMenuItem(new RouteAction(this, ApplicationMode.PEDESTRIAN)));
+		jNavigationMenu.add(new JMenuItem(new ClearRouteAction(this)));
 		addToMenu(jNavigationMenu, "offroad.up", item -> mDrawPanel.moveImageAnimated(0,-1f/3), "control UP");
 		addToMenu(jNavigationMenu, "offroad.down", item -> mDrawPanel.moveImageAnimated(0,1f/3), "control DOWN");
 		addToMenu(jNavigationMenu, "offroad.left", item -> mDrawPanel.moveImageAnimated(-1f/3,0), "control LEFT");
@@ -437,9 +443,27 @@ public class OsmWindow {
 		menubar.add(jPointOfInterestMenu);
 		
 		JPopupMenu popupMenu = new JPopupMenu();
+		popupMenu.add(new JMenuItem(new PointNavigationAction(this, "offroad.set_start_point",
+				(helper, pos) -> helper.setStartPoint(pos, false, null))));
+		popupMenu.add(new JMenuItem(new PointNavigationAction(this, "offroad.set_intermediate_point",
+				(helper, pos) -> helper.navigateToPoint(pos, false, helper.getIntermediatePoints().size()))));
+		popupMenu.add(new JMenuItem(new PointNavigationAction(this, "offroad.set_destination_point",
+				(helper, pos) -> helper.navigateToPoint(pos, false, -1))));
+		popupMenu.add(new JSeparator());
 		popupMenu.add(new JMenuItem(new RouteAction(this, ApplicationMode.CAR)));
 		popupMenu.add(new JMenuItem(new RouteAction(this, ApplicationMode.BICYCLE)));
 		popupMenu.add(new JMenuItem(new RouteAction(this, ApplicationMode.PEDESTRIAN)));
+		popupMenu.add(new JSeparator());
+		popupMenu.add(new JMenuItem(new PointNavigationAction(this, "offroad.clear_intermediate_points",
+				new HelperAction(){
+			@Override
+			public void act(TargetPointsHelper pHelper, LatLon pPosition) {
+				while(!pHelper.getIntermediatePoints().isEmpty()){
+					pHelper.removeWayPoint(false, 0);
+				}
+			}})));
+		popupMenu.add(new JMenuItem(new PointNavigationAction(this, "offroad.clear_all_points",
+				(helper, pos) -> helper.removeAllWayPoints(false, false))));
 		mDrawPanel.setComponentPopupMenu(popupMenu);
 		popupMenu.addPopupMenuListener(new PoiContextMenuListener(popupMenu));
 		mFrame.setJMenuBar(menubar);
@@ -517,10 +541,10 @@ public class OsmWindow {
 		}
 		startServer();
 		mRendererRegistry = new RendererRegistry(this);
-		mTargetPointsHelper = new TargetPointsHelper(this);
 		mRoutingHelper = new RoutingHelper(this);
-		mPoiFilters = new PoiFiltersHelper(this);
 		mGeocodingLookupService = new GeocodingLookupService(this);
+		mTargetPointsHelper = new TargetPointsHelper(this);
+		mPoiFilters = new PoiFiltersHelper(this);
 		mMapPoiTypes = MapPoiTypes.getDefault();
 		mMapPoiTypes.setPoiTranslator(new MapPoiTypes.PoiTranslator() {
 			@Override
@@ -838,6 +862,7 @@ public class OsmWindow {
 			MessageFormat formatter = new MessageFormat(
 					getOffRoadString("offroad.string47")); //$NON-NLS-1$
 			String message = formatter.format(messageArguments);
+//			mStatusLabel.setBackground(Color.GRAY);
 			mStatusLabel.setText(message);
 		}
 		
@@ -910,7 +935,9 @@ public class OsmWindow {
 	}
 
 	public void showToastMessage(String pMsg) {
+//		mStatusLabel.setBackground(Color.red);
 		mStatusLabel.setText(pMsg);
+//		mStatusLabel.repaint();
 		mDontUpdateStatusLabelCounter = 4;
 	}
 
