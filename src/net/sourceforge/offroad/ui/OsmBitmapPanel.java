@@ -297,6 +297,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 	}
 
 	public void queue(OffRoadUIThread pThread) {
+		pThread.addListener(mInactivityListener);
 		synchronized (mTileBox) {
 			if(pThread.getDestinationTileBox() != null){
 				mTileBox = pThread.getDestinationTileBox().copy();
@@ -315,8 +316,6 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		}
 		mLastThread = pThread;
 		mThreadPool.execute(pThread);
-		// TODO: Do this for every thread start and end.
-		mInactivityListener.eventDispatched(null);
 	}
 
 	public int checkZoom(int newZoom) {
@@ -396,8 +395,6 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		} else {
 			tb.setLatLonCenter(newLat, newLon);
 			queue(new GenerationThread(this, tb));
-//			drawImage(bImage);
-//			setImage(bImage);
 		}
 	}
 
@@ -507,8 +504,6 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		RotatedTileBox tb = copyLatestTileBox();
 		tb.setRotate((float) (tb.getRotate() + 10 * pPreciseWheelRotation));
 		queue(new GenerationThread(this, tb));
-//		drawImage(bImage);
-//		setImage(bImage);
 	}
 
 	public void directRotateIncrement(double pPreciseWheelRotation) {

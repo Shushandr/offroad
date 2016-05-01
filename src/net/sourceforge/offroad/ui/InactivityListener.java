@@ -10,6 +10,8 @@ import java.awt.event.ActionListener;
 import javax.swing.Action;
 import javax.swing.Timer;
 
+import net.sourceforge.offroad.ui.OffRoadUIThread.OffRoadUIThreadListener;
+
 /*
  *  A class that monitors inactivity in an application.
  *
@@ -32,7 +34,7 @@ import javax.swing.Timer;
  *  however, they will not become effective until you stop and start
  *  the listener.
  */
-class InactivityListener implements ActionListener, AWTEventListener
+class InactivityListener implements ActionListener, AWTEventListener, OffRoadUIThreadListener
 {
 	public final static long KEY_EVENTS = AWTEvent.KEY_EVENT_MASK;
 
@@ -117,7 +119,7 @@ class InactivityListener implements ActionListener, AWTEventListener
 		timer.setDelay(interval);
 		timer.setRepeats(true);
 		timer.start();
-		Toolkit.getDefaultToolkit().addAWTEventListener(this, eventMask);
+//		Toolkit.getDefaultToolkit().addAWTEventListener(this, eventMask);
 	}
 
 	/*
@@ -125,7 +127,7 @@ class InactivityListener implements ActionListener, AWTEventListener
 	 */
 	public void stop()
 	{
-		Toolkit.getDefaultToolkit().removeAWTEventListener(this);
+//		Toolkit.getDefaultToolkit().removeAWTEventListener(this);
 		timer.stop();
 	}
 
@@ -141,7 +143,21 @@ class InactivityListener implements ActionListener, AWTEventListener
 
 	public void eventDispatched(AWTEvent e)
 	{
+		restart();
+	}
+
+	void restart() {
 		if (timer.isRunning())
 			timer.restart();
+	}
+
+	@Override
+	public void threadStarted() {
+		restart();
+	}
+
+	@Override
+	public void threadFinished() {
+		restart();
 	}
 }

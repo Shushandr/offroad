@@ -19,6 +19,9 @@
 
 package net.sourceforge.offroad.ui;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import net.osmand.data.RotatedTileBox;
 
 /**
@@ -26,14 +29,28 @@ import net.osmand.data.RotatedTileBox;
  * @date 26.04.2016
  */
 public class OffRoadUIThread implements Runnable {
+	
+	public interface OffRoadUIThreadListener {
+		public void threadStarted();
+		public void threadFinished();
+	}
 
 	private OffRoadUIThread mNextThread = null;
 	private boolean hasFinished = false;
 	private boolean mShouldContinue = false;
 	protected OsmBitmapPanel mOsmBitmapPanel;
+	private Set<OffRoadUIThreadListener> mListeners = new HashSet<>();
 
 	public OffRoadUIThread(OsmBitmapPanel pOsmBitmapPanel) {
 		mOsmBitmapPanel = pOsmBitmapPanel;
+	}
+	
+	public void addListener(OffRoadUIThreadListener pListener){
+		mListeners.add(pListener);
+	}
+	
+	public void removeListener(OffRoadUIThreadListener pListener){
+		mListeners.remove(pListener);
 	}
 	
 	public void setNextThread(OffRoadUIThread pNextThread) {
@@ -62,6 +79,13 @@ public class OffRoadUIThread implements Runnable {
 	@Override
 	public void run() {
 		try {
+			for (OffRoadUIThreadListener listener : mListeners) {
+				listener.threadStarted();
+			} 
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		try {
 			runInBackground();
 		} catch (Exception e1) {
 			e1.printStackTrace();
@@ -89,6 +113,9 @@ public class OffRoadUIThread implements Runnable {
 				mNextThread.shouldContinue();
 			}
 			hasFinished = true;
+		}
+		for (OffRoadUIThreadListener listener : mListeners) {
+			listener.threadFinished();
 		}
 	}
 

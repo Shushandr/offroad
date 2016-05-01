@@ -22,6 +22,8 @@ import net.osmand.data.RotatedTileBox;
 import net.sourceforge.offroad.OsmWindow;
 
 public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements ComponentListener {
+	private static final int ZOOM_DELAY_MILLISECONDS = 100;
+	private static final int ROTATE_DELAY_MILLISECONDS = 500;
 	private final static Log log = PlatformUtil.getLog(OsmBitmapPanelMouseAdapter.class);
 
 	public class ZoomPerformer implements ActionListener {
@@ -66,12 +68,11 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 	public OsmBitmapPanelMouseAdapter(OsmBitmapPanel drawPanel) {
 		this.drawPanel = drawPanel;
 		mContext = drawPanel.getContext();
-		int delay = 100; // milliseconds
 		mZoomPerformer = new ZoomPerformer();
-		mZoomTimer = new Timer(delay, mZoomPerformer);
+		mZoomTimer = new Timer(ZOOM_DELAY_MILLISECONDS, mZoomPerformer);
 		mZoomTimer.setRepeats(false);
 		mRotatePerformer = new RotatePerformer();
-		mRotateTimer = new Timer(delay, mRotatePerformer);
+		mRotateTimer = new Timer(ROTATE_DELAY_MILLISECONDS, mRotatePerformer);
 		mRotateTimer.setRepeats(false);
 	}
 

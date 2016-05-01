@@ -83,9 +83,9 @@ public class PointNavigationLayer extends OsmandMapLayer /* implements IContextM
 			if (isLocationVisible(tb, pointToStart)) {
 				int marginX = startPoint.getWidth() / 6;
 				int marginY = startPoint.getHeight();
-				int locationX = tb.getPixXFromLonNoRot(pointToStart.getLongitude());
-				int locationY = tb.getPixYFromLatNoRot(pointToStart.getLatitude());
-				canvas.rotate(-tb.getRotate(), locationX, locationY);
+				int locationX = (int) tb.getPixXFromLatLon(pointToStart.getLatitude(), pointToStart.getLongitude());
+				int locationY = (int) tb.getPixYFromLatLon(pointToStart.getLatitude(), pointToStart.getLongitude());
+				//canvas.rotate(-tb.getRotate(), locationX, locationY);
 				/* bitmapPaint */
 				canvas.drawImage(startPoint, locationX - marginX, locationY - marginY, null);
 			}
@@ -99,7 +99,7 @@ public class PointNavigationLayer extends OsmandMapLayer /* implements IContextM
 				int marginY = intermediatePoint.getHeight();
 				int locationX = tb.getPixXFromLonNoRot(ip.getLongitude());
 				int locationY = tb.getPixYFromLatNoRot(ip.getLatitude());
-				canvas.rotate(-tb.getRotate(), locationX, locationY);
+				//canvas.rotate(-tb.getRotate(), locationX, locationY);
 				/* bitmapPaint */
 				canvas.drawImage(intermediatePoint, locationX - marginX, locationY - marginY, null);
 				marginX = intermediatePoint.getWidth() / 3;
@@ -108,7 +108,7 @@ public class PointNavigationLayer extends OsmandMapLayer /* implements IContextM
 				Font textFont = canvas.getFont().deriveFont(18);
 				canvas.setFont(textFont);
 				canvas.drawString(index + "", locationX + marginX, locationY - 3 * marginY / 5);
-				canvas.rotate(tb.getRotate(), locationX, locationY);
+				//canvas.rotate(tb.getRotate(), locationX, locationY);
 			}
 		}
 
@@ -118,7 +118,7 @@ public class PointNavigationLayer extends OsmandMapLayer /* implements IContextM
 			int marginY = targetPoint.getHeight();
 			int locationX = tb.getPixXFromLonNoRot(pointToNavigate.getLongitude());
 			int locationY = tb.getPixYFromLatNoRot(pointToNavigate.getLatitude());
-			canvas.rotate(-tb.getRotate(), locationX, locationY);
+			//canvas.rotate(-tb.getRotate(), locationX, locationY);
 			/* bitmapPaint */
 			canvas.drawImage(targetPoint, locationX - marginX, locationY - marginY, null);
 		} 
@@ -139,7 +139,7 @@ public class PointNavigationLayer extends OsmandMapLayer /* implements IContextM
 				float bearing = calculations[1] - 90;
 				float radiusBearing = DIST_TO_SHOW * tb.getDensity();
 				final QuadPoint cp = tb.getCenterPixelPoint();
-				canvas.rotate(bearing, cp.x, cp.y);
+				//canvas.rotate(bearing, cp.x, cp.y);
 				canvas.translate(-24 * tb.getDensity() + radiusBearing, -22 * tb.getDensity());
 				/* bitmapPaint */
 				canvas.drawImage(arrowToDestination, (int)cp.x, (int)cp.y, null);
@@ -163,7 +163,7 @@ public class PointNavigationLayer extends OsmandMapLayer /* implements IContextM
 
 	@Override
 	public boolean drawInScreenPixels() {
-		return false;
+		return true;
 	}
 
 	public boolean disableSingleTap() {
