@@ -97,8 +97,8 @@ public class PointNavigationLayer extends OsmandMapLayer /* implements IContextM
 			if (isLocationVisible(tb, ip)) {
 				int marginX = intermediatePoint.getWidth() / 6;
 				int marginY = intermediatePoint.getHeight();
-				int locationX = tb.getPixXFromLonNoRot(ip.getLongitude());
-				int locationY = tb.getPixYFromLatNoRot(ip.getLatitude());
+				int locationX = (int) tb.getPixXFromLatLon(ip.getLatitude(), ip.getLongitude());
+				int locationY = (int) tb.getPixYFromLatLon(ip.getLatitude(), ip.getLongitude());
 				//canvas.rotate(-tb.getRotate(), locationX, locationY);
 				/* bitmapPaint */
 				canvas.drawImage(intermediatePoint, locationX - marginX, locationY - marginY, null);
@@ -116,8 +116,8 @@ public class PointNavigationLayer extends OsmandMapLayer /* implements IContextM
 		if (isLocationVisible(tb, pointToNavigate)) {
 			int marginX = targetPoint.getWidth() / 6;
 			int marginY = targetPoint.getHeight();
-			int locationX = tb.getPixXFromLonNoRot(pointToNavigate.getLongitude());
-			int locationY = tb.getPixYFromLatNoRot(pointToNavigate.getLatitude());
+			int locationX = (int) tb.getPixXFromLatLon(pointToNavigate.getLatitude(), pointToNavigate.getLongitude());
+			int locationY = (int) tb.getPixYFromLatLon(pointToNavigate.getLatitude(), pointToNavigate.getLongitude());
 			//canvas.rotate(-tb.getRotate(), locationX, locationY);
 			/* bitmapPaint */
 			canvas.drawImage(targetPoint, locationX - marginX, locationY - marginY, null);
