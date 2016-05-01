@@ -170,7 +170,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 				List<RotatedTileBox> tblist = mUnzoomedPicturesAction.getTileBoxesForZoom(biggerZoom);
 				// check for each, if the current image is contained
 				for (RotatedTileBox rtb : tblist) {
-					if (rtb.containsLatLon(screenLT) && rtb.containsLatLon(screenRB)) {
+					if (rtb.containsLatLon(screenLT) && rtb.containsLatLon(screenRB) && ctb.getRotate() == rtb.getRotate()) {
 						//						log.debug("Found bigger tile box " + rtb);
 						// draw this under it:
 						LatLon rtbLT = rtb.getLeftTopLatLon();
@@ -647,7 +647,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 				for (Iterator it = mImageStore.entrySet().iterator(); it.hasNext();) {
 					Entry<RotatedTileBox, BufferedImage> entry = (Map.Entry<RotatedTileBox, BufferedImage>) it.next();
 					RotatedTileBox rtb = entry.getKey();
-					if(!contains(rtb, pTb)){
+					if(!contains(rtb, pTb) || rtb.getRotate() != pTb.getRotate()){
 						it.remove();
 					} else {
 						mBinaryOrder.alreadyDone(rtb.getZoom());
