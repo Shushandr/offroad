@@ -1,7 +1,6 @@
 package net.sourceforge.offroad;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
@@ -103,6 +102,7 @@ import net.sourceforge.offroad.actions.ClearRouteAction;
 import net.sourceforge.offroad.actions.DownloadAction;
 import net.sourceforge.offroad.actions.NavigationBackAction;
 import net.sourceforge.offroad.actions.NavigationForwardAction;
+import net.sourceforge.offroad.actions.NavigationRotationAction;
 import net.sourceforge.offroad.actions.OffRoadAction.OffRoadMenuItem;
 import net.sourceforge.offroad.actions.PoiFilterAction;
 import net.sourceforge.offroad.actions.PointNavigationAction;
@@ -423,14 +423,21 @@ public class OsmWindow {
 		jNavigationMenu.add(new JMenuItem(new RouteAction(this, ApplicationMode.BICYCLE)));
 		jNavigationMenu.add(new JMenuItem(new RouteAction(this, ApplicationMode.PEDESTRIAN)));
 		jNavigationMenu.add(new JMenuItem(new ClearRouteAction(this)));
+		jNavigationMenu.add(new JSeparator());
 		addToMenu(jNavigationMenu, "offroad.up", item -> mDrawPanel.moveImageAnimated(0,-1f/3), "control UP");
 		addToMenu(jNavigationMenu, "offroad.down", item -> mDrawPanel.moveImageAnimated(0,1f/3), "control DOWN");
 		addToMenu(jNavigationMenu, "offroad.left", item -> mDrawPanel.moveImageAnimated(-1f/3,0), "control LEFT");
 		addToMenu(jNavigationMenu, "offroad.right", item -> mDrawPanel.moveImageAnimated(1f/3,0), "control RIGHT");
+		jNavigationMenu.add(new JSeparator());
 		addToMenu(jNavigationMenu, "offroad.zomin", item -> mAdapter.addWheelEvent(-1, mDrawPanel.getCurrentTileBox()), "control PLUS");
 		addToMenu(jNavigationMenu, "offroad.zomout", item -> mAdapter.addWheelEvent(1, mDrawPanel.getCurrentTileBox()), "control MINUS");
+		jNavigationMenu.add(new JSeparator());
 		addToMenu(jNavigationMenu, "offroad.back", new NavigationBackAction(this), "alt LEFT");
 		addToMenu(jNavigationMenu, "offroad.forward", new NavigationForwardAction(this), "alt RIGHT");
+		jNavigationMenu.add(new JSeparator());
+		addToMenu(jNavigationMenu, "offroad.reset_north", new NavigationRotationAction(this).setAbsolut(0d), "alt HOME");
+		addToMenu(jNavigationMenu, "offroad.increase_rotation", new NavigationRotationAction(this).setIncrement(30d), "alt PAGE_UP");
+		addToMenu(jNavigationMenu, "offroad.decrease_rotation", new NavigationRotationAction(this).setIncrement(-30d), "alt PAGE_DOWN");
 		menubar.add(jNavigationMenu);
 		// PointOfInterest
 		JMenu jPointOfInterestMenu = new JMenu(getOffRoadString("offroad.PointOfInterest")); //$NON-NLS-1$

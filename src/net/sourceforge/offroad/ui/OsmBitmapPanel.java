@@ -291,9 +291,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 	}
 
 	private RotatedTileBox copyLatestTileBox() {
-		synchronized (mTileBox) {
-			return mTileBox.copy();
-		}
+		return getTileBox();
 	}
 
 	public void queue(OffRoadUIThread pThread) {
