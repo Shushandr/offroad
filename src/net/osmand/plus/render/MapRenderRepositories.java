@@ -48,6 +48,7 @@ import net.osmand.render.RenderingRulesStorage;
 import net.osmand.util.Algorithms;
 import net.osmand.util.MapAlgorithms;
 import net.osmand.util.MapUtils;
+import net.sourceforge.offroad.OsmWindow;
 
 public class MapRenderRepositories {
 
@@ -647,6 +648,8 @@ public class MapRenderRepositories {
 			currentRenderingContext.nightMode = nightMode;
 			if(requestedBox.getZoom() <= zoomOnlyForBasemaps && 
 					"".equals(prefs.MAP_PREFERRED_LOCALE.get())) {
+				currentRenderingContext.preferredLocale = OsmWindow.getInstance().getLanguage();
+			} else {
 				currentRenderingContext.preferredLocale = prefs.MAP_PREFERRED_LOCALE.get();
 			}
 			final float mapDensity = (float) requestedBox.getMapDensity();

@@ -5,8 +5,6 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
-import java.awt.Stroke;
-import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
@@ -16,8 +14,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.procedure.TIntObjectProcedure;
+import net.osmand.PlatformUtil;
 import net.osmand.binary.BinaryMapDataObject;
 import net.osmand.binary.BinaryMapIndexReader.TagValuePair;
 import net.osmand.data.QuadRect;
@@ -30,6 +31,8 @@ import net.sf.junidecode.Junidecode;
 import net.sourceforge.offroad.TextStroke;
 
 public class TextRenderer {
+	private final static Log log = PlatformUtil.getLog(TextRenderer.class);
+
 
 //	private Paint paintText;
 //	private Paint paintIcon;
@@ -409,28 +412,45 @@ public class TextRenderer {
 			final TagValuePair pair, final double xMid, final double yMid, final Path2D pPath, final Point2D[] points) {
 		final TIntObjectHashMap<String> map = obj.getObjectNames();
 		if (map != null) {
-			map.forEachEntry(new TIntObjectProcedure<String>() {
-				@Override
-				public boolean execute(int tag, String name) {
-					if (name != null && name.trim().length() > 0) {
-						boolean isName = tag == obj.getMapIndex().nameEncodingType;
-						String nameTag = isName ? "" : obj.getMapIndex().decodeType(tag).tag;
-						boolean skip = false;
-						// not completely correct we should check "name"+rc.preferredLocale
-						if (isName && !rc.preferredLocale.equals("") && 
-								map.containsKey(obj.getMapIndex().nameEnEncodingType)) {
-							skip = true;
-						} 
-//						if (tag == obj.getMapIndex().nameEnEncodingType && !rc.useEnglishNames) {
-//							skip = true;
-//						}
-						if(!skip) {
-							createTextDrawInfo(obj, render, pGraphics2d, rc, pair, xMid, yMid, pPath, points, name, nameTag);
+			String[] nameTags = { "name:" + rc.preferredLocale, "name:en", "" };
+			for (int i = 0; i < nameTags.length; i++) {
+				String nameTag = nameTags[i];
+				Integer langTag = obj.getMapIndex().getRule(nameTag, null);
+				if(langTag == null){
+					langTag = obj.getMapIndex().nameEncodingType;
+				}
+				if(map.containsKey(langTag)) {
+					String name = map.get(langTag);
+					if (name != null) {
+						if (name.length()>0) {
+							createTextDrawInfo(obj, render, pGraphics2d, rc, pair, xMid, yMid, pPath, points, name, "");
+							break;
 						}
 					}
-					return true;
 				}
-			});
+			}
+//			map.forEachEntry(new TIntObjectProcedure<String>() {
+//				@Override
+//				public boolean execute(int tag, String name) {
+//					if (name != null && name.trim().length() > 0) {
+//						boolean isName = tag == obj.getMapIndex().nameEncodingType;
+//						String nameTag = isName ? "" : obj.getMapIndex().decodeType(tag).tag;
+//						boolean skip = false;
+//						// not completely correct we should check "name"+rc.preferredLocale
+//						if (isName && !rc.preferredLocale.equals("") && 
+//								map.containsKey(obj.getMapIndex().nameEnEncodingType)) {
+//							skip = true;
+//						} 
+////						if (tag == obj.getMapIndex().nameEnEncodingType && !rc.useEnglishNames) {
+////							skip = true;
+////						}
+//						if(!skip) {
+//							createTextDrawInfo(obj, render, pGraphics2d, rc, pair, xMid, yMid, pPath, points, name, nameTag);
+//						}
+//					}
+//					return true;
+//				}
+//			});
 		}
 	}
 

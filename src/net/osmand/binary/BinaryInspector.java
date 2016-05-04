@@ -67,17 +67,20 @@ public class BinaryInspector {
 		if(args.length == 1 && "test".equals(args[0])) {
 			in.inspector(new String[]{
 //				"-vpoi",
-				"-vmap","-vmapobjects", // "-vmapcoordinates", 
-				"-vrouting",
-//				"-vaddress", "-vcities",//"-vstreetgroups", 
+				"-vmap",
+					"-vmapobjects", // "-vmapcoordinates", 
+//				"-vrouting",
+//				"-vaddress", 
+//				"-vcities",//"-vstreetgroups", 
 //				"-vstreets", "-vbuildings", "-vintersections", 
 //				"-zoom=15",
 //				"-bbox=1.74,51.17,1.75,51.16",
+				"-bbox=29.4,33.3,32,28.9",
 //				"-vstats",
 //				"/Users/victorshcherb/osmand/maps/Synthetic_test_rendering.obf"
 //				"/Users/victorshcherb/osmand/maps/Netherlands_europe_2.road.obf"
 //				"/Users/victorshcherb/osmand/maps/C_11_03_06.obf"
-				"/home/foltin/programming/java/osmand/maps/Germany_saarland_europe_2.obf"
+				"/home/foltin/.OffRoad/World_basemap.obf"
 					});
 		} else {
 			in.inspector(args);
@@ -1043,7 +1046,7 @@ public class BinaryInspector {
 							}
 						}
 						
-						println(object.getType().getKeyName() + " : " + object.getSubType() + " " + object.getName() + " " + object.getLocation() + " id=" + (object.getId() >> 1) + " " + s);
+						println(object.getType().getKeyName() + " : " + object.getSubType() + " " + object.getName("de", true) + " " + object.getLocation() + " id=" + (object.getId() >> 1) + " " + s);
 						return false;
 					}
 					@Override

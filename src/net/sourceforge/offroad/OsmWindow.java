@@ -530,6 +530,8 @@ public class OsmWindow {
 		initStrings();
 		setupProxy();
 		prefs.APPLICATION_MODE.set(ApplicationMode.DEFAULT);
+		prefs.MAP_PREFERRED_LOCALE.set(getLanguage());
+		prefs.PREFERRED_LOCALE.set(getLanguage());
 		mStrings = new R.string();
 	}
 
@@ -710,7 +712,8 @@ public class OsmWindow {
 		};
 		is = getResource(defaultFile);
 		storage.parseRulesFromXmlInputStream(is, resolver);
-
+//		System.out.println("\n\n--------- TEXT ----- ");
+//		storage.printDebug(storage.TEXT_RULES, System.out);
 		return storage;
 	}
 	
