@@ -218,7 +218,6 @@ public class OsmWindow {
 
 	private static final String OFFROAD_PROPERTIES = "offroad";
 	private static OsmWindow sInstance = null;
-	private RenderingRulesStorage mRenderingRulesStorage;
 	private ResourceManager mResourceManager;
 	private OffRoadSettings settings = new OffRoadSettings(this);
 	private OsmandSettings prefs = new OsmandSettings(this, settings);
@@ -550,6 +549,7 @@ public class OsmWindow {
 		}
 		startServer();
 		mRendererRegistry = new RendererRegistry(this);
+		mRendererRegistry.initRenderers(IProgress.EMPTY_PROGRESS);
 		mRoutingHelper = new RoutingHelper(this);
 		mGeocodingLookupService = new GeocodingLookupService(this);
 		mTargetPointsHelper = new TargetPointsHelper(this);
@@ -565,7 +565,6 @@ public class OsmWindow {
 				return getString("poi_" + type.getIconKeyName());
 			}
 		});
-		mRenderingRulesStorage = initRenderingRulesStorage();
 	}
 
 
@@ -667,56 +666,6 @@ public class OsmWindow {
 		return mResourceManager.getRenderer();
 	}
 
-	public RenderingRulesStorage initRenderingRulesStorage() throws XmlPullParserException, IOException {
-		final String loc = RENDERING_STYLES_DIR; 
-		String res; 
-		res = loc + "default.render.xml";
-//		res = loc + "LightRS.render.xml";
-//		res = loc + "UniRS.render.xml";
-//		res = loc + "regions.render.xml";
-		String defaultFile = res;
-		final Map<String, String> renderingConstants = new LinkedHashMap<String, String>();
-		InputStream is = getResource(res);
-		if(is == null){
-			System.err.println("Can't find resource " + res); //$NON-NLS-1$
-			printClassPath();
-			System.exit(1);
-		}
-		try {
-			XmlPullParser parser = PlatformUtil.newXMLPullParser();
-			parser.setInput(is, "UTF-8"); //$NON-NLS-1$
-			int tok;
-			while ((tok = parser.next()) != XmlPullParser.END_DOCUMENT) {
-				if (tok == XmlPullParser.START_TAG) {
-					String tagName = parser.getName();
-					if (tagName.equals("renderingConstant")) { //$NON-NLS-1$
-						if (!renderingConstants.containsKey(parser.getAttributeValue("", "name"))) { //$NON-NLS-1$ //$NON-NLS-2$
-							renderingConstants.put(parser.getAttributeValue("", "name"), //$NON-NLS-1$ //$NON-NLS-2$
-									parser.getAttributeValue("", "value")); //$NON-NLS-1$ //$NON-NLS-2$
-						}
-					}
-				}
-			}
-		} finally {
-			is.close();
-		}
-		RenderingRulesStorage storage = new RenderingRulesStorage("default", renderingConstants); //$NON-NLS-1$
-		final RenderingRulesStorageResolver resolver = new RenderingRulesStorageResolver() {
-			@Override
-			public RenderingRulesStorage resolve(String name, RenderingRulesStorageResolver ref)
-					throws XmlPullParserException, IOException {
-				RenderingRulesStorage depends = new RenderingRulesStorage(name, renderingConstants);
-				depends.parseRulesFromXmlInputStream(getResource(loc + name + ".render.xml"), ref); //$NON-NLS-1$
-				return depends;
-			}
-		};
-		is = getResource(defaultFile);
-		storage.parseRulesFromXmlInputStream(is, resolver);
-//		System.out.println("\n\n--------- TEXT ----- ");
-//		storage.printDebug(storage.TEXT_RULES, System.out);
-		return storage;
-	}
-	
 	static public void printClassPath() {
 		ClassLoader cl = ClassLoader.getSystemClassLoader();
 
@@ -941,7 +890,10 @@ public class OsmWindow {
 	}
 	
 	public RenderingRulesStorage getRenderingRulesStorage() {
-		return mRenderingRulesStorage;
+		RenderingRulesStorage storage = mRendererRegistry.getCurrentSelectedRenderer();
+//		System.out.println("\n\n--------- TEXT ----- ");
+//		storage.printDebug(storage.TEXT_RULES, System.out);
+		return storage;
 	}
 
 	public void showToastMessage(String pMsg) {

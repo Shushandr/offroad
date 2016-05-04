@@ -54,7 +54,7 @@ public class IndexConstants {
 	public static final String WIKI_INDEX_DIR = "wiki/"; //$NON-NLS-1$
 	public static final String AV_INDEX_DIR = "avnotes/"; //$NON-NLS-1$
 	public static final String VOICE_INDEX_DIR = "voice/"; //$NON-NLS-1$
-	public static final String RENDERERS_DIR = "rendering/"; //$NON-NLS-1$
+	public static final String RENDERERS_DIR = "rendering_styles/"; //"rendering/"; //$NON-NLS-1$
 	public static final String ROUTING_XML_FILE= "routing.xml";
 	
 	
