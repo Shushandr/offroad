@@ -321,10 +321,13 @@ public abstract class OsmandMapLayer {
 
 	}
 
-	
 	public BufferedImage readImage(String image, OsmBitmapPanel view) {
+		return readImage(image, view.getContext());
+	}
+	
+	public BufferedImage readImage(String image, OsmWindow ctx) {
 		try {
-			InputStream resource = view.getContext().getResource(OsmWindow.IMAGE_PATH + image + ".png");
+			InputStream resource = ctx.getResource(OsmWindow.IMAGE_PATH + image + ".png");
 			if(resource == null){
 				log.error("Resource " + image + " not found!");
 				return null;

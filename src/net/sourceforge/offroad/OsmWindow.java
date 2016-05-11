@@ -71,6 +71,7 @@ import net.osmand.IndexConstants;
 import net.osmand.PlatformUtil;
 import net.osmand.ResultMatcher;
 import net.osmand.data.Amenity;
+import net.osmand.data.FavouritePoint;
 import net.osmand.data.LatLon;
 import net.osmand.data.PointDescription;
 import net.osmand.data.RotatedTileBox;
@@ -79,9 +80,11 @@ import net.osmand.osm.AbstractPoiType;
 import net.osmand.osm.MapPoiTypes;
 import net.osmand.osm.PoiType;
 import net.osmand.plus.ApplicationMode;
+import net.osmand.plus.FavouritesDbHelper;
 import net.osmand.plus.GeocodingLookupService;
 import net.osmand.plus.OsmandSettings;
 import net.osmand.plus.TargetPointsHelper;
+import net.osmand.plus.api.SQLiteAPI;
 import net.osmand.plus.inapp.util.Base64;
 import net.osmand.plus.inapp.util.Base64DecoderException;
 import net.osmand.plus.poi.PoiFiltersHelper;
@@ -103,6 +106,7 @@ import net.sourceforge.offroad.actions.DownloadAction;
 import net.sourceforge.offroad.actions.NavigationBackAction;
 import net.sourceforge.offroad.actions.NavigationForwardAction;
 import net.sourceforge.offroad.actions.NavigationRotationAction;
+import net.sourceforge.offroad.actions.OffRoadAction;
 import net.sourceforge.offroad.actions.OffRoadAction.OffRoadMenuItem;
 import net.sourceforge.offroad.actions.PoiFilterAction;
 import net.sourceforge.offroad.actions.PointNavigationAction;
@@ -111,6 +115,7 @@ import net.sourceforge.offroad.actions.RouteAction;
 import net.sourceforge.offroad.actions.SearchAddressAction;
 import net.sourceforge.offroad.actions.ShowWikipediaAction;
 import net.sourceforge.offroad.data.QuadRectExtendable;
+import net.sourceforge.offroad.data.SQLiteImpl;
 import net.sourceforge.offroad.res.ResourceTest;
 import net.sourceforge.offroad.res.Resources;
 import net.sourceforge.offroad.ui.AmenityTablePanel;
@@ -256,6 +261,12 @@ public class OsmWindow {
 	private boolean mSearchBarVisible = true;
 	Vector<CursorPositionListener> mCursorPositionListeners = new Vector<>();
 	private PoiUIFilter mCurrentPoiFilter;
+
+
+	private SQLiteImpl mSqLiteImpl;
+
+
+	private FavouritesDbHelper mFavorites;
 
 	public void createAndShowUI() {
 		mDrawPanel = new OsmBitmapPanel(this);
@@ -447,6 +458,38 @@ public class OsmWindow {
 			jPointOfInterestMenu.add(lPointOfInterestItem);
 		}
 		menubar.add(jPointOfInterestMenu);
+		// Favourites
+		JMenu jFavouritesMenu = new JMenu(getOffRoadString("offroad.Favourites")); //$NON-NLS-1$
+		JMenuItem lAddFavourite = new JMenuItem(new OffRoadAction(this){
+
+			@Override
+			public void actionPerformed(ActionEvent pE) {
+				LatLon pos = getCursorPosition();
+				getFavorites().addFavourite(new FavouritePoint(pos.getLatitude(), pos.getLongitude(), "Test", "CategoryBla"));
+			}
+
+			@Override
+			public void save() {
+			}});
+		lAddFavourite.setName(getOffRoadString("offroad.addFavourite"));
+		jFavouritesMenu.add(lAddFavourite);
+		for (FavouritePoint fp : getFavorites().getFavouritePoints()) {
+			JMenuItem lFavouritesItem = new JMenuItem(new OffRoadAction(this) {
+				
+				@Override
+				public void actionPerformed(ActionEvent pE) {
+					mContext.move(new LatLon(fp.getLatitude(), fp.getLongitude()), null);
+				}
+				
+				@Override
+				public void save() {
+					
+				}
+			});
+			lFavouritesItem.setName(fp.getName());
+			jFavouritesMenu.add(lFavouritesItem);
+		}
+		menubar.add(jFavouritesMenu);
 		
 		JPopupMenu popupMenu = new JPopupMenu();
 		popupMenu.add(new JMenuItem(new PointNavigationAction(this, "offroad.set_start_point",
@@ -1114,6 +1157,29 @@ public class OsmWindow {
 		mSearchBarVisible = ! mSearchBarVisible;
 		mFrame.revalidate();
 		mDrawPanel.requestFocus();
+	}
+
+	public SQLiteAPI getSQLiteAPI() {
+		if(mSqLiteImpl == null){
+			mSqLiteImpl = new SQLiteImpl();
+		}
+		return mSqLiteImpl;
+	}
+
+	public File getDatabasePath(String pFavouriteDbName) {
+		return getAppPath(pFavouriteDbName);
+	}
+
+	public File getFileStreamPath(String pFileToBackup) {
+		return getAppPath(pFileToBackup);
+	}
+
+	public FavouritesDbHelper getFavorites() {
+		if(mFavorites == null){
+			mFavorites = new FavouritesDbHelper(this);
+			mFavorites.loadFavorites();
+		}
+		return mFavorites;
 	}
 
 }

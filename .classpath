@@ -7,5 +7,7 @@
 	<classpathentry kind="lib" path="lib/gnu-trove-osmand.jar" sourcepath="lib/gnu-trove-osmand.jar"/>
 	<classpathentry kind="lib" path="lib/junidecode-0.1.jar"/>
 	<classpathentry kind="lib" path="lib/kxml2-2.3.0.jar" sourcepath="lib/kxml2-src-2.3.0.zip"/>
+	<classpathentry kind="lib" path="lib/jdbc-api-1.4.jar"/>
+	<classpathentry kind="lib" path="lib/bzip2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

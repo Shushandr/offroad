@@ -41,6 +41,7 @@ import net.osmand.data.RotatedTileBox;
 import net.osmand.data.RotatedTileBox.RotatedTileBoxBuilder;
 import net.osmand.plus.OsmandSettings;
 import net.osmand.plus.routing.RoutingHelper.IRouteInformationListener;
+import net.osmand.plus.views.FavoritesLayer;
 import net.osmand.plus.views.MapTextLayer;
 import net.osmand.plus.views.OsmandMapLayer;
 import net.osmand.plus.views.OsmandMapLayer.DrawSettings;
@@ -105,6 +106,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		mPoiLayer = new POIMapLayer(pWin);
 		addLayer(mPoiLayer, 3);
 		addLayer(new PointNavigationLayer(mContext), 4);
+		addLayer(new FavoritesLayer(), 5);
 		for (OsmandMapLayer layer : layers) {
 			layer.initLayer(this);
 		}

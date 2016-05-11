@@ -54,6 +54,8 @@
 				<include name="gnu-trove-osmand.jar"/>
 				<include name="junidecode-0.1.jar"/>
 				<include name="kxml2-2.3.0.jar"/>
+				<include name="bzip2.jar"/>
+				<include name="jdbc-api-1.4.jar"/>
 			</fileset>
 		</copy>
 		<tempfile prefix="manifest" property="temp.manifest.file"/>
