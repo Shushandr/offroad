@@ -1,6 +1,7 @@
 package net.osmand.plus.views;
 
 import java.awt.Color;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
@@ -25,7 +26,7 @@ import net.sourceforge.offroad.ui.PorterDuffMultiplyFilter;
 
 public class FavoritesLayer  extends OsmandMapLayer implements IContextMenuProvider, MapTextProvider<LocationPoint> {
 
-	public static final int DEFAULT_COLOR = 0xaabbcc;
+	public static final int DEFAULT_COLOR = 0x55aabbcc;
 	public static final int DEFAULT_OUTER_COLOR = 0x88555555;
 
 	protected int startZoom = 6;
@@ -113,9 +114,10 @@ public class FavoritesLayer  extends OsmandMapLayer implements IContextMenuProvi
 
 					if (intersects(boundIntersections, x, y, iconSize, iconSize)) {
 						int col = o.getColor() == 0 ? defaultColor : o.getColor();
-						canvas.setComposite(new PorterDuffMultiplyFilter(new Color(col, true)));
-						canvas.drawImage(pointSmall, x - pointSmall.getWidth() / 2, y - pointSmall.getHeight() / 2, null); //paintIcon
-						canvas.setComposite(null);
+						Graphics2D ng = (Graphics2D) canvas.create();
+						ng.setComposite(new PorterDuffMultiplyFilter(new Color(col, true)));
+						ng.drawImage(pointSmall, x - pointSmall.getWidth() / 2, y - pointSmall.getHeight() / 2, null); //paintIcon
+						ng.dispose();
 						smallObjectsLatLon.add(new LatLon(o.getLatitude(), o.getLongitude()));
 					} else {
 						fullObjects.add(o);

@@ -101,18 +101,19 @@ import net.osmand.router.GeneralRouter;
 import net.osmand.router.RoutingConfiguration;
 import net.osmand.router.RoutingConfiguration.Builder;
 import net.osmand.util.MapUtils;
+import net.sourceforge.offroad.actions.AddFavoriteAction;
 import net.sourceforge.offroad.actions.ClearRouteAction;
 import net.sourceforge.offroad.actions.DownloadAction;
 import net.sourceforge.offroad.actions.NavigationBackAction;
 import net.sourceforge.offroad.actions.NavigationForwardAction;
 import net.sourceforge.offroad.actions.NavigationRotationAction;
-import net.sourceforge.offroad.actions.OffRoadAction;
 import net.sourceforge.offroad.actions.OffRoadAction.OffRoadMenuItem;
 import net.sourceforge.offroad.actions.PoiFilterAction;
 import net.sourceforge.offroad.actions.PointNavigationAction;
 import net.sourceforge.offroad.actions.PointNavigationAction.HelperAction;
 import net.sourceforge.offroad.actions.RouteAction;
 import net.sourceforge.offroad.actions.SearchAddressAction;
+import net.sourceforge.offroad.actions.ShowFavoriteAction;
 import net.sourceforge.offroad.actions.ShowWikipediaAction;
 import net.sourceforge.offroad.data.QuadRectExtendable;
 import net.sourceforge.offroad.data.SQLiteImpl;
@@ -458,38 +459,15 @@ public class OsmWindow {
 			jPointOfInterestMenu.add(lPointOfInterestItem);
 		}
 		menubar.add(jPointOfInterestMenu);
-		// Favourites
-		JMenu jFavouritesMenu = new JMenu(getOffRoadString("offroad.Favourites")); //$NON-NLS-1$
-		JMenuItem lAddFavourite = new JMenuItem(new OffRoadAction(this){
-
-			@Override
-			public void actionPerformed(ActionEvent pE) {
-				LatLon pos = getCursorPosition();
-				getFavorites().addFavourite(new FavouritePoint(pos.getLatitude(), pos.getLongitude(), "Test", "CategoryBla"));
-			}
-
-			@Override
-			public void save() {
-			}});
-		lAddFavourite.setName(getOffRoadString("offroad.addFavourite"));
-		jFavouritesMenu.add(lAddFavourite);
+		// Favorites
+		JMenu jFavoritesMenu = new JMenu(getOffRoadString("offroad.Favorites")); //$NON-NLS-1$
+		JMenuItem lAddFavourite = new JMenuItem(new AddFavoriteAction(this, getOffRoadString("offroad.addFavorite"), null));
+		jFavoritesMenu.add(lAddFavourite);
 		for (FavouritePoint fp : getFavorites().getFavouritePoints()) {
-			JMenuItem lFavouritesItem = new JMenuItem(new OffRoadAction(this) {
-				
-				@Override
-				public void actionPerformed(ActionEvent pE) {
-					mContext.move(new LatLon(fp.getLatitude(), fp.getLongitude()), null);
-				}
-				
-				@Override
-				public void save() {
-					
-				}
-			});
-			lFavouritesItem.setName(fp.getName());
-			jFavouritesMenu.add(lFavouritesItem);
+			JMenuItem lFavoritesItem = new JMenuItem(new ShowFavoriteAction(this, fp));
+			jFavoritesMenu.add(lFavoritesItem);
 		}
-		menubar.add(jFavouritesMenu);
+		menubar.add(jFavoritesMenu);
 		
 		JPopupMenu popupMenu = new JPopupMenu();
 		popupMenu.add(new JMenuItem(new PointNavigationAction(this, "offroad.set_start_point",

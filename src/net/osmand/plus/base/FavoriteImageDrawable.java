@@ -36,7 +36,7 @@ public class FavoriteImageDrawable extends Drawable {
 		mLayer = pLayer;
 //		paintBackground = new Paint();
 //		paintBackground.setColorFilter(new PorterDuffColorFilter(col, PorterDuff.Mode.MULTIPLY));
-		int col = color == 0 || color == Color.BLACK.getRGB() ? FavoritesLayer.DEFAULT_COLOR : color;
+		int col = color == 0 ? FavoritesLayer.DEFAULT_COLOR : color;
 		paintBackground_Composite = new PorterDuffMultiplyFilter(new Color(col, true));
 //		paintIcon = new Paint();
 		favIcon = mLayer.readImage("map_favorite", ctx);

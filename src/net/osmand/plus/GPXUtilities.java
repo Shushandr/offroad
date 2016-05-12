@@ -63,7 +63,11 @@ public class GPXUtilities {
 		public int getColor(int defColor) {
 			if(extensions != null && extensions.containsKey("color")) {
 				try {
-					return Integer.parseInt(extensions.get("color").toUpperCase(), 16);
+					String colString = extensions.get("color").toUpperCase();
+					if(colString.startsWith("#")){
+						colString = colString.substring(1);
+					}
+					return Integer.parseInt(colString, 16);
 				} catch (IllegalArgumentException e) {
 					e.printStackTrace();
 				}

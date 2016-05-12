@@ -35,7 +35,6 @@ public class PorterDuffMultiplyFilter implements Composite {
 	                }
 				int width = Math.min(src.getWidth(), dstIn.getWidth());
 				int height = Math.min(src.getHeight(), dstIn.getHeight());
-
 				int[] srcPixels = new int[width];
 				byte[] srcPixelsByte = new byte[4*width];
 				int[] dstPixels = new int[width];
@@ -46,10 +45,10 @@ public class PorterDuffMultiplyFilter implements Composite {
 					} else {
 						src.getDataElements(0, y, width, 1, srcPixelsByte);
 						for (int i = 0; i < srcPixels.length; i++) {
-							srcPixels[i] = srcPixelsByte[i*4] 
-									+ srcPixelsByte[i*4+1] << 8
-									+ srcPixelsByte[i*4+2] << 16
-									+ srcPixelsByte[i*4+3] << 24
+							srcPixels[i] = srcPixelsByte[i*4+2] 
+									| srcPixelsByte[i*4+1] << 8
+									| srcPixelsByte[i*4] << 16
+									| srcPixelsByte[i*4+3] << 24
 									;
 						}
 					}
