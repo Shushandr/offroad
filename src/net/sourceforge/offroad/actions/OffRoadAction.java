@@ -93,7 +93,7 @@ public abstract class OffRoadAction extends AbstractAction {
 	public abstract void save();
 
 	protected String getResourceString(String pWindowTitle) {
-		return pWindowTitle;
+		return mContext.getOffRoadString(pWindowTitle);
 	}
 
 	public void createDialog() {
