@@ -155,16 +155,16 @@ public class MapRenderRepositories {
 			return false;
 		}
 		if (requestedBox == null) {
-			log.info("RENDER MAP: update due to start");
+			log.debug("RENDER MAP: update due to start");
 			return true;
 		}
 		if (drawSettings.isUpdateVectorRendering()) {
-			log.info("RENDER MAP: update due to request");
+			log.debug("RENDER MAP: update due to request");
 			return true;
 		}
 		if (requestedBox.getZoom() != box.getZoom() ||
 				requestedBox.getMapDensity() != box.getMapDensity()) {
-			log.info("RENDER MAP: update due zoom/map density");
+			log.debug("RENDER MAP: update due zoom/map density");
 			return true;
 		}
 
@@ -175,12 +175,12 @@ public class MapRenderRepositories {
 			deltaRotate += 360;
 		}
 		if (Math.abs(deltaRotate) > 25) {
-			log.info("RENDER MAP: update due to rotation");
+			log.debug("RENDER MAP: update due to rotation");
 			return true;
 		}
 		boolean upd = !requestedBox.containsTileBox(box);
 		if(upd) {
-			log.info("RENDER MAP: update due to tile box");
+			log.debug("RENDER MAP: update due to tile box");
 		}
 		return upd;
 	}
@@ -235,9 +235,9 @@ public class MapRenderRepositories {
 		}
 		cObjectsBox = dataBox;
 		cObjectsZoom = zoom;
-		log.info(String.format("BLat=%s, TLat=%s, LLong=%s, RLong=%s, zoom=%s", //$NON-NLS-1$
+		log.debug(String.format("BLat=%s, TLat=%s, LLong=%s, RLong=%s, zoom=%s", //$NON-NLS-1$
 				dataBox.bottom, dataBox.top, dataBox.left, dataBox.right, zoom));
-		log.info(String.format("Native search: %s ms ", System.currentTimeMillis() - now)); //$NON-NLS-1$
+		log.debug(String.format("Native search: %s ms ", System.currentTimeMillis() - now)); //$NON-NLS-1$
 		return true;
 	}
 
@@ -308,7 +308,7 @@ public class MapRenderRepositories {
 				});
 			}
 		} catch (IOException e) {
-			log.debug("Search failed " + c.getRegionNames(), e); //$NON-NLS-1$
+			log.error("Search failed " + c.getRegionNames(), e); //$NON-NLS-1$
 		}
 	}
 
@@ -353,7 +353,7 @@ public class MapRenderRepositories {
 					readRouteDataAsMapObjects(searchRequest, c, tempResult, ids);
 				}
 			}
-			log.info(String.format("Route objects %s", tempResult.size() +""));
+			log.debug(String.format("Route objects %s", tempResult.size() +""));
 		}
 
 		String coastlineTime = "";
@@ -400,9 +400,9 @@ public class MapRenderRepositories {
 
 
 		if (count[0] > 0) {
-			log.info(String.format("BLat=%s, TLat=%s, LLong=%s, RLong=%s, zoom=%s", //$NON-NLS-1$
+			log.debug(String.format("BLat=%s, TLat=%s, LLong=%s, RLong=%s, zoom=%s", //$NON-NLS-1$
 					cBottomLatitude, cTopLatitude, cLeftLongitude, cRightLongitude, zoom));
-			log.info(String.format("Searching: %s ms  %s (%s results found)", System.currentTimeMillis() - now, coastlineTime, count[0])); //$NON-NLS-1$
+			log.debug(String.format("Searching: %s ms  %s (%s results found)", System.currentTimeMillis() - now, coastlineTime, count[0])); //$NON-NLS-1$
 		}
 
 
@@ -459,7 +459,7 @@ public class MapRenderRepositories {
 				res = c.searchMapIndex(searchRequest);
 			} catch (IOException e) {
 				res = new ArrayList<BinaryMapDataObject>();
-				log.debug("Search failed " + c.getRegionNames(), e); //$NON-NLS-1$
+				log.error("Search failed " + c.getRegionNames(), e); //$NON-NLS-1$
 			}
 			if(res.size() > 0) {
 				if(basemap) {
@@ -540,7 +540,7 @@ public class MapRenderRepositories {
 		interrupted = false;
 		// prevent editing
 		requestedBox = new RotatedTileBox(tileRect);
-		log.info("RENDER MAP: new request " + tileRect ); 
+		log.debug("RENDER MAP: new request " + tileRect ); 
 		if (currentRenderingContext != null) {
 			currentRenderingContext = null;
 		}
@@ -680,7 +680,7 @@ public class MapRenderRepositories {
 			renderer.generateNewBitmap(currentRenderingContext, cObjects, pGraphics2d, renderingReq);
 			// Force to use rendering request in order to prevent Garbage Collector when it is used in C++
 			if(renderingReq != null){
-				log.info("Debug :" + renderingReq != null);				
+				log.debug("Debug :" + renderingReq != null);				
 			}
 			String renderingDebugInfo = currentRenderingContext.renderingDebugInfo;
 			currentRenderingContext.ended = true;

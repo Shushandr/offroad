@@ -464,7 +464,7 @@ public class OsmWindow {
 		menubar.add(jPointOfInterestMenu);
 		// Favorites
 		JMenu jFavoritesMenu = new JMenu(getOffRoadString("offroad.Favorites")); //$NON-NLS-1$
-		JMenuItem lAddFavourite = new JMenuItem(new AddFavoriteAction(this, getOffRoadString("offroad.addFavorite"), null));
+		JMenuItem lAddFavourite = new JMenuItem(new AddFavoriteAction(this, getOffRoadString("offroad.addFavorite"), null, null));
 		lAddFavourite.setAccelerator(KeyStroke.getKeyStroke("control D")); //$NON-NLS-1$
 		jFavoritesMenu.add(lAddFavourite);
 		for (FavoriteGroup	 fg : getFavorites().getFavoriteGroups()) {

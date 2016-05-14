@@ -22,6 +22,9 @@ package net.sourceforge.offroad.ui;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+
+import net.osmand.PlatformUtil;
 import net.osmand.data.RotatedTileBox;
 
 /**
@@ -29,6 +32,8 @@ import net.osmand.data.RotatedTileBox;
  * @date 26.04.2016
  */
 public class OffRoadUIThread implements Runnable {
+	private final static Log log = PlatformUtil.getLog(OffRoadUIThread.class);
+
 	
 	public interface OffRoadUIThreadListener {
 		public void threadStarted();
@@ -98,7 +103,7 @@ public class OffRoadUIThread implements Runnable {
 				e.printStackTrace();
 			}
 		}
-		System.out.println("THREAD:" + this + " should continue.");
+		log.debug("THREAD:" + this + " should continue.");
 		try {
 			runAfterThreadsBeforeHaveFinished();
 		} catch (Exception e) {
@@ -108,7 +113,7 @@ public class OffRoadUIThread implements Runnable {
 			mOsmBitmapPanel.setCurrentTileBox(getDestinationTileBox());
 		}
 		synchronized (this) {
-			System.out.println("THREAD:" + this + " Notify next threads...");
+			log.debug("THREAD:" + this + " Notify next threads...");
 			if (mNextThread != null) {
 				mNextThread.shouldContinue();
 			}

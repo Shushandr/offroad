@@ -15,6 +15,8 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import net.osmand.data.FavouritePoint;
 import net.osmand.data.LatLon;
@@ -26,7 +28,7 @@ import net.osmand.plus.MapMarkersHelper.MapMarkerChangedListener;
 import net.sourceforge.offroad.OsmWindow;
 import net.sourceforge.offroad.ui.FavoriteGroupRenderer;
 
-public class AddFavoriteAction extends OffRoadAction {
+public class AddFavoriteAction extends OffRoadAction implements DocumentListener {
 	private JTextField mNameTextField;
 	private JTextField mDescriptionTextField;
 	private JComboBox<FavoriteGroup> mComboBox;
@@ -34,9 +36,12 @@ public class AddFavoriteAction extends OffRoadAction {
 	private JCheckBox mNewGroupCheckBox;
 	private JTextField mGroupNameTextField;
 	private JColorChooser mGroupColorChooser;
+	private FavouritePoint mUpdatePoint;
+	private JButton mOkButton;
 
-	public AddFavoriteAction(OsmWindow pContext, String pName, Icon pIcon) {
+	public AddFavoriteAction(OsmWindow pContext, String pName, Icon pIcon, FavouritePoint pUpdatePoint) {
 		super(pContext, pName, pIcon);
+		mUpdatePoint = pUpdatePoint;
 	}
 
 	@Override
@@ -52,6 +57,7 @@ public class AddFavoriteAction extends OffRoadAction {
 		contentPane.add(new JLabel(getResourceString("offroad.favoriteName")), new GridBagConstraints(0, y, 1, 1, 1.0, 1.0,
 				GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 		mNameTextField = new JTextField();
+		mNameTextField.getDocument().addDocumentListener(this);
 		contentPane.add(mNameTextField, new GridBagConstraints(1, y++, 2, 1, 4.0, 1.0, GridBagConstraints.WEST,
 				GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
 		contentPane.add(new JLabel(getResourceString("offroad.favoriteDescription")), new GridBagConstraints(0, y, 1, 1, 1.0, 1.0,
@@ -74,10 +80,10 @@ public class AddFavoriteAction extends OffRoadAction {
 		contentPane.add(mNewGroupCheckBox, new GridBagConstraints(1, y++, 2, 1, 4.0, 1.0, GridBagConstraints.WEST,
 				GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
 		mNewGroupCheckBox.addActionListener(t -> toggleNewGroup());
-
 		contentPane.add(new JLabel(getResourceString("offroad.favoriteGroupName")), new GridBagConstraints(0, y, 1, 1, 1.0, 1.0,
 				GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 		mGroupNameTextField = new JTextField();
+		mGroupNameTextField.getDocument().addDocumentListener(this);
 		contentPane.add(mGroupNameTextField, new GridBagConstraints(1, y++, 2, 1, 4.0, 1.0, GridBagConstraints.WEST,
 				GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
 
@@ -88,40 +94,57 @@ public class AddFavoriteAction extends OffRoadAction {
 				GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
 		
 		
-		JButton okButton = new JButton(getResourceString("offroad.addFavoriteOK"));
-		contentPane.add(okButton, new GridBagConstraints(2, y, 1, 1, 1.0, 1.0,
+		mOkButton = new JButton(getResourceString("offroad.addFavoriteOK"));
+		contentPane.add(mOkButton, new GridBagConstraints(2, y, 1, 1, 1.0, 1.0,
 				GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(10, 10, 0, 0), 0, 0));
-		okButton.addActionListener(t -> terminate(true));
+		mOkButton.addActionListener(t -> terminate(true));
 		JButton cancelButton = new JButton(getResourceString("offroad.addFavoriteCancel"));
 		cancelButton.addActionListener(t -> terminate(false));
 		contentPane.add(cancelButton, new GridBagConstraints(1, y, 1, 1, 1.0, 1.0,
 				GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(10, 10, 0, 0), 0, 0));
+		mNewGroupCheckBox.setSelected(mComboBoxModel.getSize()==0);
 		toggleNewGroup();
 		
-		// fill with values:
-		
-		final MapMarkersHelper helper = mContext.getMapMarkersHelper();
-		LatLon position = mContext.getCursorPosition();
-		PointDescription pointDescription = new PointDescription(PointDescription.POINT_TYPE_LOCATION, "");
-		helper.addListener(new MapMarkerChangedListener() {
-			
-			@Override
-			public void onMapMarkersChanged() {
-			}
-			
-			@Override
-			public void onMapMarkerChanged(final MapMarker pMapMarker) {
-				// FIXME: I don't know, if this is the right map-marker...
-				MapMarkerChangedListener inst = this;
-				SwingUtilities.invokeLater(new Runnable() {
-					public void run() {
-						helper.removeListener(inst);
-						mNameTextField.setText(pMapMarker.getPointDescription(mContext).getName());
+		if(mUpdatePoint != null){
+			// fill with values:
+			mNameTextField.setText(mUpdatePoint.getName());
+			mDescriptionTextField.setText(mUpdatePoint.getDescription());
+			mGroupColorChooser.setColor(mUpdatePoint.getColor());
+			mGroupNameTextField.setText(mUpdatePoint.getCategory());
+			// find category in combo:
+			for (int i = 0; i < mComboBoxModel.getSize(); ++i){
+				FavoriteGroup fg = mComboBoxModel.getElementAt(i);
+				if(fg.name != null && fg.name.equals(mUpdatePoint.getCategory())){
+					if(fg.color == mUpdatePoint.getColor()){
+						mComboBox.setSelectedIndex(i);
+						break;
 					}
-				});
+				}
 			}
-		});
-		helper.addMapMarker(position, null);
+		} else {
+			final MapMarkersHelper helper = mContext.getMapMarkersHelper();
+			LatLon position = mContext.getCursorPosition();
+			helper.addListener(new MapMarkerChangedListener() {
+				
+				@Override
+				public void onMapMarkersChanged() {
+				}
+				
+				@Override
+				public void onMapMarkerChanged(final MapMarker pMapMarker) {
+					// FIXME: I don't know, if this is the right map-marker...
+					MapMarkerChangedListener inst = this;
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							helper.removeListener(inst);
+							mNameTextField.setText(pMapMarker.getPointDescription(mContext).getName());
+						}
+					});
+				}
+			});
+			helper.addMapMarker(position, null);
+		}
+		mOkButton.setEnabled(false);
 		mDialog.pack();
 		mDialog.setVisible(true);
 
@@ -132,11 +155,11 @@ public class AddFavoriteAction extends OffRoadAction {
 		mGroupNameTextField.setEnabled(sel);
 		mGroupColorChooser.setEnabled(sel);
 		mComboBox.setEnabled(!sel);
+		validate();
 	}
 
 	private void terminate(boolean pSaveResults) {
 		if (pSaveResults) {
-			// FIXME: Validierung1!
 			LatLon pos = mContext.getCursorPosition();
 			String groupName;
 			if (mNewGroupCheckBox.isSelected()) {
@@ -156,5 +179,28 @@ public class AddFavoriteAction extends OffRoadAction {
 
 	@Override
 	public void save() {
+	}
+
+	@Override
+	public void insertUpdate(DocumentEvent pE) {
+		validate();
+	}
+
+	@Override
+	public void removeUpdate(DocumentEvent pE) {
+		validate();
+	}
+
+	private void validate() {
+		if(mNameTextField.getText().length()>0 && (!mNewGroupCheckBox.isSelected() || mGroupNameTextField.getText().length()>0)){
+			mOkButton.setEnabled(true);
+		} else {
+			mOkButton.setEnabled(false);
+		}
+	}
+
+	@Override
+	public void changedUpdate(DocumentEvent pE) {
+		validate();
 	}
 }
