@@ -59,44 +59,46 @@ public class AddFavoriteAction extends OffRoadAction implements DocumentListener
 		mNameTextField = new JTextField();
 		mNameTextField.getDocument().addDocumentListener(this);
 		contentPane.add(mNameTextField, new GridBagConstraints(1, y++, 2, 1, 4.0, 1.0, GridBagConstraints.WEST,
-				GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
+				GridBagConstraints.HORIZONTAL, new Insets(0, 10, 0, 0), 0, 0));
 		contentPane.add(new JLabel(getResourceString("offroad.favoriteDescription")), new GridBagConstraints(0, y, 1, 1, 1.0, 1.0,
 				GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 		mDescriptionTextField = new JTextField();
 		contentPane.add(mDescriptionTextField, new GridBagConstraints(1, y++, 2, 1, 4.0, 1.0, GridBagConstraints.WEST,
-				GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
+				GridBagConstraints.HORIZONTAL, new Insets(0, 10, 0, 0), 0, 0));
+		contentPane.add(new JLabel(getResourceString("offroad.favoriteGroup")), new GridBagConstraints(0, y, 1, 1, 1.0, 1.0,
+				GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 		mComboBox = new JComboBox<FavoriteGroup>();
 		mComboBoxModel = new DefaultComboBoxModel<FavoriteGroup>();
 		for (FavoriteGroup filter : mContext.getFavorites().getFavoriteGroups()) {
 			mComboBoxModel.addElement(filter);
 		}
 		mComboBox.setModel(mComboBoxModel);
-		mComboBox.setFocusable(false);
+		mComboBox.setFocusable(true);
 		mComboBox.setRenderer(new FavoriteGroupRenderer());
-		contentPane.add(mComboBox, new GridBagConstraints(1, y++, 2, 1, 0, 0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+		contentPane.add(mComboBox, new GridBagConstraints(1, y++, 2, 1, 0, 0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 10, 0, 0), 0, 0));
 		contentPane.add(new JLabel(getResourceString("offroad.favoriteNewGroup")), new GridBagConstraints(0, y, 1, 1, 1.0, 1.0,
-				GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+				GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(10, 0, 0, 0), 0, 0));
 		mNewGroupCheckBox = new JCheckBox();
 		contentPane.add(mNewGroupCheckBox, new GridBagConstraints(1, y++, 2, 1, 4.0, 1.0, GridBagConstraints.WEST,
-				GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
+				GridBagConstraints.HORIZONTAL, new Insets(0, 10, 0, 0), 0, 0));
 		mNewGroupCheckBox.addActionListener(t -> toggleNewGroup());
 		contentPane.add(new JLabel(getResourceString("offroad.favoriteGroupName")), new GridBagConstraints(0, y, 1, 1, 1.0, 1.0,
 				GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 		mGroupNameTextField = new JTextField();
 		mGroupNameTextField.getDocument().addDocumentListener(this);
 		contentPane.add(mGroupNameTextField, new GridBagConstraints(1, y++, 2, 1, 4.0, 1.0, GridBagConstraints.WEST,
-				GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
+				GridBagConstraints.HORIZONTAL, new Insets(0, 10, 0, 0), 0, 0));
 
 		contentPane.add(new JLabel(getResourceString("offroad.favoriteGroupColor")), new GridBagConstraints(0, y, 1, 1, 1.0, 1.0,
 				GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 		mGroupColorChooser = new JColorChooser();
 		contentPane.add(mGroupColorChooser, new GridBagConstraints(1, y++, 2, 1, 4.0, 1.0, GridBagConstraints.WEST,
-				GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
+				GridBagConstraints.HORIZONTAL, new Insets(0, 10, 0, 0), 0, 0));
 		
 		
 		mOkButton = new JButton(getResourceString("offroad.addFavoriteOK"));
 		contentPane.add(mOkButton, new GridBagConstraints(2, y, 1, 1, 1.0, 1.0,
-				GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(10, 10, 0, 0), 0, 0));
+				GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(10, 10, 0, 0), 0, 0));
 		mOkButton.addActionListener(t -> terminate(true));
 		JButton cancelButton = new JButton(getResourceString("offroad.addFavoriteCancel"));
 		cancelButton.addActionListener(t -> terminate(false));
