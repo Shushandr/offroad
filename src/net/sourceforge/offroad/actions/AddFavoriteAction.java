@@ -14,10 +14,15 @@ import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 
 import net.osmand.data.FavouritePoint;
 import net.osmand.data.LatLon;
+import net.osmand.data.PointDescription;
 import net.osmand.plus.FavouritesDbHelper.FavoriteGroup;
+import net.osmand.plus.MapMarkersHelper;
+import net.osmand.plus.MapMarkersHelper.MapMarker;
+import net.osmand.plus.MapMarkersHelper.MapMarkerChangedListener;
 import net.sourceforge.offroad.OsmWindow;
 import net.sourceforge.offroad.ui.FavoriteGroupRenderer;
 
@@ -75,24 +80,48 @@ public class AddFavoriteAction extends OffRoadAction {
 		mGroupNameTextField = new JTextField();
 		contentPane.add(mGroupNameTextField, new GridBagConstraints(1, y++, 2, 1, 4.0, 1.0, GridBagConstraints.WEST,
 				GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
-		mGroupNameTextField.setEnabled(false);
 
 		contentPane.add(new JLabel(getResourceString("offroad.favoriteGroupColor")), new GridBagConstraints(0, y, 1, 1, 1.0, 1.0,
 				GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 		mGroupColorChooser = new JColorChooser();
 		contentPane.add(mGroupColorChooser, new GridBagConstraints(1, y++, 2, 1, 4.0, 1.0, GridBagConstraints.WEST,
 				GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
-		mGroupColorChooser.setEnabled(false);
 		
 		
 		JButton okButton = new JButton(getResourceString("offroad.addFavoriteOK"));
 		contentPane.add(okButton, new GridBagConstraints(2, y, 1, 1, 1.0, 1.0,
-				GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+				GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(10, 10, 0, 0), 0, 0));
 		okButton.addActionListener(t -> terminate(true));
 		JButton cancelButton = new JButton(getResourceString("offroad.addFavoriteCancel"));
 		cancelButton.addActionListener(t -> terminate(false));
 		contentPane.add(cancelButton, new GridBagConstraints(1, y, 1, 1, 1.0, 1.0,
-				GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+				GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(10, 10, 0, 0), 0, 0));
+		toggleNewGroup();
+		
+		// fill with values:
+		
+		final MapMarkersHelper helper = mContext.getMapMarkersHelper();
+		LatLon position = mContext.getCursorPosition();
+		PointDescription pointDescription = new PointDescription(PointDescription.POINT_TYPE_LOCATION, "");
+		helper.addListener(new MapMarkerChangedListener() {
+			
+			@Override
+			public void onMapMarkersChanged() {
+			}
+			
+			@Override
+			public void onMapMarkerChanged(final MapMarker pMapMarker) {
+				// FIXME: I don't know, if this is the right map-marker...
+				MapMarkerChangedListener inst = this;
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						helper.removeListener(inst);
+						mNameTextField.setText(pMapMarker.getPointDescription(mContext).getName());
+					}
+				});
+			}
+		});
+		helper.addMapMarker(position, null);
 		mDialog.pack();
 		mDialog.setVisible(true);
 

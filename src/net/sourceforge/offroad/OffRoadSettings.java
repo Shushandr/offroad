@@ -135,7 +135,7 @@ final class OffRoadSettings implements SettingsAPI {
 	@Override
 	public String getString(Object pPref, String pKey, String pDefValue) {
 		String res = getPreferences(pPref).getProperty(pKey, pDefValue);
-		System.out.println("PREFS: " + pKey + "="+res);
+//		System.out.println("PREFS: " + pKey + "="+res);
 		return res;
 	}
 

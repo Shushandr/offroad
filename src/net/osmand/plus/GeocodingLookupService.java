@@ -119,71 +119,69 @@ public class GeocodingLookupService {
 		Location loc = new Location("");
 		loc.setLatitude(latLon.getLatitude());
 		loc.setLongitude(latLon.getLongitude());
-		// FIXME: Implement?
-		return false;
-//		return app.getLocationProvider()
-//				.getGeocodingResult(loc, new ResultMatcher<GeocodingResult>() {
-//
-//					@Override
-//					public boolean publish(GeocodingResult object) {
-//						String result = null;
-//						if (object != null) {
-//							OsmandSettings settings = app.getSettings();
-//							String lang = settings.MAP_PREFERRED_LOCALE.get();
-//							String geocodingResult = "";
-//							double relevantDistance = -1;
-//
-//							if (object.building != null) {
-//								String bldName = object.building.getName(lang);
-//								if (!Algorithms.isEmpty(object.buildingInterpolation)) {
-//									bldName = object.buildingInterpolation;
-//								}
-//								geocodingResult = object.street.getName(lang) + " " + bldName + ", "
-//										+ object.city.getName(lang);
-//							} else if (object.street != null) {
-//								geocodingResult = object.street.getName(lang) + ", " + object.city.getName(lang);
-//								relevantDistance = object.getDistanceP();
-//							} else if (object.city != null) {
-//								geocodingResult = object.city.getName(lang);
-//							} else if (object.point != null) {
-//								RouteDataObject rd = object.point.getRoad();
-//								String sname = rd.getName(lang);
-//								if (Algorithms.isEmpty(sname)) {
-//									sname = "";
-//								}
-//								String ref = rd.getRef();
-//								if (!Algorithms.isEmpty(ref)) {
-//									if (!Algorithms.isEmpty(sname)) {
-//										sname += ", ";
-//									}
-//									sname += ref;
-//								}
-//								geocodingResult = sname;
-//								relevantDistance = object.getDistanceP();
-//							}
-//
-//							result = geocodingResult;
-//							if (relevantDistance == -1) {
-//								relevantDistance = object.getDistance();
-//							}
-//
-//							if (!Algorithms.isEmpty(result) && relevantDistance > 100) {
-//								result = app.getString(R.string.shared_string_near) + " " + result;
-//							}
-//						}
-//
-//						lastFoundAddress = result;
-//						searchDone = true;
-//
-//						return true;
-//					}
-//
-//					@Override
-//					public boolean isCancelled() {
-//						return !hasAnyRequest(latLon);
-//					}
-//
-//				});
+		return app.getLocationProvider()
+				.getGeocodingResult(loc, new ResultMatcher<GeocodingResult>() {
+
+					@Override
+					public boolean publish(GeocodingResult object) {
+						String result = null;
+						if (object != null) {
+							OsmandSettings settings = app.getSettings();
+							String lang = settings.MAP_PREFERRED_LOCALE.get();
+							String geocodingResult = "";
+							double relevantDistance = -1;
+
+							if (object.building != null) {
+								String bldName = object.building.getName(lang);
+								if (!Algorithms.isEmpty(object.buildingInterpolation)) {
+									bldName = object.buildingInterpolation;
+								}
+								geocodingResult = object.street.getName(lang) + " " + bldName + ", "
+										+ object.city.getName(lang);
+							} else if (object.street != null) {
+								geocodingResult = object.street.getName(lang) + ", " + object.city.getName(lang);
+								relevantDistance = object.getDistanceP();
+							} else if (object.city != null) {
+								geocodingResult = object.city.getName(lang);
+							} else if (object.point != null) {
+								RouteDataObject rd = object.point.getRoad();
+								String sname = rd.getName(lang);
+								if (Algorithms.isEmpty(sname)) {
+									sname = "";
+								}
+								String ref = rd.getRef();
+								if (!Algorithms.isEmpty(ref)) {
+									if (!Algorithms.isEmpty(sname)) {
+										sname += ", ";
+									}
+									sname += ref;
+								}
+								geocodingResult = sname;
+								relevantDistance = object.getDistanceP();
+							}
+
+							result = geocodingResult;
+							if (relevantDistance == -1) {
+								relevantDistance = object.getDistance();
+							}
+
+							if (!Algorithms.isEmpty(result) && relevantDistance > 100) {
+								result = app.getString(R.string.shared_string_near) + " " + result;
+							}
+						}
+
+						lastFoundAddress = result;
+						searchDone = true;
+
+						return true;
+					}
+
+					@Override
+					public boolean isCancelled() {
+						return !hasAnyRequest(latLon);
+					}
+
+				});
 	}
 
 	private class AddressLookupRequestsAsyncTask extends Thread {

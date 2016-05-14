@@ -28,10 +28,8 @@ import java.net.URLClassLoader;
 import java.text.MessageFormat;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Properties;
 import java.util.PropertyResourceBundle;
 import java.util.Vector;
@@ -63,7 +61,6 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.commons.logging.Log;
-import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import net.osmand.IProgress;
@@ -81,7 +78,10 @@ import net.osmand.osm.MapPoiTypes;
 import net.osmand.osm.PoiType;
 import net.osmand.plus.ApplicationMode;
 import net.osmand.plus.FavouritesDbHelper;
+import net.osmand.plus.FavouritesDbHelper.FavoriteGroup;
 import net.osmand.plus.GeocodingLookupService;
+import net.osmand.plus.MapMarkersHelper;
+import net.osmand.plus.OsmAndLocationProvider;
 import net.osmand.plus.OsmandSettings;
 import net.osmand.plus.TargetPointsHelper;
 import net.osmand.plus.api.SQLiteAPI;
@@ -96,7 +96,6 @@ import net.osmand.plus.resources.ResourceManager;
 import net.osmand.plus.routing.RoutingHelper;
 import net.osmand.plus.views.POIMapLayer;
 import net.osmand.render.RenderingRulesStorage;
-import net.osmand.render.RenderingRulesStorage.RenderingRulesStorageResolver;
 import net.osmand.router.GeneralRouter;
 import net.osmand.router.RoutingConfiguration;
 import net.osmand.router.RoutingConfiguration.Builder;
@@ -253,6 +252,7 @@ public class OsmWindow {
 	private JPanel mStatusBar;
 	private PoiFiltersHelper mPoiFilters;
 	private AmenityTablePanel mAmenityTable;
+	private MapMarkersHelper mMapMarkersHelper;
 
 
 	private JToolBar mToolBar;
@@ -268,6 +268,9 @@ public class OsmWindow {
 
 
 	private FavouritesDbHelper mFavorites;
+
+
+	private OsmAndLocationProvider mOsmAndLocationProvider;
 
 	public void createAndShowUI() {
 		mDrawPanel = new OsmBitmapPanel(this);
@@ -418,7 +421,7 @@ public class OsmWindow {
 		JMenu jDownloadMenu = new JMenu(getOffRoadString("offroad.download")); //$NON-NLS-1$
 		JMenuItem lDownloadItem = new JMenuItem(getOffRoadString("offroad.string11")); //$NON-NLS-1$
 		lDownloadItem.addActionListener(new DownloadAction(this));
-		lDownloadItem.setAccelerator(KeyStroke.getKeyStroke("control D")); //$NON-NLS-1$
+		lDownloadItem.setAccelerator(KeyStroke.getKeyStroke("control G")); //$NON-NLS-1$
 		jDownloadMenu.add(lDownloadItem);
 		menubar.add(jDownloadMenu);
 		// View
@@ -462,10 +465,15 @@ public class OsmWindow {
 		// Favorites
 		JMenu jFavoritesMenu = new JMenu(getOffRoadString("offroad.Favorites")); //$NON-NLS-1$
 		JMenuItem lAddFavourite = new JMenuItem(new AddFavoriteAction(this, getOffRoadString("offroad.addFavorite"), null));
+		lAddFavourite.setAccelerator(KeyStroke.getKeyStroke("control D")); //$NON-NLS-1$
 		jFavoritesMenu.add(lAddFavourite);
-		for (FavouritePoint fp : getFavorites().getFavouritePoints()) {
-			JMenuItem lFavoritesItem = new JMenuItem(new ShowFavoriteAction(this, fp));
-			jFavoritesMenu.add(lFavoritesItem);
+		for (FavoriteGroup	 fg : getFavorites().getFavoriteGroups()) {
+			JMenu groupMenu = new JMenu(fg.name);
+			for (FavouritePoint fp : fg.points) {
+				JMenuItem lFavoritesItem = new JMenuItem(new ShowFavoriteAction(this, fp));
+				groupMenu.add(lFavoritesItem);
+			}
+			jFavoritesMenu.add(groupMenu);
 		}
 		menubar.add(jFavoritesMenu);
 		
@@ -560,6 +568,7 @@ public class OsmWindow {
 		widthPixels = size.width;
 		heightPixels = size.height;
 		density = java.awt.Toolkit.getDefaultToolkit().getScreenResolution()/96f;
+		mOsmAndLocationProvider = new OsmAndLocationProvider(this);
 		mRegions = new OsmandRegions();
 		mResourceManager = new ResourceManager(this);
 		mResourceManager.indexingMaps(IProgress.EMPTY_PROGRESS);
@@ -586,6 +595,7 @@ public class OsmWindow {
 				return getString("poi_" + type.getIconKeyName());
 			}
 		});
+		mMapMarkersHelper = new MapMarkersHelper(this);
 	}
 
 
@@ -890,6 +900,10 @@ public class OsmWindow {
 		return mTargetPointsHelper;
 	}
 
+	public MapMarkersHelper getMapMarkersHelper() {
+		return mMapMarkersHelper;
+	}
+	
 	public RoutingHelper getRoutingHelper() {
 		return mRoutingHelper;
 	}
@@ -898,8 +912,8 @@ public class OsmWindow {
 		return mGeocodingLookupService;
 	}
 
-	public Object getLocationProvider() {
-		return null;
+	public OsmAndLocationProvider getLocationProvider() {
+		return mOsmAndLocationProvider;
 	}
 
 	public MapPoiTypes getPoiTypes() {

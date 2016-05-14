@@ -36,6 +36,9 @@ import javax.swing.WindowConstants;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
+import org.apache.commons.logging.Log;
+
+import net.osmand.PlatformUtil;
 import net.sourceforge.offroad.OsmWindow;
 
 /**
@@ -43,6 +46,7 @@ import net.sourceforge.offroad.OsmWindow;
  * @date 09.04.2016
  */
 public abstract class OffRoadAction extends AbstractAction {
+	protected final static Log log = PlatformUtil.getLog(OffRoadAction.class);
 
 	public interface SelectableAction {
 
