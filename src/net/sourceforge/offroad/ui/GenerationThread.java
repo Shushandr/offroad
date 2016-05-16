@@ -18,7 +18,7 @@ class GenerationThread extends OffRoadUIThread {
 	GenerationThread(OsmBitmapPanel pOsmBitmapPanel, RotatedTileBox pTileCopy, ScreenManipulation pManipulation) {
 		super(pOsmBitmapPanel);
 		mTileCopy = pTileCopy;
-		mManipulation = new ScreenManipulation(pManipulation);
+		mManipulation = (pManipulation==null)?null:new ScreenManipulation(pManipulation);
 	}
 
 	@Override
@@ -32,7 +32,11 @@ class GenerationThread extends OffRoadUIThread {
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-				mOsmBitmapPanel.addScreenManipulation(mManipulation.negate());
+				if (mManipulation==null) {
+					mOsmBitmapPanel.resetManipulation();
+				} else {
+					mOsmBitmapPanel.addScreenManipulation(mManipulation.negate());
+				}
 				mOsmBitmapPanel.setImage(mNewBitmap);
 			}
 		});

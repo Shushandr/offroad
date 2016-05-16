@@ -26,8 +26,8 @@ class MoveAnimationThread extends OffRoadUIThread {
 
 	ScreenManipulation getScreenManipulation(int it) {
 		ScreenManipulation sm = new ScreenManipulation();
-		sm.originX = -(int) mDeltaX  / it;
-		sm.originY = -(int) mDeltaY  / it;
+		sm.originX = -mDeltaX  / it;
+		sm.originY = -mDeltaY  / it;
 		return sm;
 	}
 	

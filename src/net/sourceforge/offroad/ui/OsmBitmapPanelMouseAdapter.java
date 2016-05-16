@@ -14,6 +14,7 @@ import javax.swing.Timer;
 import org.apache.commons.logging.Log;
 
 import net.osmand.PlatformUtil;
+import net.osmand.data.LatLon;
 import net.osmand.data.RotatedTileBox;
 import net.sourceforge.offroad.OsmWindow;
 import net.sourceforge.offroad.ui.OsmBitmapPanel.ScreenManipulation;
@@ -54,8 +55,9 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 	}
 	
 	private OsmBitmapPanel drawPanel;
-	private Point startPoint;
-	private Point lastDragPoint;
+	private LatLon startPoint;
+	private LatLon lastDragPoint;
+	private Point deltaPoint;
 	private Timer mZoomTimer;
 	private ZoomPerformer mZoomPerformer;
 	private Timer mRotateTimer;
@@ -74,15 +76,6 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 		mRotateTimer.setRepeats(false);
 	}
 
-	@Override
-	public void mousePressed(MouseEvent e) {
-		if(isPopup(e)){
-			return;
-		}
-		startPoint = e.getPoint();
-		lastDragPoint = e.getPoint();
-	}
-
 	public ZoomPerformer getZoomPerformer() {
 		return mZoomPerformer;
 	}
@@ -90,34 +83,47 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 	public boolean isPopup(MouseEvent e) {
 		return e.getButton() != MouseEvent.BUTTON1;
 	}
-
+	
 	@Override
-	public void mouseReleased(MouseEvent e) {
+	public void mousePressed(MouseEvent e) {
 		if(isPopup(e)){
 			return;
 		}
-		int delx = e.getX() - startPoint.x;
-		int dely = e.getY() - startPoint.y;
-		if(delx == 0 && dely == 0){
-			return;
-		}
-		drawPanel.moveImage(-delx, -dely, new ScreenManipulation(0f, delx, dely, 0d));
-		startPoint = null;
+		startPoint = getLatLon(e);
+		lastDragPoint = startPoint;
+		deltaPoint = new Point(0,0);
+	}
+
+	LatLon getLatLon(MouseEvent e) {
+		return drawPanel.getCurrentTileBox().getLatLonFromPixel(e.getPoint().x, e.getPoint().y);
 	}
 
 	@Override
 	public void mouseDragged(MouseEvent e) {
 		// no button is pressed in that event. !?!
-//		if(isPopup(e)){
-//			return;
-//		}
 		if(startPoint == null){
 			return;
 		}
 		Point point = new Point(e.getPoint());
-		point.translate(-lastDragPoint.x, -lastDragPoint.y);
-		lastDragPoint = e.getPoint();
+		int lastX = -(int) drawPanel.getCurrentTileBox().getPixXFromLatLon(lastDragPoint);
+		int lastY = -(int) drawPanel.getCurrentTileBox().getPixYFromLatLon(lastDragPoint);
+		point.translate(lastX, lastY);
+		deltaPoint.translate(point.x, point.y);
+		lastDragPoint = getLatLon(e);
 		drawPanel.dragImage(point);
+	}
+	
+	@Override
+	public void mouseReleased(MouseEvent e) {
+		if(isPopup(e)){
+			return;
+		}
+		float startX = drawPanel.getCurrentTileBox().getPixXFromLatLon(startPoint);
+		float startY = drawPanel.getCurrentTileBox().getPixYFromLatLon(startPoint);
+		float delx = e.getX() - startX;
+		float dely = e.getY() - startY;
+		drawPanel.moveImage(-delx, -dely, new ScreenManipulation(0f, deltaPoint.x, deltaPoint.y, 0d));
+		startPoint = null;
 	}
 
 	@Override

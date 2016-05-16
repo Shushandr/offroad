@@ -603,6 +603,13 @@ public class RotatedTileBox {
 		return true;
 	}
 
+	public float getPixXFromLatLon(LatLon pLatLon) {
+		return getPixXFromLatLon(pLatLon.getLatitude(), pLatLon.getLongitude());
+	}
+	public float getPixYFromLatLon(LatLon pLatLon) {
+		return getPixYFromLatLon(pLatLon.getLatitude(), pLatLon.getLongitude());
+	}
+
 
 	
 	

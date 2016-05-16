@@ -33,8 +33,8 @@ class ZoomAnimationThread extends OffRoadUIThread {
 		ScreenManipulation sm = new ScreenManipulation();
 		sm.scale = delta;
 		// this is not correct. involve the size of the image.
-		sm.originX = (int) (mNewCenter.x * (1f-dest) / it);
-		sm.originY = (int) (mNewCenter.y * (1f-dest) / it);
+		sm.originX = (mNewCenter.x * (1f-dest) / it);
+		sm.originY = (mNewCenter.y * (1f-dest) / it);
 		return sm;
 	}
 	

@@ -54,17 +54,18 @@ import net.sourceforge.offroad.OsmWindow;
 @SuppressWarnings("serial")
 public class OsmBitmapPanel extends JPanel implements IRouteInformationListener {
 	public static class ScreenManipulation {
+		public final float NEAR_ZERO=0.00001f;
 		public float scale = 0f;
-		public int originX = 0;
-		public int originY = 0;
-		public double mRotation = 0;
+		public float originX = 0;
+		public float originY = 0;
+		public double rotation = 0;
 
-		public ScreenManipulation(float pScale, int pOriginX, int pOriginY, double pRotation) {
+		public ScreenManipulation(float pScale, float pOriginX, float pOriginY, double pRotation) {
 			super();
 			scale = pScale;
 			originX = pOriginX;
 			originY = pOriginY;
-			mRotation = pRotation;
+			rotation = pRotation;
 		}
 		public ScreenManipulation(ScreenManipulation pOther){
 			this();
@@ -72,32 +73,49 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 				this.scale = pOther.scale;
 				this.originX = pOther.originX;
 				this.originY = pOther.originY;
-				this.mRotation = pOther.mRotation;
+				this.rotation = pOther.rotation;
 			}
 		}
 		public ScreenManipulation() {
-			scale = 0f;
-			originX = 0;
-			originY = 0;
-			mRotation = 0;
+			reset();
 		}
 		public ScreenManipulation negate(){
 			this.scale = -scale;
 			this.originX = -originX;
 			this.originY = -originY;
-			this.mRotation = -mRotation;
+			this.rotation = -rotation;
 			return this;
 		}
 		public void add(ScreenManipulation pSMDelta) {
 			this.scale += pSMDelta.scale;
 			this.originX += pSMDelta.originX;
 			this.originY += pSMDelta.originY;
-			this.mRotation += pSMDelta.mRotation;
+			this.rotation += pSMDelta.rotation;
 		}
 		@Override
 		public String toString() {
 			return "ScreenManipulation [scale=" + scale + ", originX=" + originX + ", originY=" + originY
-					+ ", mRotation=" + mRotation + "]";
+					+ ", mRotation=" + rotation + "]";
+		}
+		public void roundLittleNumbers() {
+			if(Math.abs(scale) < NEAR_ZERO){
+				scale = 0f;
+			}
+			if(Math.abs(originX) < NEAR_ZERO){
+				originX = 0f;
+			}
+			if(Math.abs(originY) < NEAR_ZERO){
+				originY = 0f;
+			}
+			if(Math.abs(rotation) < NEAR_ZERO){
+				rotation = 0f;
+			}
+		}
+		public void reset() {
+			scale = 0f;
+			originX = 0;
+			originY = 0;
+			rotation = 0;
 		}
 	};
 	private static final int INACTIVITY_TIME_IN_MILLISECONDS = 2000;
@@ -204,7 +222,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		super.paintComponent(g);
 		Graphics2D gd2 = (Graphics2D) g;
 		Graphics2D g2 = createGraphics(gd2);
-		g2.rotate(mManipulation.mRotation, getWidth() / 2, getHeight() / 2);
+		g2.rotate(mManipulation.rotation, getWidth() / 2, getHeight() / 2);
 		g2.translate(mManipulation.originX, mManipulation.originY);
 		float globalScale = 1f+mManipulation.scale;
 		g2.scale(globalScale, globalScale);
@@ -500,12 +518,12 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		RotatedTileBox tb = copyLatestTileBox();
 		tb.setRotate((float) (pDegrees) + tb.getRotate());
 		ScreenManipulation sm = new ScreenManipulation();
-		sm.mRotation = Math.toRadians((float) (pDegrees));
+		sm.rotation = Math.toRadians((float) (pDegrees));
 		queue(new GenerationThread(this, tb, sm));
 	}
 
 	public void directRotateIncrement(double pDegrees) {
-		mManipulation.mRotation += Math.toRadians(pDegrees);
+		mManipulation.rotation += Math.toRadians(pDegrees);
 		repaint();
 	}
 
@@ -605,7 +623,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		QuadPoint centerPixelPoint = getTileBox().getCenterPixelPoint();
 		float x = -(float)(centerPixelPoint.x - size.getWidth()/2f);
 		float y = -(float)(centerPixelPoint.y - size.getHeight()/2f);
-		ScreenManipulation sm = new ScreenManipulation(0f, (int)x, (int)y, 0d);
+		ScreenManipulation sm = new ScreenManipulation(0f, x, y, 0d);
 		addScreenManipulation(sm);
 		repaint();
 		drawLater(sm);
@@ -654,7 +672,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 						it.remove();
 					}
 				}
-				log.info("After setting a new tile box we have " + mImageStore.size() + " cache entries.");
+				log.debug("After setting a new tile box we have " + mImageStore.size() + " cache entries.");
 			}
 		}
 		
@@ -695,7 +713,12 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 
 	public void addScreenManipulation(ScreenManipulation pScreenManipulation) {
 		mManipulation.add(pScreenManipulation);
-		log.info("Setting manipulation to " + mManipulation+ ", delta was " + pScreenManipulation);
+		mManipulation.roundLittleNumbers();
+		log.debug("Setting manipulation to " + mManipulation+ ", delta was " + pScreenManipulation);
+	}
+
+	public void resetManipulation() {
+		mManipulation.reset();
 	}
 
 
