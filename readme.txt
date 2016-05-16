@@ -28,6 +28,12 @@ An offline map viewer based on OsmAnd.
 
 Version History:
 
+0_1_Alpha8:
+============
+* Favorites added
+* Different routing services added
+* Background rendering of adjacent maps added 
+
 0_1_Alpha7:
 ============
 * Routing with intermediate points and different types (pedestrian, bicycle, car)

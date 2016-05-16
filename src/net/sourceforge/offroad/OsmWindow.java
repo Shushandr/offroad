@@ -458,8 +458,8 @@ public class OsmWindow {
 		addToMenu(jNavigationMenu, "offroad.left", item -> mDrawPanel.moveImageAnimated(-1f/3,0), "control LEFT");
 		addToMenu(jNavigationMenu, "offroad.right", item -> mDrawPanel.moveImageAnimated(1f/3,0), "control RIGHT");
 		jNavigationMenu.add(new JSeparator());
-		addToMenu(jNavigationMenu, "offroad.zomin", item -> mAdapter.addWheelEvent(-1, mDrawPanel.getCurrentTileBox()), "control PLUS");
-		addToMenu(jNavigationMenu, "offroad.zomout", item -> mAdapter.addWheelEvent(1, mDrawPanel.getCurrentTileBox()), "control MINUS");
+		addToMenu(jNavigationMenu, "offroad.zoomin", item -> mAdapter.addWheelEvent(-1, mDrawPanel.getCurrentTileBox()), "control PLUS");
+		addToMenu(jNavigationMenu, "offroad.zoomout", item -> mAdapter.addWheelEvent(1, mDrawPanel.getCurrentTileBox()), "control MINUS");
 		jNavigationMenu.add(new JSeparator());
 		addToMenu(jNavigationMenu, "offroad.back", new NavigationBackAction(this), "alt LEFT");
 		addToMenu(jNavigationMenu, "offroad.forward", new NavigationForwardAction(this), "alt RIGHT");
