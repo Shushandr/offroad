@@ -53,6 +53,53 @@ import net.sourceforge.offroad.OsmWindow;
 
 @SuppressWarnings("serial")
 public class OsmBitmapPanel extends JPanel implements IRouteInformationListener {
+	public static class ScreenManipulation {
+		public float scale = 0f;
+		public int originX = 0;
+		public int originY = 0;
+		public double mRotation = 0;
+
+		public ScreenManipulation(float pScale, int pOriginX, int pOriginY, double pRotation) {
+			super();
+			scale = pScale;
+			originX = pOriginX;
+			originY = pOriginY;
+			mRotation = pRotation;
+		}
+		public ScreenManipulation(ScreenManipulation pOther){
+			this();
+			if(pOther!=null){
+				this.scale = pOther.scale;
+				this.originX = pOther.originX;
+				this.originY = pOther.originY;
+				this.mRotation = pOther.mRotation;
+			}
+		}
+		public ScreenManipulation() {
+			scale = 0f;
+			originX = 0;
+			originY = 0;
+			mRotation = 0;
+		}
+		public ScreenManipulation negate(){
+			this.scale = -scale;
+			this.originX = -originX;
+			this.originY = -originY;
+			this.mRotation = -mRotation;
+			return this;
+		}
+		public void add(ScreenManipulation pSMDelta) {
+			this.scale += pSMDelta.scale;
+			this.originX += pSMDelta.originX;
+			this.originY += pSMDelta.originY;
+			this.mRotation += pSMDelta.mRotation;
+		}
+		@Override
+		public String toString() {
+			return "ScreenManipulation [scale=" + scale + ", originX=" + originX + ", originY=" + originY
+					+ ", mRotation=" + mRotation + "]";
+		}
+	};
 	private static final int INACTIVITY_TIME_IN_MILLISECONDS = 2000;
 
 	private final static Log log = PlatformUtil.getLog(OsmBitmapPanel.class);
@@ -72,16 +119,13 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 	private OsmWindow mContext;
 	private RotatedTileBox mTileBox;
 	private RotatedTileBox mCurrentTileBox;
-	float scale = 1.0f;
-	int originX = 0;
-	int originY = 0;
+	private ScreenManipulation mManipulation = new ScreenManipulation();
 	private OffRoadUIThread mAnimationThread;
 	private GenerationThread mGenerationThread;
 	private boolean mShowCursor;
 	private LatLon mCursorPosition = null;
 	private int mCursorLength = 20;
 	private BasicStroke mStroke;
-	private double mRotation = 0;
 	private List<OsmandMapLayer> layers = new ArrayList<OsmandMapLayer>();
 	private Map<OsmandMapLayer, Float> zOrders = new HashMap<OsmandMapLayer, Float>();
 	private POIMapLayer mPoiLayer;
@@ -160,17 +204,18 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		super.paintComponent(g);
 		Graphics2D gd2 = (Graphics2D) g;
 		Graphics2D g2 = createGraphics(gd2);
-		g2.rotate(mRotation, getWidth() / 2, getHeight() / 2);
-		g2.translate(originX, originY);
-		g2.scale(scale, scale);
+		g2.rotate(mManipulation.mRotation, getWidth() / 2, getHeight() / 2);
+		g2.translate(mManipulation.originX, mManipulation.originY);
+		float globalScale = 1f+mManipulation.scale;
+		g2.scale(globalScale, globalScale);
 		// check for cached picture of bigger size to lay under:
 		RotatedTileBox ctb;
 		synchronized (mCurrentTileBox) {
 			ctb = mCurrentTileBox.copy();
 		}
-		if(scale < 1.0d || originX != 0 || originY != 0) {
-			LatLon screenLT = ctb.getLatLonFromPixel(-originX/scale, -originY/scale);
-			LatLon screenRB = ctb.getLatLonFromPixel(-originX/scale + getWidth()/scale, -originY/scale + getHeight()/scale);
+		if(mManipulation.scale < 0d || mManipulation.originX != 0 || mManipulation.originY != 0) {
+			LatLon screenLT = ctb.getLatLonFromPixel(-mManipulation.originX/globalScale, -mManipulation.originY/globalScale);
+			LatLon screenRB = ctb.getLatLonFromPixel(-mManipulation.originX/globalScale + getWidth()/globalScale, -mManipulation.originY/globalScale + getHeight()/globalScale);
 			L1: for(int biggerZoom = OsmWindow.MIN_ZOOM; biggerZoom <= ctb.getZoom(); ++biggerZoom){
 				List<RotatedTileBox> tblist = mUnzoomedPicturesAction.getTileBoxesForZoom(biggerZoom);
 				// check for each, if the current image is contained
@@ -218,10 +263,6 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 	}
 
 	void setImage(BufferedImage pImage) {
-		scale = 1.0f;
-		originX = 0;
-		originY = 0;
-		mRotation = 0;
 		bImage = pImage;
 		repaint();
 	}
@@ -290,14 +331,14 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		tileCopy.setLatLonCenter(latFromPixel, lonFromPixel);
 		mAnimationThread = new ZoomAnimationThread(this, pWheelRotation, pNewCenter);
 		queue(mAnimationThread);
-		mGenerationThread = new GenerationThread(this, tileCopy);
+		mGenerationThread = new GenerationThread(this, tileCopy, mAnimationThread.getScreenManipulationSum());
 		queue(mGenerationThread);
 	}
 
 	public void directZoomIncrement(double pD, Point pPoint) {
 //		RotatedTileBox tileCopy = getZoomedTileBox(pD, pPoint);
 		log.info("Wheel increment: " + pD);
-		scale = (float) (scale - pD);
+		mManipulation.scale -= pD;
 		repaint();
 	}
 
@@ -341,13 +382,13 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		return newZoom;
 	}
 
-	public void moveImage(float pDeltaX, float pDeltaY) {
+	public void moveImage(float pDeltaX, float pDeltaY, ScreenManipulation pSm) {
 		RotatedTileBox tb = copyLatestTileBox();
 		QuadPoint center = tb.getCenterPixelPoint();
 		double newLat = tb.getLatFromPixel(center.x + pDeltaX, center.y + pDeltaY);
 		double newLon = tb.getLonFromPixel(center.x + pDeltaX, center.y + pDeltaY);
 		tb.setLatLonCenter(newLat, newLon);
-		queue(new GenerationThread(this, tb));
+		queue(new GenerationThread(this, tb, pSm));
 	}
 
 	public void moveImageAnimated(float pDeltaX, float pDeltaY) {
@@ -361,7 +402,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 				tileBox.getLonFromPixel(center.x + pDeltaX, center.y + pDeltaY));
 		mAnimationThread = new MoveAnimationThread(this, pDeltaX, pDeltaY);
 		queue(mAnimationThread);
-		mGenerationThread = new GenerationThread(this, tileCopy);
+		mGenerationThread = new GenerationThread(this, tileCopy, mAnimationThread.getScreenManipulationSum());
 		queue(mGenerationThread);
 	}
 
@@ -377,8 +418,8 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 	}
 
 	public void dragImage(Point pTranslate) {
-		originX = pTranslate.x;
-		originY = pTranslate.y;
+		mManipulation.originX += pTranslate.x;
+		mManipulation.originY += pTranslate.y;
 		repaint();
 	}
 
@@ -405,7 +446,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		tb.setLatLonCenter(pLocation.getLatitude(), pLocation.getLongitude());
 		int newZoom = checkZoom(pZoom);
 		tb.setZoom(newZoom);
-		queue(new GenerationThread(this, tb));
+		queue(new GenerationThread(this, tb, null));
 	}
 
 	public void setCursor(LatLon pLocation) {
@@ -434,9 +475,12 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 	/**
 	 */
 	public void drawLater() {
+		drawLater(null);
+	}
+	public void drawLater(ScreenManipulation pSm) {
 		RotatedTileBox tb = copyLatestTileBox();
 		tb.setPixelDimensions(getWidth(), getHeight());
-		mGenerationThread = new GenerationThread(this, tb);
+		mGenerationThread = new GenerationThread(this, tb, pSm);
 		queue(mGenerationThread);
 	}
 
@@ -452,14 +496,16 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		}
 	}
 
-	public void rotateIncrement(double pPreciseWheelRotation) {
+	public void rotateIncrement(double pDegrees) {
 		RotatedTileBox tb = copyLatestTileBox();
-		tb.setRotate((float) (tb.getRotate() + 10 * pPreciseWheelRotation));
-		queue(new GenerationThread(this, tb));
+		tb.setRotate((float) (pDegrees) + tb.getRotate());
+		ScreenManipulation sm = new ScreenManipulation();
+		sm.mRotation = Math.toRadians((float) (pDegrees));
+		queue(new GenerationThread(this, tb, sm));
 	}
 
-	public void directRotateIncrement(double pPreciseWheelRotation) {
-		mRotation += Math.toRadians(10 * pPreciseWheelRotation);
+	public void directRotateIncrement(double pDegrees) {
+		mManipulation.mRotation += Math.toRadians(pDegrees);
 		repaint();
 	}
 
@@ -557,11 +603,12 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 	public void resizePanel() {
 		Dimension size = getSize();
 		QuadPoint centerPixelPoint = getTileBox().getCenterPixelPoint();
-		Point diff = new Point();
-		diff.x = -(int) (centerPixelPoint.x - size.getWidth()/2f);
-		diff.y = -(int) (centerPixelPoint.y - size.getHeight()/2f);
-		dragImage(diff);
-		drawLater();
+		float x = -(float)(centerPixelPoint.x - size.getWidth()/2f);
+		float y = -(float)(centerPixelPoint.y - size.getHeight()/2f);
+		ScreenManipulation sm = new ScreenManipulation(0f, (int)x, (int)y, 0d);
+		addScreenManipulation(sm);
+		repaint();
+		drawLater(sm);
 	}
 
 	public class CalculateUnzoomedPicturesAction extends AbstractAction {
@@ -623,7 +670,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 			}
 			if(mTileOrder.hasNext()){
 				RotatedTileBox tb =  mTileOrder.getNext();
-				queue(new GenerationThread(OsmBitmapPanel.this, tb){
+				queue(new GenerationThread(OsmBitmapPanel.this, tb, null){
 					@Override
 					public void runAfterThreadsBeforeHaveFinished() {
 						// instead of setting this, we store it:
@@ -640,6 +687,15 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 				});
 			}
 		}
+	}
+
+	public ScreenManipulation getManipulation() {
+		return new ScreenManipulation(mManipulation);
+	}
+
+	public void addScreenManipulation(ScreenManipulation pScreenManipulation) {
+		mManipulation.add(pScreenManipulation);
+		log.info("Setting manipulation to " + mManipulation+ ", delta was " + pScreenManipulation);
 	}
 
 

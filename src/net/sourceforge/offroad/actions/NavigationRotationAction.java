@@ -22,6 +22,7 @@ package net.sourceforge.offroad.actions;
 import java.awt.event.ActionEvent;
 
 import net.sourceforge.offroad.OsmWindow;
+import net.sourceforge.offroad.ui.OsmBitmapPanel;
 
 /**
  * @author foltin
@@ -30,6 +31,7 @@ import net.sourceforge.offroad.OsmWindow;
 public class NavigationRotationAction extends OffRoadAction {
 
 	private double mIncrement;
+	private boolean mIsAbsolute = false;
 
 	public NavigationRotationAction(OsmWindow pContext) {
 		super(pContext);
@@ -37,11 +39,13 @@ public class NavigationRotationAction extends OffRoadAction {
 
 	public NavigationRotationAction setIncrement(double pIncrement){
 		mIncrement = pIncrement;
+		mIsAbsolute = false;
 		return this;
 	}
 	
-	public NavigationRotationAction setAbsolut(double pNewAngle){
-		mIncrement = - mContext.getDrawPanel().getTileBox().getRotate() + pNewAngle;
+	public NavigationRotationAction setAbsolute(double pNewAngle){
+		mIsAbsolute = true;
+		mIncrement = pNewAngle;
 		return this;
 	}
 	
@@ -50,7 +54,13 @@ public class NavigationRotationAction extends OffRoadAction {
 	 */
 	@Override
 	public void actionPerformed(ActionEvent pE) {
-		mContext.getDrawPanel().rotateIncrement(mIncrement);
+		OsmBitmapPanel drawPanel = mContext.getDrawPanel();
+		double incr = mIncrement;
+		if(mIsAbsolute){
+			incr -= mContext.getDrawPanel().getTileBox().getRotate();
+		}
+		drawPanel.directRotateIncrement(incr);
+		drawPanel.rotateIncrement(incr);
 	}
 
 	/* (non-Javadoc)

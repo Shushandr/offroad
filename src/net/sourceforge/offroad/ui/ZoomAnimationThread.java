@@ -2,6 +2,8 @@ package net.sourceforge.offroad.ui;
 
 import java.awt.Point;
 
+import net.sourceforge.offroad.ui.OsmBitmapPanel.ScreenManipulation;
+
 class ZoomAnimationThread extends OffRoadUIThread {
 	/**
 	 * 
@@ -17,18 +19,28 @@ class ZoomAnimationThread extends OffRoadUIThread {
 
 	@Override
 	public void runAfterThreadsBeforeHaveFinished() {
-		float dest = (float) Math.pow(2, mWheelRotation);
-		float start = 1.0f;
 		int it = 10;
-		float delta = (dest - start) / it;
 		for (int i = 0; i < it; ++i) {
-			mOsmBitmapPanel.scale = start + i * delta;
-			// this is not correct. involve the size of the image.
-			mOsmBitmapPanel.originX = (int) (mNewCenter.x - (mNewCenter.x) * mOsmBitmapPanel.scale);
-			mOsmBitmapPanel.originY = (int) (mNewCenter.y - (mNewCenter.y) * mOsmBitmapPanel.scale);
-			System.out.println(this+" Wheel= " + mWheelRotation + ", Setting scale to " + mOsmBitmapPanel.scale + ", delta = "
-					+ delta + ", dest=" + dest);
+			ScreenManipulation sm = getScreenManipulation(it);
+			mOsmBitmapPanel.addScreenManipulation(sm);
 			mOsmBitmapPanel.repaintAndWait(50);
 		}
 	}
+
+	ScreenManipulation getScreenManipulation(int it) {
+		float dest = (float) Math.pow(2, mWheelRotation);
+		float delta = (dest-1f) / it;
+		ScreenManipulation sm = new ScreenManipulation();
+		sm.scale = delta;
+		// this is not correct. involve the size of the image.
+		sm.originX = (int) (mNewCenter.x * (1f-dest) / it);
+		sm.originY = (int) (mNewCenter.y * (1f-dest) / it);
+		return sm;
+	}
+	
+	public ScreenManipulation getScreenManipulationSum() {
+		ScreenManipulation sm = getScreenManipulation(1);
+		return sm;
+	}
+
 }

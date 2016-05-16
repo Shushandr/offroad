@@ -147,13 +147,16 @@ class InactivityListener implements ActionListener, AWTEventListener, OffRoadUIT
 	}
 
 	void restart() {
-		if (timer.isRunning())
+		if (timer.isRunning()){
 			timer.restart();
+		} else {
+			timer.start();
+		}
 	}
 
 	@Override
 	public void threadStarted() {
-		restart();
+		timer.stop();
 	}
 
 	@Override

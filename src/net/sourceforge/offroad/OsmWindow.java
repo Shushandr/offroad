@@ -452,7 +452,7 @@ public class OsmWindow {
 		addToMenu(jNavigationMenu, "offroad.back", new NavigationBackAction(this), "alt LEFT");
 		addToMenu(jNavigationMenu, "offroad.forward", new NavigationForwardAction(this), "alt RIGHT");
 		jNavigationMenu.add(new JSeparator());
-		addToMenu(jNavigationMenu, "offroad.reset_north", new NavigationRotationAction(this).setAbsolut(0d), "alt HOME");
+		addToMenu(jNavigationMenu, "offroad.reset_north", new NavigationRotationAction(this).setAbsolute(0d), "alt HOME");
 		addToMenu(jNavigationMenu, "offroad.increase_rotation", new NavigationRotationAction(this).setIncrement(30d), "alt PAGE_UP");
 		addToMenu(jNavigationMenu, "offroad.decrease_rotation", new NavigationRotationAction(this).setIncrement(-30d), "alt PAGE_DOWN");
 		menubar.add(jNavigationMenu);

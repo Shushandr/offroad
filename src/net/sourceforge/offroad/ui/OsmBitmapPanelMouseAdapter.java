@@ -1,13 +1,10 @@
 package net.sourceforge.offroad.ui;
 
-import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
@@ -17,9 +14,9 @@ import javax.swing.Timer;
 import org.apache.commons.logging.Log;
 
 import net.osmand.PlatformUtil;
-import net.osmand.data.QuadPoint;
 import net.osmand.data.RotatedTileBox;
 import net.sourceforge.offroad.OsmWindow;
+import net.sourceforge.offroad.ui.OsmBitmapPanel.ScreenManipulation;
 
 public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements ComponentListener {
 	private static final int ZOOM_DELAY_MILLISECONDS = 100;
@@ -58,6 +55,7 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 	
 	private OsmBitmapPanel drawPanel;
 	private Point startPoint;
+	private Point lastDragPoint;
 	private Timer mZoomTimer;
 	private ZoomPerformer mZoomPerformer;
 	private Timer mRotateTimer;
@@ -82,6 +80,7 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 			return;
 		}
 		startPoint = e.getPoint();
+		lastDragPoint = e.getPoint();
 	}
 
 	public ZoomPerformer getZoomPerformer() {
@@ -102,7 +101,7 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 		if(delx == 0 && dely == 0){
 			return;
 		}
-		drawPanel.moveImage(-(float) delx, -(float) dely);
+		drawPanel.moveImage(-delx, -dely, new ScreenManipulation(0f, delx, dely, 0d));
 		startPoint = null;
 	}
 
@@ -115,8 +114,9 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 		if(startPoint == null){
 			return;
 		}
-		Point point = e.getPoint();
-		point.translate(-startPoint.x, -startPoint.y);
+		Point point = new Point(e.getPoint());
+		point.translate(-lastDragPoint.x, -lastDragPoint.y);
+		lastDragPoint = e.getPoint();
 		drawPanel.dragImage(point);
 	}
 
@@ -125,9 +125,9 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 		pE.consume();
 		if(pE.isControlDown()){
 			// rotate:
-			mRotatePerformer.addWheelEvent(pE.getPreciseWheelRotation(), pE.getPoint());
+			mRotatePerformer.addWheelEvent(10*pE.getPreciseWheelRotation(), pE.getPoint());
 			mRotateTimer.restart();
-			drawPanel.directRotateIncrement(pE.getPreciseWheelRotation());
+			drawPanel.directRotateIncrement(10*pE.getPreciseWheelRotation());
 			return;
 		}
 		mZoomPerformer.addWheelEvent(pE.getWheelRotation(), pE.getPoint());

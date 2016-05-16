@@ -315,6 +315,9 @@ public class RotatedTileBox {
 		calculateDerivedFields();
 	}
 
+	/**
+	 * @param rotate in degrees (0-360). 
+	 */
 	public void setRotate(float rotate) {
 		this.rotate = rotate;
 		calculateDerivedFields();
@@ -418,6 +421,9 @@ public class RotatedTileBox {
 		calculateDerivedFields();
 	}
 
+	/**
+	 * @return in degrees (0-360).
+	 */
 	public float getRotate() {
 		return rotate;
 	}

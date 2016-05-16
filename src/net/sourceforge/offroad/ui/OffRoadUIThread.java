@@ -26,6 +26,7 @@ import org.apache.commons.logging.Log;
 
 import net.osmand.PlatformUtil;
 import net.osmand.data.RotatedTileBox;
+import net.sourceforge.offroad.ui.OsmBitmapPanel.ScreenManipulation;
 
 /**
  * @author foltin
@@ -128,4 +129,9 @@ public class OffRoadUIThread implements Runnable {
 	public boolean hasFinished() {
 		return hasFinished;
 	}
+
+	public ScreenManipulation getScreenManipulationSum() {
+		throw new IllegalArgumentException("I shouldn't been asked that directly. An animation thread should implement this method.");
+	}
+
 }
