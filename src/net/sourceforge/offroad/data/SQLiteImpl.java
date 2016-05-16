@@ -19,20 +19,31 @@
 
 package net.sourceforge.offroad.data;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Properties;
 
+import org.apache.commons.logging.Log;
+import org.sqlite.SQLiteConfig;
+
+import net.osmand.PlatformUtil;
 import net.osmand.plus.api.SQLiteAPI;
+import net.sourceforge.offroad.OsmWindow;
 
 /**
  * @author foltin
  * @date 10.05.2016
  */
 public class SQLiteImpl implements SQLiteAPI {
+	private final static Log log = PlatformUtil.getLog(SQLiteImpl.class);
+	private OsmWindow mContext;
 
+	
 	public class SQLiteCursorWrapper implements SQLiteCursor {
 
 		private ResultSet mResult;
@@ -43,14 +54,15 @@ public class SQLiteImpl implements SQLiteAPI {
 
 		@Override
 		public String[] getColumnNames() {
+			String[] ret = null;
 			try {
-				String[] ret = new String[mResult.getMetaData().getColumnCount()];
+				ret = new String[mResult.getMetaData().getColumnCount()];
 				for (int i = 0; i < ret.length; ++i) {
 					ret[i] = mResult.getMetaData().getColumnLabel(i);
 				}
 				return ret;
 			} catch (SQLException e) {
-				e.printStackTrace();
+				log.error("SQLException:"+Arrays.toString(ret), e);
 			}
 			return null;
 		}
@@ -58,9 +70,9 @@ public class SQLiteImpl implements SQLiteAPI {
 		@Override
 		public boolean moveToFirst() {
 			try {
-				return mResult.first();
+				return mResult.next();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				log.error("SQLException:", e);
 			}
 			return false;
 		}
@@ -70,7 +82,7 @@ public class SQLiteImpl implements SQLiteAPI {
 			try {
 				return mResult.next();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				log.error("SQLException:", e);
 			}
 			return false;
 		}
@@ -78,9 +90,9 @@ public class SQLiteImpl implements SQLiteAPI {
 		@Override
 		public String getString(int pInd) {
 			try {
-				return mResult.getString(pInd);
+				return mResult.getString(pInd+1);
 			} catch (SQLException e) {
-				e.printStackTrace();
+				log.error("SQLException:"+pInd, e);
 			}
 			return null;
 		}
@@ -88,9 +100,9 @@ public class SQLiteImpl implements SQLiteAPI {
 		@Override
 		public double getDouble(int pInd) {
 			try {
-				return mResult.getDouble(pInd);
+				return mResult.getDouble(pInd+1);
 			} catch (SQLException e) {
-				e.printStackTrace();
+				log.error("SQLException:"+pInd, e);
 			}
 			return 0d;
 		}
@@ -98,9 +110,9 @@ public class SQLiteImpl implements SQLiteAPI {
 		@Override
 		public long getLong(int pInd) {
 			try {
-				return mResult.getLong(pInd);
+				return mResult.getLong(pInd+1);
 			} catch (SQLException e) {
-				e.printStackTrace();
+				log.error("SQLException:"+pInd, e);
 			}
 			return 0l;
 		}
@@ -108,9 +120,9 @@ public class SQLiteImpl implements SQLiteAPI {
 		@Override
 		public long getInt(int pInd) {
 			try {
-				return mResult.getInt(pInd);
+				return mResult.getInt(pInd+1);
 			} catch (SQLException e) {
-				e.printStackTrace();
+				log.error("SQLException:"+pInd, e);
 			}
 			return 0;
 		}
@@ -118,9 +130,9 @@ public class SQLiteImpl implements SQLiteAPI {
 		@Override
 		public byte[] getBlob(int pInd) {
 			try {
-				return mResult.getBytes(pInd);
+				return mResult.getBytes(pInd+1);
 			} catch (SQLException e) {
-				e.printStackTrace();
+				log.error("SQLException:"+pInd, e);
 			}
 			return null;
 		}
@@ -130,7 +142,7 @@ public class SQLiteImpl implements SQLiteAPI {
 			try {
 				mResult.close();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				log.error("SQLException:", e);
 			}
 		}
 
@@ -139,9 +151,11 @@ public class SQLiteImpl implements SQLiteAPI {
 	public class SQLiteConnectionWrapper implements SQLiteConnection {
 
 		private Connection mConn;
+		private String mName;
 
-		public SQLiteConnectionWrapper(Connection pConn) {
+		public SQLiteConnectionWrapper(Connection pConn, String pName) {
 			mConn = pConn;
+			mName = pName;
 		}
 
 		@Override
@@ -149,7 +163,7 @@ public class SQLiteImpl implements SQLiteAPI {
 			try {
 				mConn.close();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				log.error("SQLException:", e);
 			}
 		}
 
@@ -161,7 +175,7 @@ public class SQLiteImpl implements SQLiteAPI {
 			try {
 				return new SQLiteCursorWrapper(mConn.createStatement().executeQuery(pSql));
 			} catch (SQLException e) {
-				e.printStackTrace();
+				log.error("SQLException:"+pSql, e);
 			}
 			return null;
 		}
@@ -169,10 +183,9 @@ public class SQLiteImpl implements SQLiteAPI {
 		@Override
 		public void execSQL(String pQuery) {
 			try {
-				mConn.createStatement().executeQuery(pQuery);
+				mConn.createStatement().executeUpdate(pQuery);
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				log.error("SQLException:"+pQuery, e);
 			}
 		}
 
@@ -182,11 +195,11 @@ public class SQLiteImpl implements SQLiteAPI {
 				PreparedStatement prep = mConn.prepareStatement(pQuery);
 				for (int i = 0; i < pObjects.length; i++) {
 					Object object = pObjects[i];
-					prep.setObject(i, object);
+					prep.setObject(i+1, object);
 				}
 				prep.execute();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				log.error("SQLException:"+pQuery, e);
 			}
 		}
 
@@ -197,16 +210,17 @@ public class SQLiteImpl implements SQLiteAPI {
 
 		@Override
 		public void setVersion(int pNewVersion) {
+			mContext.getOffroadProperties().setProperty("version_"+mName, ""+pNewVersion);
 		}
 
 		@Override
 		public int getVersion() {
-			try {
-				return mConn.getMetaData().getDatabaseMajorVersion();
-			} catch (SQLException e) {
-				e.printStackTrace();
+			Properties prop = mContext.getOffroadProperties();
+			String key = "version_" + mName;
+			if(prop.containsKey(key)){
+				return Integer.parseInt(""+prop.get(key));
 			}
-			return 3;
+			return 0;
 		}
 
 		@Override
@@ -214,7 +228,7 @@ public class SQLiteImpl implements SQLiteAPI {
 			try {
 				return mConn.isReadOnly();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				log.error("SQLException:", e);
 			}
 			return true;
 		}
@@ -230,11 +244,15 @@ public class SQLiteImpl implements SQLiteAPI {
 			try {
 				return mConn.isClosed();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				log.error("SQLException:", e);
 			}
 			return true;
 		}
 
+	}
+
+	public SQLiteImpl(OsmWindow pOsmWindow) {
+		mContext = pOsmWindow;
 	}
 
 	/*
@@ -246,12 +264,15 @@ public class SQLiteImpl implements SQLiteAPI {
 	@Override
 	public SQLiteConnection getOrCreateDatabase(String pName, boolean pReadOnly) {
 		try {
-			Class.forName("org.sqlite.JDBC");
-			Connection conn = DriverManager.getConnection("jdbc:sqlite:"+pName);
-			conn.setReadOnly(pReadOnly);
-			return new SQLiteConnectionWrapper(conn);
-		} catch (ClassNotFoundException | SQLException e) {
-			e.printStackTrace();
+			SQLiteConfig config = new SQLiteConfig();
+			String file = mContext.getAppPathName(pName)+".db";
+			if(pReadOnly && new File(file).exists()){
+				config.setReadOnly(pReadOnly);
+			}
+			Connection conn = DriverManager.getConnection("jdbc:sqlite:"+file, config.toProperties());
+			return new SQLiteConnectionWrapper(conn, pName);
+		} catch (SQLException e) {
+			log.error("SQLException:"+pName, e);
 		}
 		return null;
 	}
@@ -267,4 +288,23 @@ public class SQLiteImpl implements SQLiteAPI {
 		throw new IllegalArgumentException("Not implemented");
 	}
 
+	public static void main(String[] args) {
+		SQLiteImpl impl = new SQLiteImpl(OsmWindow.getInstance());
+		SQLiteConnection conn = impl.getOrCreateDatabase("test", true);
+		System.out.println("Version: " + conn.getVersion());
+		conn.setVersion(17);
+		conn.execSQL("create table if not exists 'bla' (name TEXT);");
+		conn.execSQL("insert into 'bla' values ('testvalue');");
+		SQLiteCursor query = conn.rawQuery(
+				"SELECT name, name FROM bla ORDER BY name DESC", null); //$NON-NLS-1$//$NON-NLS-2$
+		if (query.moveToFirst()) {
+			do {
+				String name = query.getString(1);
+				System.out.println("Content:  " + name);
+			} while (query.moveToNext());
+		}
+		query.close();
+		conn.close();
+	}
+	
 }

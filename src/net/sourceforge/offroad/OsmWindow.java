@@ -231,6 +231,7 @@ public class OsmWindow {
 	private ResourceManager mResourceManager;
 	private OffRoadSettings settings = new OffRoadSettings(this);
 	private OsmandSettings prefs = new OsmandSettings(this, settings);
+	private Properties mOffroadProperties = (Properties) settings.getPreferenceObject("offroad");
 	private R.string mStrings;
 	private OsmandRegions mRegions;
 	private OsmBitmapPanel mDrawPanel;
@@ -1170,7 +1171,7 @@ public class OsmWindow {
 
 	public SQLiteAPI getSQLiteAPI() {
 		if(mSqLiteImpl == null){
-			mSqLiteImpl = new SQLiteImpl();
+			mSqLiteImpl = new SQLiteImpl(this);
 		}
 		return mSqLiteImpl;
 	}
@@ -1191,4 +1192,8 @@ public class OsmWindow {
 		return mFavorites;
 	}
 
+	public Properties getOffroadProperties() {
+		return mOffroadProperties;
+	}
+	
 }
