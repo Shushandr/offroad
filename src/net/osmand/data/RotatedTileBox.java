@@ -1,7 +1,11 @@
 package net.osmand.data;
+import org.apache.commons.logging.Log;
+
+import net.osmand.PlatformUtil;
 import net.osmand.util.MapUtils;
 
 public class RotatedTileBox {
+	private final static Log log = PlatformUtil.getLog(RotatedTileBox.class);
 
 	/// primary fields
 	private double lat;
@@ -570,6 +574,29 @@ public class RotatedTileBox {
 				+ cx + ", cy=" + cy + ", pixWidth=" + pixWidth + ", pixHeight="
 				+ pixHeight + "]";
 	}
+
+	public boolean intersects(LatLon pScreenLT, LatLon pScreenRB) {
+		LatLon lt = getLeftTopLatLon();
+		LatLon rb = getRightBottomLatLon();
+		double minLat = Math.min(pScreenLT.getLatitude(), pScreenRB.getLatitude());
+		double maxLat = Math.max(pScreenLT.getLatitude(), pScreenRB.getLatitude());
+		double minLon = Math.min(pScreenLT.getLongitude(), pScreenRB.getLongitude());
+		double maxLon = Math.max(pScreenLT.getLongitude(), pScreenRB.getLongitude());
+		if(lt.getLatitude()<= minLat && rb.getLatitude() <= minLat){
+			return false;
+		}
+		if(lt.getLatitude()>= maxLat && rb.getLatitude() >= maxLat){
+			return false;
+		}
+		if(lt.getLongitude()<= minLon && rb.getLongitude() <= minLon){
+			return false;
+		}
+		if(lt.getLongitude()>= maxLon && rb.getLongitude() >= maxLon){
+			return false;
+		}
+		return true;
+	}
+
 
 	
 	

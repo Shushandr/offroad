@@ -16,6 +16,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -52,6 +53,8 @@ import net.sourceforge.offroad.OsmWindow;
 
 @SuppressWarnings("serial")
 public class OsmBitmapPanel extends JPanel implements IRouteInformationListener {
+	private static final int INACTIVITY_TIME_IN_MILLISECONDS = 2000;
+
 	private final static Log log = PlatformUtil.getLog(OsmBitmapPanel.class);
 
 	private static final int ST_WIDTH = 1400;
@@ -117,14 +120,14 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 				repaint();
 			}
 		};
-		new Timer(1000, updateCursorAction).start();
+		new Timer(INACTIVITY_TIME_IN_MILLISECONDS, updateCursorAction).start();
 		mThreadPool = Executors.newFixedThreadPool(4);
 	}
 
 	public void init() {
 		mUnzoomedPicturesAction = new CalculateUnzoomedPicturesAction();
 		mInactivityListener = new InactivityListener(mContext.getWindow(), mUnzoomedPicturesAction);
-		mInactivityListener.setIntervalInMillis(5000);
+		mInactivityListener.setIntervalInMillis(1000);
 		mInactivityListener.start();
 	}
 
@@ -168,12 +171,11 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		if(scale < 1.0d || originX != 0 || originY != 0) {
 			LatLon screenLT = ctb.getLatLonFromPixel(-originX/scale, -originY/scale);
 			LatLon screenRB = ctb.getLatLonFromPixel(-originX/scale + getWidth()/scale, -originY/scale + getHeight()/scale);
-			L1: for(int biggerZoom = ctb.getZoom()-1; biggerZoom >= 1; --biggerZoom){
+			L1: for(int biggerZoom = OsmWindow.MIN_ZOOM; biggerZoom <= ctb.getZoom(); ++biggerZoom){
 				List<RotatedTileBox> tblist = mUnzoomedPicturesAction.getTileBoxesForZoom(biggerZoom);
 				// check for each, if the current image is contained
 				for (RotatedTileBox rtb : tblist) {
-					if (rtb.containsLatLon(screenLT) && rtb.containsLatLon(screenRB) && ctb.getRotate() == rtb.getRotate()) {
-						//						log.debug("Found bigger tile box " + rtb);
+					if ((rtb.intersects(screenLT, screenRB)) && ctb.getRotate() == rtb.getRotate()) {
 						// draw this under it:
 						LatLon rtbLT = rtb.getLeftTopLatLon();
 						LatLon rtbRB = rtb.getRightBottomLatLon();
@@ -184,7 +186,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 						BufferedImage image = mUnzoomedPicturesAction.getImage(rtb);
 						if(image != null){
 							g2.drawImage(image, (int)x1, (int)y1, (int)x2, (int)y2, 0,0, image.getWidth(), image.getHeight(), null);
-							break L1;
+//							break L1;
 						}
 					}
 				}
@@ -292,6 +294,14 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		queue(mGenerationThread);
 	}
 
+	public void directZoomIncrement(double pD, Point pPoint) {
+//		RotatedTileBox tileCopy = getZoomedTileBox(pD, pPoint);
+		log.info("Wheel increment: " + pD);
+		scale = (float) (scale - pD);
+		repaint();
+	}
+
+	
 	private RotatedTileBox copyLatestTileBox() {
 		return getTileBox();
 	}
@@ -336,66 +346,8 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		QuadPoint center = tb.getCenterPixelPoint();
 		double newLat = tb.getLatFromPixel(center.x + pDeltaX, center.y + pDeltaY);
 		double newLon = tb.getLonFromPixel(center.x + pDeltaX, center.y + pDeltaY);
-		if (false) {
-			BufferedImage image = createImage();
-			// create new image
-			clear(image);
-			Graphics2D graphics2d = image.createGraphics();
-			if (pDeltaX > 0) {
-				float gapCenterXPoint = tb.getPixWidth() + pDeltaX / 2;
-				float gapCenterYPoint = tb.getCenterPixelY() + pDeltaY;
-				double gapLat = tb.getLatFromPixel(gapCenterXPoint, gapCenterYPoint);
-				double gapLon = tb.getLonFromPixel(gapCenterXPoint, gapCenterYPoint);
-				RotatedTileBox gapXBox = new RotatedTileBoxBuilder().density(tb.getDensity()).setZoom(tb.getZoom())
-						.setPixelDimensions((int) pDeltaX, tb.getPixHeight()).setLocation(gapLat, gapLon)
-						.setMapDensity(tb.getMapDensity()).build();
-				float transX = tb.getPixWidth() - pDeltaX;
-				graphics2d.translate(transX, 0f);
-				mContext.loadMGap(graphics2d, gapXBox);
-				graphics2d.translate(-transX, 0f);
-			}
-			if (pDeltaY > 0) {
-				float gapCenterXPoint = tb.getCenterPixelX() + pDeltaX;
-				float gapCenterYPoint = tb.getPixHeight() + pDeltaY / 2;
-				double gapLat = tb.getLatFromPixel(gapCenterXPoint, gapCenterYPoint);
-				double gapLon = tb.getLonFromPixel(gapCenterXPoint, gapCenterYPoint);
-				RotatedTileBox gapYBox = new RotatedTileBoxBuilder().density(tb.getDensity()).setZoom(tb.getZoom())
-						.setPixelDimensions(tb.getPixWidth(), (int) pDeltaY).setLocation(gapLat, gapLon)
-						.setMapDensity(tb.getMapDensity()).build();
-				float transY = tb.getPixHeight() - pDeltaY;
-				graphics2d.translate(0, transY);
-				mContext.loadMGap(graphics2d, gapYBox);
-				graphics2d.translate(0, -transY);
-			}
-			if (pDeltaX < 0) {
-				float gapCenterXPoint = pDeltaX / 2;
-				float gapCenterYPoint = tb.getCenterPixelY() + pDeltaY;
-				double gapLat = tb.getLatFromPixel(gapCenterXPoint, gapCenterYPoint);
-				double gapLon = tb.getLonFromPixel(gapCenterXPoint, gapCenterYPoint);
-				RotatedTileBox gapXBox = new RotatedTileBoxBuilder().density(tb.getDensity()).setZoom(tb.getZoom())
-						.setPixelDimensions((int) -pDeltaX, tb.getPixHeight()).setLocation(gapLat, gapLon)
-						.setMapDensity(tb.getMapDensity()).build();
-				mContext.loadMGap(graphics2d, gapXBox);
-			}
-			if (pDeltaY < 0) {
-				float gapCenterXPoint = tb.getCenterPixelX() + pDeltaX;
-				float gapCenterYPoint = pDeltaY / 2;
-				double gapLat = tb.getLatFromPixel(gapCenterXPoint, gapCenterYPoint);
-				double gapLon = tb.getLonFromPixel(gapCenterXPoint, gapCenterYPoint);
-				RotatedTileBox gapYBox = new RotatedTileBoxBuilder().density(tb.getDensity()).setZoom(tb.getZoom())
-						.setPixelDimensions(tb.getPixWidth(), (int) -pDeltaY).setLocation(gapLat, gapLon)
-						.setMapDensity(tb.getMapDensity()).build();
-				mContext.loadMGap(graphics2d, gapYBox);
-			}
-			// copy the old image inside:
-			graphics2d.drawImage(bImage, (int) -pDeltaX, (int) -pDeltaY, bImage.getWidth(), bImage.getHeight(), null);
-			tb.setLatLonCenter(newLat, newLon);
-			graphics2d.dispose();
-			setImage(image);
-		} else {
-			tb.setLatLonCenter(newLat, newLon);
-			queue(new GenerationThread(this, tb));
-		}
+		tb.setLatLonCenter(newLat, newLon);
+		queue(new GenerationThread(this, tb));
 	}
 
 	public void moveImageAnimated(float pDeltaX, float pDeltaY) {
@@ -614,12 +566,16 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 
 	public class CalculateUnzoomedPicturesAction extends AbstractAction {
 
-		private BinaryOrder mBinaryOrder;
+		private RotatedTileBoxCalculationOrder mTileOrder;
 		private RotatedTileBox myTileBox;
-		private HashMap<RotatedTileBox, BufferedImage> mImageStore = new HashMap<>();
+		private LinkedHashMap<RotatedTileBox, BufferedImage> mImageStore = new LinkedHashMap<RotatedTileBox, BufferedImage>(){
+			protected boolean removeEldestEntry(Map.Entry eldest) {
+		        return size() > 2 * mTileOrder.getSize();
+		     }
+		};
 
 		public CalculateUnzoomedPicturesAction() {
-			mBinaryOrder = new BinaryOrder();
+			mTileOrder = new RotatedTileBoxCalculationOrder();
 		}
 
 		public BufferedImage getImage(RotatedTileBox pRtb) {
@@ -643,14 +599,12 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		public void setTileBox(RotatedTileBox pTb){
 			synchronized (mImageStore) {
 				myTileBox = pTb;
-				mBinaryOrder.init(1, pTb.getZoom()-1);
+				mTileOrder.init(pTb);
 				for (Iterator it = mImageStore.entrySet().iterator(); it.hasNext();) {
 					Entry<RotatedTileBox, BufferedImage> entry = (Map.Entry<RotatedTileBox, BufferedImage>) it.next();
 					RotatedTileBox rtb = entry.getKey();
-					if(!contains(rtb, pTb) || rtb.getRotate() != pTb.getRotate()){
+					if(rtb.getRotate() != pTb.getRotate()){
 						it.remove();
-					} else {
-						mBinaryOrder.alreadyDone(rtb.getZoom());
 					}
 				}
 				log.info("After setting a new tile box we have " + mImageStore.size() + " cache entries.");
@@ -659,17 +613,22 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		
 		@Override
 		public void actionPerformed(ActionEvent pE) {
-			if(mBinaryOrder.hasNext()){
-				int nextZoom = mBinaryOrder.getNext();
-				// calculate image:
-				RotatedTileBox tb = myTileBox.copy();
-				tb.setZoom(nextZoom);
+			// check for empty queue:
+			if(mLastThread != null){
+				synchronized(mLastThread){
+					if(!mLastThread.hasFinished()){
+						return;
+					}
+				}
+			}
+			if(mTileOrder.hasNext()){
+				RotatedTileBox tb =  mTileOrder.getNext();
 				queue(new GenerationThread(OsmBitmapPanel.this, tb){
 					@Override
 					public void runAfterThreadsBeforeHaveFinished() {
 						// instead of setting this, we store it:
 						synchronized (mImageStore) {
-							System.out.println("Adding zoom " + mTileCopy.getZoom() + " to the cache.");
+							log.info("Adding  " + mTileCopy + " to the cache.");
 							mImageStore.put(mTileCopy, mNewBitmap);
 						}
 					}

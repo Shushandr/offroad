@@ -222,6 +222,9 @@ public class OsmWindow {
 
 
 	private static final String OFFROAD_PROPERTIES = "offroad";
+
+
+	public static final int MIN_ZOOM = 1;
 	private static OsmWindow sInstance = null;
 	private ResourceManager mResourceManager;
 	private OffRoadSettings settings = new OffRoadSettings(this);
