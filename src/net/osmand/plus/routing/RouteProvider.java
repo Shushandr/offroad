@@ -1,9 +1,14 @@
 package net.osmand.plus.routing;
 
 
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -13,8 +18,18 @@ import java.util.Map;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import net.osmand.Location;
@@ -22,6 +37,7 @@ import net.osmand.PlatformUtil;
 import net.osmand.binary.BinaryMapIndexReader;
 import net.osmand.data.LatLon;
 import net.osmand.data.LocationPoint;
+import net.osmand.osm.io.NetworkUtils;
 import net.osmand.plus.ApplicationMode;
 import net.osmand.plus.GPXUtilities.GPXFile;
 import net.osmand.plus.GPXUtilities.Route;
@@ -32,6 +48,7 @@ import net.osmand.plus.OsmandSettings;
 import net.osmand.plus.OsmandSettings.CommonPreference;
 import net.osmand.plus.TargetPointsHelper;
 import net.osmand.plus.TargetPointsHelper.TargetPoint;
+import net.osmand.plus.Version;
 //import net.osmand.plus.activities.SettingsNavigationActivity;
 //import net.osmand.plus.render.NativeOsmandLibrary;
 import net.osmand.router.GeneralRouter;
@@ -75,7 +92,7 @@ public class RouteProvider {
 			return this != OSMAND && this != BROUTER;
 		}
 		
-		boolean isAvailable(OsmWindow ctx) {
+		public boolean isAvailable(OsmWindow ctx) {
 			if (this == BROUTER) {
 //				return ctx.getBRouterService() != null;
 				return false;
@@ -288,12 +305,12 @@ public class RouteProvider {
 					res = findVectorMapsRoute(params, calcGPXRoute);
 //				} else if (params.type == RouteService.BROUTER) {
 //					res = findBROUTERRoute(params);
-//				} else if (params.type == RouteService.YOURS) {
-//					res = findYOURSRoute(params);
+				} else if (params.type == RouteService.YOURS) {
+					res = findYOURSRoute(params);
 //				} else if (params.type == RouteService.ORS) {
 //					res = findORSRoute(params);
-//				} else if (params.type == RouteService.OSRM) {
-//					res = findOSRMRoute(params);
+				} else if (params.type == RouteService.OSRM) {
+					res = findOSRMRoute(params);
 				} else if (params.type == RouteService.STRAIGHT){
 					res = findStraightRoute(params);
 				}
@@ -306,10 +323,10 @@ public class RouteProvider {
 				return res; 
 			} catch (IOException e) {
 				log.error("Failed to find route ", e); //$NON-NLS-1$
-//			} catch (ParserConfigurationException e) {
-//				log.error("Failed to find route ", e); //$NON-NLS-1$
-//			} catch (SAXException e) {
-//				log.error("Failed to find route ", e); //$NON-NLS-1$
+			} catch (ParserConfigurationException e) {
+				log.error("Failed to find route ", e); //$NON-NLS-1$
+			} catch (SAXException e) {
+				log.error("Failed to find route ", e); //$NON-NLS-1$
 //			} catch (JSONException e) {
 //				log.error("Failed to find route ", e); //$NON-NLS-1$
 			}
@@ -551,66 +568,66 @@ public class RouteProvider {
 	
 
 
-//	protected RouteCalculationResult findYOURSRoute(RouteCalculationParams params) throws MalformedURLException, IOException,
-//			ParserConfigurationException, FactoryConfigurationError, SAXException {
-//		List<Location> res = new ArrayList<Location>();
-//		StringBuilder uri = new StringBuilder();
-//		uri.append("http://www.yournavigation.org/api/1.0/gosmore.php?format=kml"); //$NON-NLS-1$
-//		uri.append("&flat=").append(params.start.getLatitude()); //$NON-NLS-1$
-//		uri.append("&flon=").append(params.start.getLongitude()); //$NON-NLS-1$
-//		uri.append("&tlat=").append(params.end.getLatitude()); //$NON-NLS-1$
-//		uri.append("&tlon=").append(params.end.getLongitude()); //$NON-NLS-1$
-//		if (params.mode.isDerivedRoutingFrom(ApplicationMode.BICYCLE)) {
-//			uri.append("&v=bicycle") ; //$NON-NLS-1$
-//		} else if (params.mode.isDerivedRoutingFrom(ApplicationMode.PEDESTRIAN)) {
-//			uri.append("&v=foot") ; //$NON-NLS-1$
-//		} else if(params.mode.isDerivedRoutingFrom(ApplicationMode.CAR)){
-//			uri.append("&v=motorcar"); //$NON-NLS-1$
-//		} else {
-//			return applicationModeNotSupported(params);
-//		}
-//		uri.append("&fast=").append(params.fast ? "1" : "0").append("&layer=mapnik"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-//		log.info("URL route " + uri);
-//		URLConnection connection = NetworkUtils.getHttpURLConnection(uri.toString());
-//		connection.setRequestProperty("User-Agent", Version.getFullVersion(params.ctx));
-//		DocumentBuilder dom = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-//		Document doc = dom.parse(new InputSource(new InputStreamReader(connection.getInputStream())));
-//		NodeList list = doc.getElementsByTagName("coordinates"); //$NON-NLS-1$
-//		for(int i=0; i<list.getLength(); i++){
-//			Node item = list.item(i);
-//			String str = item.getFirstChild().getNodeValue();
-//			if(str == null){
-//				continue;
-//			}
-//			int st = 0;
-//			int next = 0;
-//			while((next = str.indexOf('\n', st)) != -1){
-//				String coordinate = str.substring(st, next + 1);
-//				int s = coordinate.indexOf(',');
-//				if (s != -1) {
-//					try {
-//						double lon = Double.parseDouble(coordinate.substring(0, s));
-//						double lat = Double.parseDouble(coordinate.substring(s + 1));
-//						Location l = new Location("router"); //$NON-NLS-1$
-//						l.setLatitude(lat);
-//						l.setLongitude(lon);
-//						res.add(l);
-//					} catch (NumberFormatException e) {
-//					}
-//				}
-//				st = next + 1;
-//			}
-//		}
-//		if(list.getLength() == 0){
-//			if(doc.getChildNodes().getLength() == 1){
-//				Node item = doc.getChildNodes().item(0);
-//				return new RouteCalculationResult(item.getNodeValue());
-//				
-//			}
-//		}
-//		params.intermediates = null;
-//		return new RouteCalculationResult(res, null, params, null);
-//	}
+	protected RouteCalculationResult findYOURSRoute(RouteCalculationParams params) throws MalformedURLException, IOException,
+			ParserConfigurationException, FactoryConfigurationError, SAXException {
+		List<Location> res = new ArrayList<Location>();
+		StringBuilder uri = new StringBuilder();
+		uri.append("http://www.yournavigation.org/api/1.0/gosmore.php?format=kml"); //$NON-NLS-1$
+		uri.append("&flat=").append(params.start.getLatitude()); //$NON-NLS-1$
+		uri.append("&flon=").append(params.start.getLongitude()); //$NON-NLS-1$
+		uri.append("&tlat=").append(params.end.getLatitude()); //$NON-NLS-1$
+		uri.append("&tlon=").append(params.end.getLongitude()); //$NON-NLS-1$
+		if (params.mode.isDerivedRoutingFrom(ApplicationMode.BICYCLE)) {
+			uri.append("&v=bicycle") ; //$NON-NLS-1$
+		} else if (params.mode.isDerivedRoutingFrom(ApplicationMode.PEDESTRIAN)) {
+			uri.append("&v=foot") ; //$NON-NLS-1$
+		} else if(params.mode.isDerivedRoutingFrom(ApplicationMode.CAR)){
+			uri.append("&v=motorcar"); //$NON-NLS-1$
+		} else {
+			return applicationModeNotSupported(params);
+		}
+		uri.append("&fast=").append(params.fast ? "1" : "0").append("&layer=mapnik"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		log.info("URL route " + uri);
+		URLConnection connection = NetworkUtils.getHttpURLConnection(uri.toString());
+		connection.setRequestProperty("User-Agent", Version.getFullVersion(params.ctx));
+		DocumentBuilder dom = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+		Document doc = dom.parse(connection.getInputStream());
+		NodeList list = doc.getElementsByTagName("coordinates"); //$NON-NLS-1$
+		for(int i=0; i<list.getLength(); i++){
+			Node item = list.item(i);
+			String str = item.getFirstChild().getNodeValue();
+			if(str == null){
+				continue;
+			}
+			int st = 0;
+			int next = 0;
+			while((next = str.indexOf('\n', st)) != -1){
+				String coordinate = str.substring(st, next + 1);
+				int s = coordinate.indexOf(',');
+				if (s != -1) {
+					try {
+						double lon = Double.parseDouble(coordinate.substring(0, s));
+						double lat = Double.parseDouble(coordinate.substring(s + 1));
+						Location l = new Location("router"); //$NON-NLS-1$
+						l.setLatitude(lat);
+						l.setLongitude(lon);
+						res.add(l);
+					} catch (NumberFormatException e) {
+					}
+				}
+				st = next + 1;
+			}
+		}
+		if(list.getLength() == 0){
+			if(doc.getChildNodes().getLength() == 1){
+				Node item = doc.getChildNodes().item(0);
+				return new RouteCalculationResult(item.getNodeValue());
+				
+			}
+		}
+		params.intermediates = null;
+		return new RouteCalculationResult(res, null, params, null);
+	}
 	
 	protected RouteCalculationResult findVectorMapsRoute(final RouteCalculationParams params, boolean calcGPXRoute) throws IOException {
 		BinaryMapIndexReader[] files = params.ctx.getResourceManager().getRoutingMapFiles();
@@ -941,71 +958,71 @@ public class RouteProvider {
 		return directions;
 	}
 	
-//	protected RouteCalculationResult findORSRoute(RouteCalculationParams params) throws MalformedURLException, IOException, ParserConfigurationException, FactoryConfigurationError,
-//			SAXException {
-//		List<Location> res = new ArrayList<Location>();
-//
-//		String rpref = "Fastest";
-//		if (params.mode.isDerivedRoutingFrom(ApplicationMode.PEDESTRIAN)) {
-//			rpref = "Pedestrian";
-//		} else if (params.mode.isDerivedRoutingFrom(ApplicationMode.BICYCLE)) {
-//			rpref = "Bicycle";
-//			// } else if (ApplicationMode.LOWTRAFFIC == mode) {
-//			// rpref = "BicycleSafety";
-//			// } else if (ApplicationMode.RACEBIKE == mode) {
-//			// rpref = "BicycleRacer";
-//			// } else if (ApplicationMode.TOURBIKE == mode) {
-//			// rpref = "BicycleRoute";
-//			// } else if (ApplicationMode.MTBIKE == mode) {
-//			// rpref = "BicycleMTB";
-//		} else if (params.mode.isDerivedRoutingFrom(ApplicationMode.CAR)) {
-//			if (!params.fast) {
-//				rpref = "Shortest";
-//			}
-//		} else {
-//			return applicationModeNotSupported(params);
-//		}
-//
-//		StringBuilder request = new StringBuilder();
-//		request.append("http://openls.geog.uni-heidelberg.de/osm/eu/routing?").append("start=").append(params.start.getLongitude()).append(',')
-//				.append(params.start.getLatitude()).append("&end=").append(params.end.getLongitude()).append(',').append(params.end.getLatitude())
-//				.append("&preference=").append(rpref);
-//		// TODO if we would get instructions from the service, we could use this language setting
-//		// .append("&language=").append(Locale.getDefault().getLanguage());
-//
-//		log.info("URL route " + request);
-//		URLConnection connection = NetworkUtils.getHttpURLConnection(request.toString());
-//		connection.setRequestProperty("User-Agent", Version.getFullVersion(params.ctx));
-//
-//		DocumentBuilder dom = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-//		Document doc = dom.parse(new InputSource(new InputStreamReader(connection.getInputStream())));
-//		NodeList list = doc.getElementsByTagName("xls:RouteGeometry"); //$NON-NLS-1$
-//		for (int i = 0; i < list.getLength(); i++) {
-//			NodeList poslist = ((Element) list.item(i)).getElementsByTagName("gml:pos"); //$NON-NLS-1$
-//			for (int j = 0; j < poslist.getLength(); j++) {
-//				String text = poslist.item(j).getFirstChild().getNodeValue();
-//				int s = text.indexOf(' ');
-//				try {
-//					double lon = Double.parseDouble(text.substring(0, s));
-//					double lat = Double.parseDouble(text.substring(s + 1));
-//					Location l = new Location("router"); //$NON-NLS-1$
-//					l.setLatitude(lat);
-//					l.setLongitude(lon);
-//					res.add(l);
-//				} catch (NumberFormatException nfe) {
-//				}
-//			}
-//		}
-//		if (list.getLength() == 0) {
-//			if (doc.getChildNodes().getLength() == 1) {
-//				Node item = doc.getChildNodes().item(0);
-//				return new RouteCalculationResult(item.getNodeValue());
-//
-//			}
-//		}
-//		params.intermediates = null;
-//		return new RouteCalculationResult(res, null, params, null);
-//	}
+	protected RouteCalculationResult findORSRoute(RouteCalculationParams params) throws MalformedURLException, IOException, ParserConfigurationException, FactoryConfigurationError,
+			SAXException {
+		List<Location> res = new ArrayList<Location>();
+
+		String rpref = "Fastest";
+		if (params.mode.isDerivedRoutingFrom(ApplicationMode.PEDESTRIAN)) {
+			rpref = "Pedestrian";
+		} else if (params.mode.isDerivedRoutingFrom(ApplicationMode.BICYCLE)) {
+			rpref = "Bicycle";
+			// } else if (ApplicationMode.LOWTRAFFIC == mode) {
+			// rpref = "BicycleSafety";
+			// } else if (ApplicationMode.RACEBIKE == mode) {
+			// rpref = "BicycleRacer";
+			// } else if (ApplicationMode.TOURBIKE == mode) {
+			// rpref = "BicycleRoute";
+			// } else if (ApplicationMode.MTBIKE == mode) {
+			// rpref = "BicycleMTB";
+		} else if (params.mode.isDerivedRoutingFrom(ApplicationMode.CAR)) {
+			if (!params.fast) {
+				rpref = "Shortest";
+			}
+		} else {
+			return applicationModeNotSupported(params);
+		}
+
+		StringBuilder request = new StringBuilder();
+		request.append("http://openls.geog.uni-heidelberg.de/osm/eu/routing?").append("start=").append(params.start.getLongitude()).append(',')
+				.append(params.start.getLatitude()).append("&end=").append(params.end.getLongitude()).append(',').append(params.end.getLatitude())
+				.append("&preference=").append(rpref);
+		// TODO if we would get instructions from the service, we could use this language setting
+		// .append("&language=").append(Locale.getDefault().getLanguage());
+
+		log.info("URL route " + request);
+		URLConnection connection = NetworkUtils.getHttpURLConnection(request.toString());
+		connection.setRequestProperty("User-Agent", Version.getFullVersion(params.ctx));
+
+		DocumentBuilder dom = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+		Document doc = dom.parse(connection.getInputStream());
+		NodeList list = doc.getElementsByTagName("xls:RouteGeometry"); //$NON-NLS-1$
+		for (int i = 0; i < list.getLength(); i++) {
+			NodeList poslist = ((Element) list.item(i)).getElementsByTagName("gml:pos"); //$NON-NLS-1$
+			for (int j = 0; j < poslist.getLength(); j++) {
+				String text = poslist.item(j).getFirstChild().getNodeValue();
+				int s = text.indexOf(' ');
+				try {
+					double lon = Double.parseDouble(text.substring(0, s));
+					double lat = Double.parseDouble(text.substring(s + 1));
+					Location l = new Location("router"); //$NON-NLS-1$
+					l.setLatitude(lat);
+					l.setLongitude(lon);
+					res.add(l);
+				} catch (NumberFormatException nfe) {
+				}
+			}
+		}
+		if (list.getLength() == 0) {
+			if (doc.getChildNodes().getLength() == 1) {
+				Node item = doc.getChildNodes().item(0);
+				return new RouteCalculationResult(item.getNodeValue());
+
+			}
+		}
+		params.intermediates = null;
+		return new RouteCalculationResult(res, null, params, null);
+	}
 	
 	public GPXFile createOsmandRouterGPX(RouteCalculationResult srcRoute, OsmWindow ctx){
         TargetPointsHelper helper = ctx.getTargetPointsHelper();
@@ -1102,57 +1119,62 @@ public class RouteProvider {
 		uri.append("&loc=").append(String.valueOf(il.getLatitude()));
 		uri.append(",").append(String.valueOf(il.getLongitude()));
 	}
-//	protected RouteCalculationResult findOSRMRoute(RouteCalculationParams params)
-//			throws MalformedURLException, IOException, JSONException {
-//		// https://router.project-osrm.org/viaroute?loc=52.28,4.83&loc=52.35,4.95&alt=false&output=gpx
-//		List<Location> res = new ArrayList<Location>();
-//		StringBuilder uri = new StringBuilder();
-//		// possibly hide that API key because it is privacy of osmand
-//		// A6421860EBB04234AB5EF2D049F2CD8F key is compromised
-//		String scheme = "";
-//		// https certificate doesn't seem to be accepted on Android
-////		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD && false) {
-////			scheme = "https";
-////		} else {
-//			scheme = "http";
-////		}
-//		uri.append(scheme + "://router.project-osrm.org/viaroute?alt=false"); //$NON-NLS-1$
-//		uri.append("&loc=").append(String.valueOf(params.start.getLatitude()));
-//		uri.append(",").append(String.valueOf(params.start.getLongitude()));
-//		if(params.intermediates != null && params.intermediates.size() > 0) {
-//			for(LatLon il : params.intermediates) {
-//				appendOSRMLoc(uri, il);
-//			}
+	protected RouteCalculationResult findOSRMRoute(RouteCalculationParams params)
+			throws MalformedURLException, IOException{
+		// https://router.project-osrm.org/viaroute?loc=52.28,4.83&loc=52.35,4.95&alt=false&output=gpx
+		List<Location> res = new ArrayList<Location>();
+		StringBuilder uri = new StringBuilder();
+		String scheme = "";
+		// https certificate doesn't seem to be accepted on Android
+//		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD && false) {
+//			scheme = "https";
+//		} else {
+			scheme = "http";
 //		}
-//		appendOSRMLoc(uri, params.end);
+		uri.append(scheme + "://router.project-osrm.org/viaroute?alt=false"); //$NON-NLS-1$
+		uri.append("&loc=").append(String.valueOf(params.start.getLatitude()));
+		uri.append(",").append(String.valueOf(params.start.getLongitude()));
+		if(params.intermediates != null && params.intermediates.size() > 0) {
+			for(LatLon il : params.intermediates) {
+				appendOSRMLoc(uri, il);
+			}
+		}
+		appendOSRMLoc(uri, params.end);
 //		uri.append("&output=gpx"); //$NON-NLS-1$
-//		
-//		log.info("URL route " + uri);
-//		
-//		URLConnection connection = NetworkUtils.getHttpURLConnection(uri.toString());
-//		connection.setRequestProperty("User-Agent", Version.getFullVersion(params.ctx));
-////		StringBuilder content = new StringBuilder();
-////		BufferedReader rs = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-////		String s;
-////		while((s = rs.readLine()) != null) {
-////			content.append(s);
-////		}
-////		JSONObject obj = new JSONObject(content.toString());
-//		final InputStream inputStream = connection.getInputStream();
-//		GPXFile gpxFile = GPXUtilities.loadGPXFile(params.ctx, inputStream);
-//		try {
-//			inputStream.close();
-//		} catch(IOException e){
-//		}
-//		if(gpxFile.routes.isEmpty()) {
-//			return new RouteCalculationResult("Route is empty");
-//		}
-//		for (WptPt pt : gpxFile.routes.get(0).points) {
-//			res.add(createLocation(pt));
-//		}
-//		params.intermediates = null;
-//		return new RouteCalculationResult(res, null, params, null);
-//	}
+		uri.append("&compression=false"); //$NON-NLS-1$
+		
+		log.info("URL route " + uri);
+		
+		URLConnection connection = NetworkUtils.getHttpURLConnection(uri.toString());
+		connection.setRequestProperty("User-Agent", Version.getFullVersion(params.ctx));
+		StringBuilder content = new StringBuilder();
+		BufferedReader rs = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+		String s;
+		while((s = rs.readLine()) != null) {
+			content.append(s);
+		}
+		try {
+			JSONObject obj = new JSONObject(content.toString());
+			int status = obj.getInt("status");
+			if(status == 200){
+				JSONArray routeGeometry = obj.getJSONArray("route_geometry");
+				for (int i = 0; i < routeGeometry.length(); ++i) {
+					double latitude = routeGeometry.getJSONArray(i).getDouble(0);
+					double longitude = routeGeometry.getJSONArray(i).getDouble(1);
+					Location loc = new Location("OsmandRouteProvider");
+					loc.setLatitude(latitude);
+					loc.setLongitude(longitude);
+					res.add(loc);
+				} 
+			} else {
+				new RouteCalculationResult(params.ctx.getString(R.string.no_route));
+			}
+		} catch (JSONException e) {
+			log.error("JSON Parsing went wrong", e);
+		}
+		params.intermediates = null;
+		return new RouteCalculationResult(res, null, params, null);
+	}
 
 
 //	protected RouteCalculationResult findBROUTERRoute(RouteCalculationParams params) throws MalformedURLException,

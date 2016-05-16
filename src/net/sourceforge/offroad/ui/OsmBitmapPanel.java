@@ -693,7 +693,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 					public void runAfterThreadsBeforeHaveFinished() {
 						// instead of setting this, we store it:
 						synchronized (mImageStore) {
-							log.info("Adding  " + mTileCopy + " to the cache.");
+							log.debug("Adding  " + mTileCopy + " to the cache.");
 							mImageStore.put(mTileCopy, mNewBitmap);
 						}
 					}

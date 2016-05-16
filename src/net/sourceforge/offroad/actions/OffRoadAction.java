@@ -122,7 +122,7 @@ public abstract class OffRoadAction extends AbstractAction {
 	public static class OffRoadMenuItem extends JCheckBoxMenuItem {
 		private JMenu mMenu;
 
-		public OffRoadMenuItem(PoiFilterAction pPoiFilterAction, JMenu pMenu) {
+		public OffRoadMenuItem(OffRoadAction pPoiFilterAction, JMenu pMenu) {
 			super(pPoiFilterAction);
 			mMenu = pMenu;
 			mMenu.addMenuListener(new MenuListener() {

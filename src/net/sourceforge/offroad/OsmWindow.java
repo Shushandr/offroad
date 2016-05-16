@@ -93,6 +93,7 @@ import net.osmand.plus.render.MapRenderRepositories;
 import net.osmand.plus.render.RendererRegistry;
 import net.osmand.plus.render.RenderingIcons;
 import net.osmand.plus.resources.ResourceManager;
+import net.osmand.plus.routing.RouteProvider.RouteService;
 import net.osmand.plus.routing.RoutingHelper;
 import net.osmand.plus.views.POIMapLayer;
 import net.osmand.render.RenderingRulesStorage;
@@ -101,6 +102,7 @@ import net.osmand.router.RoutingConfiguration;
 import net.osmand.router.RoutingConfiguration.Builder;
 import net.osmand.util.MapUtils;
 import net.sourceforge.offroad.actions.AddFavoriteAction;
+import net.sourceforge.offroad.actions.ChooseRouteServiceAction;
 import net.sourceforge.offroad.actions.ClearRouteAction;
 import net.sourceforge.offroad.actions.DownloadAction;
 import net.sourceforge.offroad.actions.NavigationBackAction;
@@ -441,6 +443,16 @@ public class OsmWindow {
 		jNavigationMenu.add(new JMenuItem(new RouteAction(this, ApplicationMode.PEDESTRIAN)));
 		jNavigationMenu.add(new JMenuItem(new ClearRouteAction(this)));
 		jNavigationMenu.add(new JSeparator());
+		JMenu lRoutingServiceMenu = new JMenu(getOffRoadString("offroad.routing_service"));
+		for (int i = 0; i < RouteService.values().length; i++) {
+			RouteService service = RouteService.values()[i];
+			if(service.isAvailable(this)){
+				JMenuItem lRoutingServiceItem = new OffRoadMenuItem(new ChooseRouteServiceAction(this, service), lRoutingServiceMenu);
+				lRoutingServiceMenu.add(lRoutingServiceItem);
+			}
+		}
+		jNavigationMenu.add(lRoutingServiceMenu);
+		jNavigationMenu.add(new JSeparator());
 		addToMenu(jNavigationMenu, "offroad.up", item -> mDrawPanel.moveImageAnimated(0,-1f/3), "control UP");
 		addToMenu(jNavigationMenu, "offroad.down", item -> mDrawPanel.moveImageAnimated(0,1f/3), "control DOWN");
 		addToMenu(jNavigationMenu, "offroad.left", item -> mDrawPanel.moveImageAnimated(-1f/3,0), "control LEFT");
@@ -514,7 +526,9 @@ public class OsmWindow {
 	void addToMenu(JMenu jNavigationMenu, String name, ActionListener action, String keyStroke) {
 		JMenuItem navigationBackItem = new JMenuItem(getOffRoadString(name)); //$NON-NLS-1$
 		navigationBackItem.addActionListener(action);
-		navigationBackItem.setAccelerator(KeyStroke.getKeyStroke(keyStroke)); //$NON-NLS-1$
+		if (keyStroke != null) {
+			navigationBackItem.setAccelerator(KeyStroke.getKeyStroke(keyStroke)); //$NON-NLS-1$
+		}
 		jNavigationMenu.add(navigationBackItem);
 	}
 
