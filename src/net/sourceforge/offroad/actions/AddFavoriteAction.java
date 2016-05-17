@@ -20,7 +20,6 @@ import javax.swing.event.DocumentListener;
 
 import net.osmand.data.FavouritePoint;
 import net.osmand.data.LatLon;
-import net.osmand.data.PointDescription;
 import net.osmand.plus.FavouritesDbHelper.FavoriteGroup;
 import net.osmand.plus.MapMarkersHelper;
 import net.osmand.plus.MapMarkersHelper.MapMarker;
@@ -148,6 +147,7 @@ public class AddFavoriteAction extends OffRoadAction implements DocumentListener
 		}
 		mOkButton.setEnabled(false);
 		mDialog.pack();
+		decorateDialog();
 		mDialog.setVisible(true);
 
 	}
@@ -177,10 +177,6 @@ public class AddFavoriteAction extends OffRoadAction implements DocumentListener
 			mContext.getDrawPanel().drawLater();
 		}
 		disposeDialog();
-	}
-
-	@Override
-	public void save() {
 	}
 
 	@Override

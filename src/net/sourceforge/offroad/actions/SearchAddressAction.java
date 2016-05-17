@@ -200,12 +200,14 @@ public class SearchAddressAction extends OffRoadAction {
 		mRegionStore.addSelectionListener();
 		mDialog.pack();
 		removeWaitingCursor();
+		decorateDialog();
 		mDialog.setVisible(true);
 
 	}
 
 	@Override
 	public void save() {
+		super.save();
 		mRegionStore.save(mContext.getSettings());
 	}
 

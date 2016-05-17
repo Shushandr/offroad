@@ -353,6 +353,7 @@ public class DownloadAction extends OffRoadAction {
 			}
 		}
 		mDialog.pack();
+		decorateDialog();
 		removeWaitingCursor();
 		mDialog.setVisible(true);
 
@@ -506,11 +507,6 @@ public class DownloadAction extends OffRoadAction {
 		mTextField.requestFocus();
 	}
 
-	@Override
-	public void save() {
-		// TODO Auto-generated method stub
-
-	}
 
 	private final class FilterTextDocumentListener implements DocumentListener {
 		private static final int TYPE_DELAY_TIME = 500;

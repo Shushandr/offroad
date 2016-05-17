@@ -13,6 +13,8 @@ import java.awt.Insets;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
@@ -48,6 +50,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JProgressBar;
 import javax.swing.JSeparator;
+import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
@@ -118,6 +121,8 @@ import net.sourceforge.offroad.actions.ShowFavoriteAction;
 import net.sourceforge.offroad.actions.ShowWikipediaAction;
 import net.sourceforge.offroad.data.QuadRectExtendable;
 import net.sourceforge.offroad.data.SQLiteImpl;
+import net.sourceforge.offroad.data.persistence.ComponentLocationStorage;
+import net.sourceforge.offroad.data.persistence.OsmWindowLocationStorage;
 import net.sourceforge.offroad.res.ResourceTest;
 import net.sourceforge.offroad.res.Resources;
 import net.sourceforge.offroad.ui.AmenityTablePanel;
@@ -278,6 +283,9 @@ public class OsmWindow {
 
 	private OsmAndLocationProvider mOsmAndLocationProvider;
 
+
+	private JSplitPane mSplitPane;
+
 	public void createAndShowUI() {
 		mDrawPanel = new OsmBitmapPanel(this);
 		mAdapter = new OsmBitmapPanelMouseAdapter(mDrawPanel);
@@ -374,8 +382,8 @@ public class OsmWindow {
 		mFrame = new JFrame(getOffRoadString("offroad.string4")); //$NON-NLS-1$
 		mFrame.getContentPane().setLayout(new BorderLayout());
 		mFrame.getContentPane().add(mToolBar, BorderLayout.NORTH);
-		mFrame.getContentPane().add(mAmenityTable, BorderLayout.WEST);
-		mFrame.getContentPane().add(mDrawPanel, BorderLayout.CENTER);
+		mSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, mAmenityTable, mDrawPanel);
+		mFrame.getContentPane().add(mSplitPane);
 		mFrame.getContentPane().add(mStatusBar, BorderLayout.SOUTH);
 		mFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		mFrame.addWindowListener(new WindowAdapter() {
@@ -520,7 +528,21 @@ public class OsmWindow {
 		mFrame.setJMenuBar(menubar);
 		mDrawPanel.init();
 		mFrame.pack();
-		mFrame.setLocationRelativeTo(null);
+		OsmWindowLocationStorage storage = (OsmWindowLocationStorage) ComponentLocationStorage.decorateDialog(this, mFrame, getClass().getName());
+		if (storage!= null) {
+			mFrame.addComponentListener(new ComponentAdapter() {
+				@Override
+				public void componentResized(ComponentEvent pE) {
+					int splitPanePosition = storage.getSplitLocation();
+					int lastSplitPanePosition = storage.getSplitLocation();
+					if (mSplitPane != null && splitPanePosition != -1 && lastSplitPanePosition != -1) {
+						mSplitPane.setDividerLocation(splitPanePosition);
+						mSplitPane.setLastDividerLocation(lastSplitPanePosition);
+					}
+					mFrame.removeComponentListener(this);
+				}
+			});
+		}
 		mFrame.setVisible(true);
 	}
 
@@ -569,6 +591,9 @@ public class OsmWindow {
 		prefs.setLastKnownMapLocation(tileBox.getLatitude(), tileBox.getLongitude());
 		prefs.setLastKnownMapZoom(tileBox.getZoom());
 		getSettings().SELECTED_POI_FILTER_STRING_FOR_MAP.set(mSearchTextField.getText());
+		OsmWindowLocationStorage storage = new OsmWindowLocationStorage();
+		storage.setSplitLocation(mSplitPane.getDividerLocation());
+		ComponentLocationStorage.storeDialogPositions(this, mFrame, storage, getClass().getName());
 		settings.save();
 	}
 
@@ -1159,10 +1184,11 @@ public class OsmWindow {
 	void toggleSearchBar() {
 		if(mSearchBarVisible){
 			mFrame.getContentPane().remove(mToolBar);
-			mFrame.getContentPane().remove(mAmenityTable);
+//			mFrame.getContentPane().remove(mAmenityTable);
+			mSplitPane.setDividerLocation(0);
 		} else {
 			mFrame.getContentPane().add(mToolBar, BorderLayout.NORTH);
-			mFrame.getContentPane().add(mAmenityTable, BorderLayout.WEST);
+//			mFrame.getContentPane().add(mAmenityTable, BorderLayout.WEST);
 		}
 		mSearchBarVisible = ! mSearchBarVisible;
 		mFrame.revalidate();

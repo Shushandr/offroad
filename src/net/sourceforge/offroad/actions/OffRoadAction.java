@@ -40,6 +40,7 @@ import org.apache.commons.logging.Log;
 
 import net.osmand.PlatformUtil;
 import net.sourceforge.offroad.OsmWindow;
+import net.sourceforge.offroad.data.persistence.ComponentLocationStorage;
 
 /**
  * @author foltin
@@ -94,8 +95,21 @@ public abstract class OffRoadAction extends AbstractAction {
 		mDialog.dispose();
 	}
 
-	public abstract void save();
+	public void save(){
+		if (mDialog!= null) {
+			ComponentLocationStorage.storeDialogPositions(mContext, mDialog, createComponentLocationStorage(),
+					getComponentLocationStorageProperty());
+		}
+	}
 
+	protected ComponentLocationStorage createComponentLocationStorage() {
+		return new ComponentLocationStorage();
+	}
+
+	protected String getComponentLocationStorageProperty() {
+		return this.getClass().getName();
+	}
+	
 	protected String getResourceString(String pWindowTitle) {
 		return mContext.getOffRoadString(pWindowTitle);
 	}
@@ -113,6 +127,10 @@ public abstract class OffRoadAction extends AbstractAction {
 				disposeDialog();
 			}
 		});
+	}
+
+	protected void decorateDialog() {
+		ComponentLocationStorage.decorateDialog(mContext, mDialog, getComponentLocationStorageProperty());
 	}
 
 	public boolean isSelected() {
