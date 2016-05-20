@@ -316,8 +316,10 @@ public class OsmWindow {
 		mToolBar.add(new JLabel(getOffRoadString("offroad.search")), new GridBagConstraints(0, 0, 1, 1, 0, 1, GridBagConstraints.WEST, GridBagConstraints.VERTICAL, new Insets(0, 0, 0, 0), 0, 0));
 		
 		mSearchTextField = new JTextField();
+		mSearchTextField.getInputMap().put(KeyStroke.getKeyStroke("control LEFT"), "none");
+		mSearchTextField.getInputMap().put(KeyStroke.getKeyStroke("control RIGHT"), "none");
 		mSearchTextField.setText(getSettings().SELECTED_POI_FILTER_STRING_FOR_MAP.get());
-		mAmenityTable = new AmenityTablePanel(getInstance());
+		mAmenityTable = new AmenityTablePanel(this);
 		getSearchTextField().addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent pE) {
@@ -359,7 +361,7 @@ public class OsmWindow {
 		mComboBox = new JComboBox<PoiUIFilter>();
 		mComboBoxModel = new DefaultComboBoxModel<PoiUIFilter>();
 		mCurrentPoiFilter = mPoiFilters.getSearchByNamePOIFilter();
-		mComboBoxModel.addElement(mCurrentPoiFilter);
+		mComboBoxModel.addElement(mPoiFilters.getSearchByNamePOIFilter());
 		mComboBoxModel.addElement(mPoiFilters.getNominatimAddressFilter());
 		mComboBoxModel.addElement(mPoiFilters.getNominatimPOIFilter());
 		for (PoiUIFilter filter : mPoiFilters.getTopDefinedPoiFilters()) {
