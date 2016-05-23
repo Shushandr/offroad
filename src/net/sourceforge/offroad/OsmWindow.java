@@ -83,10 +83,12 @@ import net.osmand.plus.ApplicationMode;
 import net.osmand.plus.FavouritesDbHelper;
 import net.osmand.plus.FavouritesDbHelper.FavoriteGroup;
 import net.osmand.plus.GeocodingLookupService;
+import net.osmand.plus.GpxSelectionHelper;
 import net.osmand.plus.MapMarkersHelper;
 import net.osmand.plus.OsmAndLocationProvider;
 import net.osmand.plus.OsmandSettings;
 import net.osmand.plus.TargetPointsHelper;
+import net.osmand.plus.activities.SavingTrackHelper;
 import net.osmand.plus.api.SQLiteAPI;
 import net.osmand.plus.inapp.util.Base64;
 import net.osmand.plus.inapp.util.Base64DecoderException;
@@ -108,6 +110,7 @@ import net.sourceforge.offroad.actions.AddFavoriteAction;
 import net.sourceforge.offroad.actions.ChooseRouteServiceAction;
 import net.sourceforge.offroad.actions.ClearRouteAction;
 import net.sourceforge.offroad.actions.DownloadAction;
+import net.sourceforge.offroad.actions.GpxImportAction;
 import net.sourceforge.offroad.actions.NavigationBackAction;
 import net.sourceforge.offroad.actions.NavigationForwardAction;
 import net.sourceforge.offroad.actions.NavigationRotationAction;
@@ -123,6 +126,7 @@ import net.sourceforge.offroad.data.QuadRectExtendable;
 import net.sourceforge.offroad.data.SQLiteImpl;
 import net.sourceforge.offroad.data.persistence.ComponentLocationStorage;
 import net.sourceforge.offroad.data.persistence.OsmWindowLocationStorage;
+import net.sourceforge.offroad.res.OffRoadResources;
 import net.sourceforge.offroad.res.ResourceTest;
 import net.sourceforge.offroad.res.Resources;
 import net.sourceforge.offroad.ui.AmenityTablePanel;
@@ -286,6 +290,15 @@ public class OsmWindow {
 
 	private JSplitPane mSplitPane;
 
+
+	private OffRoadResources mOffRoadResources;
+
+
+	private GpxSelectionHelper mGpxSelectionHelper;
+
+
+	private SavingTrackHelper mSavingTrackHelper;
+
 	public void createAndShowUI() {
 		mDrawPanel = new OsmBitmapPanel(this);
 		mAdapter = new OsmBitmapPanelMouseAdapter(mDrawPanel);
@@ -414,6 +427,9 @@ public class OsmWindow {
 			}
 		});
 		jFileMenu.add(saveItem);
+		JMenuItem importGpxItem = new JMenuItem(getOffRoadString("offroad.import_gpx")); //$NON-NLS-1$
+		importGpxItem.addActionListener(new GpxImportAction(this));
+		jFileMenu.add(importGpxItem);
 		menubar.add(jFileMenu);
 		JMenu jSearchMenu = new JMenu(getOffRoadString("offroad.string7")); //$NON-NLS-1$
 		JMenuItem findItem = new JMenuItem(getOffRoadString("offroad.string8")); //$NON-NLS-1$
@@ -1222,6 +1238,29 @@ public class OsmWindow {
 
 	public Properties getOffroadProperties() {
 		return mOffroadProperties;
+	}
+
+	public OffRoadResources getResources() {
+		if(mOffRoadResources == null){
+			mOffRoadResources = new OffRoadResources(this);
+		}
+		return mOffRoadResources;
+	}
+	
+	
+
+	public GpxSelectionHelper getSelectedGpxHelper() {
+		if(mGpxSelectionHelper==null){
+			mGpxSelectionHelper = new GpxSelectionHelper(this, getSavingTrackHelper());
+		}
+		return mGpxSelectionHelper;
+	}
+
+	protected SavingTrackHelper getSavingTrackHelper() {
+		if (mSavingTrackHelper==null) {
+			mSavingTrackHelper = new SavingTrackHelper(this);
+		}
+		return mSavingTrackHelper;
 	}
 	
 }

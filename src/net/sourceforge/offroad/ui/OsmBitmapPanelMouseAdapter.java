@@ -136,9 +136,9 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 			drawPanel.directRotateIncrement(10*pE.getPreciseWheelRotation());
 			return;
 		}
+//		drawPanel.directZoomIncrement(pE.getWheelRotation(), pE.getPoint());
 		mZoomPerformer.addWheelEvent(pE.getWheelRotation(), pE.getPoint());
 		mZoomTimer.restart();
-//		drawPanel.directZoomIncrement(pE.getPreciseWheelRotation(), pE.getPoint());
 	}
 
 	@Override

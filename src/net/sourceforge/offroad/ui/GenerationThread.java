@@ -17,7 +17,7 @@ class GenerationThread extends OffRoadUIThread {
 
 	GenerationThread(OsmBitmapPanel pOsmBitmapPanel, RotatedTileBox pTileCopy, ScreenManipulation pManipulation) {
 		super(pOsmBitmapPanel);
-		mTileCopy = pTileCopy;
+		mTileCopy = pTileCopy.copy();
 		mManipulation = (pManipulation==null)?null:new ScreenManipulation(pManipulation);
 	}
 
@@ -37,7 +37,8 @@ class GenerationThread extends OffRoadUIThread {
 				} else {
 					mOsmBitmapPanel.addScreenManipulation(mManipulation.negate());
 				}
-				mOsmBitmapPanel.setImage(mNewBitmap);
+				// in the lazy case, the bitmap may not have been generated
+				mOsmBitmapPanel.setImage(mNewBitmap, mTileCopy);
 			}
 		});
 	}

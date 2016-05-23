@@ -33,7 +33,7 @@ import net.sourceforge.offroad.ui.OsmBitmapPanel.ScreenManipulation;
  * @date 26.04.2016
  */
 public class OffRoadUIThread implements Runnable {
-	private final static Log log = PlatformUtil.getLog(OffRoadUIThread.class);
+	protected final static Log log = PlatformUtil.getLog(OffRoadUIThread.class);
 
 	
 	public interface OffRoadUIThreadListener {
@@ -41,9 +41,9 @@ public class OffRoadUIThread implements Runnable {
 		public void threadFinished();
 	}
 
-	private OffRoadUIThread mNextThread = null;
+	protected OffRoadUIThread mNextThread = null;
 	private boolean hasFinished = false;
-	private boolean mShouldContinue = false;
+	protected boolean mShouldContinue = false;
 	protected OsmBitmapPanel mOsmBitmapPanel;
 	private Set<OffRoadUIThreadListener> mListeners = new HashSet<>();
 
@@ -96,15 +96,7 @@ public class OffRoadUIThread implements Runnable {
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}
-		while(!mShouldContinue){
-			// FIXME: Use notify.
-			try {
-				Thread.sleep(20);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-		log.debug("THREAD:" + this + " should continue.");
+		waitForThreadBeforeHaveFinished();
 		try {
 			runAfterThreadsBeforeHaveFinished();
 		} catch (Exception e) {
@@ -123,6 +115,18 @@ public class OffRoadUIThread implements Runnable {
 		for (OffRoadUIThreadListener listener : mListeners) {
 			listener.threadFinished();
 		}
+	}
+
+	protected void waitForThreadBeforeHaveFinished() {
+		while(!mShouldContinue){
+			// FIXME: Use notify.
+			try {
+				Thread.sleep(20);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		log.debug("THREAD:" + this + " should continue.");
 	}
 
 	

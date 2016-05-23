@@ -25,6 +25,7 @@ public interface SQLiteAPI {
 		boolean isDbLockedByOtherThreads();
 
 		boolean isClosed();
+		boolean isOpen();
 
 	}
 	
@@ -45,7 +46,7 @@ public interface SQLiteAPI {
 		
 		long getLong(int ind);
 		
-		long getInt(int ind);
+		int getInt(int ind);
 		
 		byte[] getBlob(int ind);
 		
@@ -76,6 +77,8 @@ public interface SQLiteAPI {
 		void bindBlob(int i, byte[] val);
 
 	}
+	
+	public boolean isDatabaseExistent(String name);
 	
 	public SQLiteConnection getOrCreateDatabase(String name, boolean readOnly);
 	

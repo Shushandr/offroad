@@ -118,7 +118,7 @@ public class SQLiteImpl implements SQLiteAPI {
 		}
 
 		@Override
-		public long getInt(int pInd) {
+		public int getInt(int pInd) {
 			try {
 				return mResult.getInt(pInd+1);
 			} catch (SQLException e) {
@@ -249,6 +249,11 @@ public class SQLiteImpl implements SQLiteAPI {
 			return true;
 		}
 
+		@Override
+		public boolean isOpen() {
+			return !isClosed();
+		}
+		
 	}
 
 	public SQLiteImpl(OsmWindow pOsmWindow) {
@@ -265,7 +270,7 @@ public class SQLiteImpl implements SQLiteAPI {
 	public SQLiteConnection getOrCreateDatabase(String pName, boolean pReadOnly) {
 		try {
 			SQLiteConfig config = new SQLiteConfig();
-			String file = mContext.getAppPathName(pName)+".db";
+			String file = getDatabaseFileName(pName);
 			if(pReadOnly && new File(file).exists()){
 				config.setReadOnly(pReadOnly);
 			}
@@ -275,6 +280,11 @@ public class SQLiteImpl implements SQLiteAPI {
 			log.error("SQLException:"+pName, e);
 		}
 		return null;
+	}
+
+	protected String getDatabaseFileName(String pName) {
+		String file = mContext.getAppPathName(pName)+".db";
+		return file;
 	}
 
 	/*
@@ -305,6 +315,12 @@ public class SQLiteImpl implements SQLiteAPI {
 		}
 		query.close();
 		conn.close();
+	}
+
+	@Override
+	public boolean isDatabaseExistent(String pName) {
+		String file = getDatabaseFileName(pName);
+		return new File(file).exists();
 	}
 	
 }

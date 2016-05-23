@@ -55,7 +55,7 @@ public class RotatedTileBoxCalculationOrder {
 	}
 
 	public void init(RotatedTileBox pTb) {
-		mTb = pTb;
+		mTb = pTb.copy();
 		mIndex = 0;
 	}
 
