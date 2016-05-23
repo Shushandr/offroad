@@ -1,6 +1,7 @@
 package net.osmand.plus.views;
 
 import java.awt.Graphics2D;
+import java.awt.Polygon;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
@@ -151,7 +152,7 @@ public abstract class OsmandMapLayer {
 		return cnt;
 	}
 
-	public int calculatePath(RotatedTileBox tb, TIntArrayList xs, TIntArrayList ys, Path2D path) {
+	public int calculatePath(RotatedTileBox tb, TIntArrayList xs, TIntArrayList ys, Path2D pPath) {
 		boolean start = false;
 		int px = xs.get(0);
 		int py = ys.get(0);
@@ -178,9 +179,9 @@ public abstract class OsmandMapLayer {
 			if (draw) {
 				if (!start) {
 					cnt++;
-					path.moveTo(px, py);
+					pPath.moveTo(px, py);
 				}
-				path.lineTo(x, y);
+				pPath.lineTo(x, y);
 				start = true;
 			} else {
 				start = false;
@@ -325,7 +326,7 @@ public abstract class OsmandMapLayer {
 		return readImage(image, view.getContext());
 	}
 	
-	public BufferedImage readImage(String image, OsmWindow ctx) {
+	public static BufferedImage readImage(String image, OsmWindow ctx) {
 		try {
 			InputStream resource = ctx.getResource(OsmWindow.IMAGE_PATH + image + ".png");
 			if(resource == null){

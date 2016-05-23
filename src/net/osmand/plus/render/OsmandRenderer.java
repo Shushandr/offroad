@@ -3,15 +3,12 @@ package net.osmand.plus.render;
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Polygon;
 import java.awt.Stroke;
 import java.awt.TexturePaint;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.awt.geom.RectangularShape;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,6 +34,8 @@ import net.osmand.util.Algorithms;
 import net.osmand.util.MapUtils;
 import net.sourceforge.offroad.Cap;
 import net.sourceforge.offroad.DashPathEffect;
+import net.sourceforge.offroad.ui.Paint;
+import net.sourceforge.offroad.ui.Paint.Style;
 
 public class OsmandRenderer {
 	private static final Log log = PlatformUtil.getLog(OsmandRenderer.class);
@@ -572,7 +571,14 @@ public class OsmandRenderer {
 		newGraphics.dispose();
 	}
 	
-	public boolean updatePaint(RenderingRuleSearchRequest req, Graphics2D pGraphics2d, int ind, boolean area, RenderingContext rc){
+	public boolean updatePaint(RenderingRuleSearchRequest req, Graphics2D pGraphics, int ind, boolean area, RenderingContext rc){
+		Paint p = new Paint();
+		boolean res = updatePaint(req, p, ind, area, rc);
+		p.updateGraphics(pGraphics);
+		return res;
+	}
+
+	public boolean updatePaint(RenderingRuleSearchRequest req, Paint p, int ind, boolean area, RenderingContext rc){
 		RenderingRuleProperty rColor;
 		RenderingRuleProperty rStrokeW;
 		RenderingRuleProperty rCap;
@@ -623,20 +629,19 @@ public class OsmandRenderer {
 			if(!req.isSpecified(rColor) && !req.isSpecified(req.ALL.R_SHADER)){
 				return false;
 			}
-//			pGraphics2d.setShader(null);
-//			pGraphics2d.setColorFilter(null);
-//			pGraphics2d.clearShadowLayer();
-//			p.setStyle(Style.FILL_AND_STROKE);
-			pGraphics2d.setStroke(new BasicStroke(0f));
-//			pGraphics2d.setStrokeWidth(0);
+			p.setShader(null);
+			p.setColorFilter(null);
+			p.clearShadowLayer();
+			p.setStyle(Style.FILL_AND_STROKE);
+			p.setStrokeWidth(0);
 		} else {
 			if(!req.isSpecified(rStrokeW)){
 				return false;
 			}
-//			pGraphics2d.setShader(null);
-//			pGraphics2d.setColorFilter(null);
-//			pGraphics2d.clearShadowLayer();
-//			pGraphics2d.setStyle(Style.STROKE);
+			p.setShader(null);
+			p.setColorFilter(null);
+			p.clearShadowLayer();
+			p.setStyle(Style.STROKE);
 			float width = rc.getComplexValue(req, rStrokeW);
 			width = Math.max(0f, width);
 			int capValue = BasicStroke.CAP_BUTT;
@@ -668,19 +673,19 @@ public class OsmandRenderer {
 				}
 				float[] cachedValues = parsedDashEffects.get(pathEffect);
 				
-				pGraphics2d.setStroke(getDashEffect(width, rc, cachedValues, 0, capValue));
+				p.setStroke(getDashEffect(width, rc, cachedValues, 0, capValue));
 			} else {
-				pGraphics2d.setStroke(new BasicStroke(width, capValue, BasicStroke.JOIN_ROUND));
+				p.setStroke(new BasicStroke(width, capValue, BasicStroke.JOIN_ROUND));
 			}
 		}
-		pGraphics2d.setColor(createColor(req.getIntPropertyValue(rColor)));
+		p.setColor(createColor(req.getIntPropertyValue(rColor)));
 		if(ind == 0){
 			String resId = req.getStringPropertyValue(req.ALL.R_SHADER);
 			if(resId != null){
 				if(req.getIntPropertyValue(rColor) == 0) {
-					pGraphics2d.setColor(Color.WHITE); // set color required by skia
+					p.setColor(Color.WHITE); // set color required by skia
 				}
-				pGraphics2d.setPaint(getShader(resId));
+				p.setPaint(getShader(resId));
 			}
 			// do not check shadow color here
 			if(rc.shadowRenderingMode == 1) {

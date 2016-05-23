@@ -1252,6 +1252,7 @@ public class OsmWindow {
 	public GpxSelectionHelper getSelectedGpxHelper() {
 		if(mGpxSelectionHelper==null){
 			mGpxSelectionHelper = new GpxSelectionHelper(this, getSavingTrackHelper());
+			mGpxSelectionHelper.loadGPXTracks(IProgress.EMPTY_PROGRESS);
 		}
 		return mGpxSelectionHelper;
 	}

@@ -43,6 +43,7 @@ import net.osmand.data.RotatedTileBox.RotatedTileBoxBuilder;
 import net.osmand.plus.OsmandSettings;
 import net.osmand.plus.routing.RoutingHelper.IRouteInformationListener;
 import net.osmand.plus.views.FavoritesLayer;
+import net.osmand.plus.views.GPXLayer;
 import net.osmand.plus.views.MapTextLayer;
 import net.osmand.plus.views.OsmandMapLayer;
 import net.osmand.plus.views.OsmandMapLayer.DrawSettings;
@@ -50,6 +51,7 @@ import net.osmand.plus.views.POIMapLayer;
 import net.osmand.plus.views.PointNavigationLayer;
 import net.osmand.plus.views.RouteLayer;
 import net.sourceforge.offroad.OsmWindow;
+import net.sourceforge.offroad.res.OffRoadResources;
 
 @SuppressWarnings("serial")
 public class OsmBitmapPanel extends JPanel implements IRouteInformationListener {
@@ -173,6 +175,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		addLayer(mPoiLayer, 3);
 		addLayer(new PointNavigationLayer(mContext), 4);
 		addLayer(new FavoritesLayer(), 5);
+		addLayer(new GPXLayer(), 6);
 		for (OsmandMapLayer layer : layers) {
 			layer.initLayer(this);
 		}
@@ -748,6 +751,10 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 			return false;
 		}
 		return true;
+	}
+
+	public OffRoadResources getResources() {
+		return mContext.getResources();
 	}
 
 }

@@ -8,6 +8,7 @@ import java.awt.image.BufferedImage;
 import java.util.TreeMap;
 
 import net.osmand.plus.views.FavoritesLayer;
+import net.osmand.plus.views.OsmandMapLayer;
 import net.sourceforge.offroad.OsmWindow;
 import net.sourceforge.offroad.ui.Drawable;
 import net.sourceforge.offroad.ui.PorterDuffMultiplyFilter;
@@ -24,24 +25,22 @@ public class FavoriteImageDrawable extends Drawable {
 //	private Paint paintInnerCircle;
 	private BufferedImage listDrawable;
 	private Rectangle listDrawable_Bounds = new Rectangle();
-	private FavoritesLayer mLayer;
 	private OsmWindow mContext;
 	private PorterDuffMultiplyFilter paintIcon_Composite;
 	private PorterDuffMultiplyFilter paintBackground_Composite;
 
-	public FavoriteImageDrawable(OsmWindow ctx, int color, boolean withShadow, FavoritesLayer pLayer) {
+	public FavoriteImageDrawable(OsmWindow ctx, int color, boolean withShadow) {
 		mContext = ctx;
 		this.withShadow = withShadow;
 		this.color = color;
-		mLayer = pLayer;
 //		paintBackground = new Paint();
 //		paintBackground.setColorFilter(new PorterDuffColorFilter(col, PorterDuff.Mode.MULTIPLY));
 		int col = color == 0 ? FavoritesLayer.DEFAULT_COLOR : color;
 		paintBackground_Composite = new PorterDuffMultiplyFilter(new Color(col, true));
 //		paintIcon = new Paint();
-		favIcon = mLayer.readImage("map_favorite", ctx);
-		favBackground = mLayer.readImage("map_white_favorite_shield", ctx);
-		listDrawable = mLayer.readImage("ic_action_fav_dark", ctx);
+		favIcon = OsmandMapLayer.readImage("map_favorite", ctx);
+		favBackground = OsmandMapLayer.readImage("map_white_favorite_shield", ctx);
+		listDrawable = OsmandMapLayer.readImage("ic_action_fav_dark", ctx);
 
 //		paintOuter = new Paint();
 //		paintOuter.setAntiAlias(true);
@@ -143,12 +142,12 @@ public class FavoriteImageDrawable extends Drawable {
 
 	private static TreeMap<Integer, FavoriteImageDrawable> cache = new TreeMap<>();
 
-	public static FavoriteImageDrawable getOrCreate(OsmWindow a, int color, boolean withShadow, FavoritesLayer pLayer) {
+	public static FavoriteImageDrawable getOrCreate(OsmWindow a, int color, boolean withShadow) {
 		color = color | 0xff000000;
 		int hash = (color << 2) + (withShadow ? 1 : 0);
 		FavoriteImageDrawable drawable = cache.get(hash);
 		if (drawable == null) {
-			drawable = new FavoriteImageDrawable(a, color, withShadow, pLayer);
+			drawable = new FavoriteImageDrawable(a, color, withShadow);
 			drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
 			cache.put(hash, drawable);
 		}

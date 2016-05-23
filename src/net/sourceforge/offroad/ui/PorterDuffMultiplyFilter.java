@@ -12,6 +12,9 @@ import java.awt.image.WritableRaster;
 public class PorterDuffMultiplyFilter implements Composite {
 	private Color mColor;
 
+	public PorterDuffMultiplyFilter(int pColor) {
+		this(new Color(pColor, true));
+	}
 	public PorterDuffMultiplyFilter(Color pColor) {
 		setColor(pColor);
 	}
