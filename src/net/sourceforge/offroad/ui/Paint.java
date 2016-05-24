@@ -54,7 +54,7 @@ public class Paint {
 	private Object mShader;
 	private boolean mClearShadowLayer;
 	private TexturePaint mTexturePaint;
-	private float mStrokeWidth;
+	private float mStrokeWidth=2f;
 	private Stroke mStroke;
 
 	public void setAntiAlias(boolean pAntialias) {

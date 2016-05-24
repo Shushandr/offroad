@@ -44,28 +44,33 @@ public class GpxImportAction extends OffRoadAction {
 	@Override
 	public void actionPerformed(ActionEvent pE) {
 		JFileChooser chooser = new JFileChooser();
+		chooser.setMultiSelectionEnabled(true);
 		int result = chooser.showOpenDialog(mContext.getWindow());
 		if(result == JFileChooser.CANCEL_OPTION){
 			return;
 		}
-		File file = chooser.getSelectedFile();
-		File intentUri = file;
-		String fileName = file.getName();
-
-		final boolean isFileIntent = true;
-		final boolean isOsmandSubdir = isSubDirectory(mContext.getAppPath(IndexConstants.GPX_INDEX_DIR), new File(intentUri.getPath()));
-
-		final boolean saveFile = !isFileIntent || !isOsmandSubdir;
-
-		if (file != null && fileName.endsWith(KML_SUFFIX)) {
-			handleKmlImport(intentUri, fileName, saveFile);
-//Issue 2275
-//		} else if (fileName != null && (fileName.contains("favourite")|| 
-//				fileName.contains("favorite"))) {
-//			handleFavouritesImport(intentUri, fileName, saveFile);
-		} else {
-//			handleGpxImport(intentUri, fileName, saveFile);
-			handleFavouritesImport(intentUri, fileName, saveFile);
+		File[] fileList = chooser.getSelectedFiles();
+		for (int i = 0; i < fileList.length; i++) {
+			File file = fileList[i];
+			
+			File intentUri = file;
+			String fileName = file.getName();
+	
+			final boolean isFileIntent = true;
+			final boolean isOsmandSubdir = isSubDirectory(mContext.getAppPath(IndexConstants.GPX_INDEX_DIR), new File(intentUri.getPath()));
+	
+			final boolean saveFile = !isFileIntent || !isOsmandSubdir;
+	
+			if (file != null && fileName.endsWith(KML_SUFFIX)) {
+				handleKmlImport(intentUri, fileName, saveFile);
+	//Issue 2275
+	//		} else if (fileName != null && (fileName.contains("favourite")|| 
+	//				fileName.contains("favorite"))) {
+	//			handleFavouritesImport(intentUri, fileName, saveFile);
+			} else {
+	//			handleGpxImport(intentUri, fileName, saveFile);
+				handleFavouritesImport(intentUri, fileName, saveFile);
+			}
 		}
 	}
 
@@ -300,8 +305,8 @@ public class GpxImportAction extends OffRoadAction {
 	}
 
 	private void importFavourites(final GPXUtilities.GPXFile gpxFile, final String fileName, final boolean save) {
-//		handleResult(gpxFile, fileName, save);
-		importFavoritesImpl(gpxFile);
+		handleResult(gpxFile, fileName, save);
+//		importFavoritesImpl(gpxFile);
 		
 //		final DialogInterface.OnClickListener importFavouritesListener = new DialogInterface.OnClickListener() {
 //			@Override

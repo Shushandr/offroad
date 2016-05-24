@@ -84,6 +84,7 @@ import net.osmand.plus.FavouritesDbHelper;
 import net.osmand.plus.FavouritesDbHelper.FavoriteGroup;
 import net.osmand.plus.GeocodingLookupService;
 import net.osmand.plus.GpxSelectionHelper;
+import net.osmand.plus.GpxSelectionHelper.SelectedGpxFile;
 import net.osmand.plus.MapMarkersHelper;
 import net.osmand.plus.OsmAndLocationProvider;
 import net.osmand.plus.OsmandSettings;
@@ -517,6 +518,9 @@ public class OsmWindow {
 			}
 			jFavoritesMenu.add(groupMenu);
 		}
+		JMenuItem lSelectTrack = new JMenuItem(new SelectTrackAction(this, getOffRoadString("offroad.selectTrack")));
+		lSelectTrack.setAccelerator(KeyStroke.getKeyStroke("control T")); //$NON-NLS-1$
+		jFavoritesMenu.add(lSelectTrack);
 		menubar.add(jFavoritesMenu);
 		
 		JPopupMenu popupMenu = new JPopupMenu();
