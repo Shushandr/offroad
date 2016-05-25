@@ -28,6 +28,10 @@ An offline map viewer based on OsmAnd.
 
 Version History:
 
+0_1_Alpha9:
+============
+* Import and organize GPX-Tracks added.
+
 0_1_Alpha8:
 ============
 * Favorites added

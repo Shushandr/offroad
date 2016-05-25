@@ -87,6 +87,9 @@
 			update="true">
 			<fileset dir="${build}">
 			</fileset>
+			<fileset dir="${src}">
+				<include name="**/*.xslt"/>
+			</fileset>
 		</jar>
 		<delete file="${temp.manifest.file}" failonerror="false"/>
 	</target>
