@@ -2,6 +2,7 @@ package net.sourceforge.offroad;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -37,6 +38,7 @@ import java.util.PropertyResourceBundle;
 import java.util.Vector;
 
 import javax.swing.AbstractAction;
+import javax.swing.AbstractButton;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JComboBox;
@@ -84,7 +86,6 @@ import net.osmand.plus.FavouritesDbHelper;
 import net.osmand.plus.FavouritesDbHelper.FavoriteGroup;
 import net.osmand.plus.GeocodingLookupService;
 import net.osmand.plus.GpxSelectionHelper;
-import net.osmand.plus.GpxSelectionHelper.SelectedGpxFile;
 import net.osmand.plus.MapMarkersHelper;
 import net.osmand.plus.OsmAndLocationProvider;
 import net.osmand.plus.OsmandSettings;
@@ -522,7 +523,7 @@ public class OsmWindow {
 		lSelectTrack.setAccelerator(KeyStroke.getKeyStroke("control T")); //$NON-NLS-1$
 		jFavoritesMenu.add(lSelectTrack);
 		menubar.add(jFavoritesMenu);
-		
+		adaptMenuMnemonics(menubar.getComponents());
 		JPopupMenu popupMenu = new JPopupMenu();
 		popupMenu.add(new JMenuItem(new PointNavigationAction(this, "offroad.set_start_point",
 				(helper, pos) -> helper.setStartPoint(pos, false, null))));
@@ -568,6 +569,46 @@ public class OsmWindow {
 		mFrame.setVisible(true);
 	}
 
+	private void adaptMenuMnemonics(Component[] components) {
+		for (int i = 0; i < components.length; i++) {
+			Component comp = components[i];
+			if (comp instanceof AbstractButton) {
+				AbstractButton but = (AbstractButton) comp;
+				setMnemonic(but);
+			}
+			if (comp instanceof JMenu) {
+				JMenu cont = (JMenu) comp;
+				adaptMenuMnemonics(cont.getPopupMenu().getComponents());
+			}
+		}
+	}
+
+	public static boolean isMacOsX() {
+		boolean underMac = false;
+		String osName = System.getProperty("os.name");
+		if (osName.startsWith("Mac OS")) {
+			underMac = true;
+		}
+		return underMac;
+	}
+	
+	private void setMnemonic(AbstractButton item){
+		String rawLabel = item.getText();
+		item.setText(rawLabel.replaceFirst("&([^ ])", "$1"));
+		int mnemoSignIndex = rawLabel.indexOf("&");
+		if (mnemoSignIndex >= 0 && mnemoSignIndex + 1 < rawLabel.length()) {
+			char charAfterMnemoSign = rawLabel.charAt(mnemoSignIndex + 1);
+			if (charAfterMnemoSign != ' ') {
+				// no mnemonics under Mac OS:
+				if (!isMacOsX()) {
+					item.setMnemonic(charAfterMnemoSign);
+					// sets the underline to exactly this character.
+					item.setDisplayedMnemonicIndex(mnemoSignIndex);
+				}
+			}
+		}
+	}
+	
 	void addToMenu(JMenu jNavigationMenu, String name, ActionListener action, String keyStroke) {
 		JMenuItem navigationBackItem = new JMenuItem(getOffRoadString(name)); //$NON-NLS-1$
 		navigationBackItem.addActionListener(action);
@@ -590,6 +631,7 @@ public class OsmWindow {
 		if(mOffroadResources.containsKey(pString)){
 			return mOffroadResources.getString(pString);
 		}
+		log.error("TRANSLATE ME: " + pString);
 		return "TRANSLATE_ME:" + pString; //$NON-NLS-1$
 	}
 
