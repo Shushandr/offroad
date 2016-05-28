@@ -426,7 +426,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		double newLat = tb.getLatFromPixel(center.x + pDeltaX, center.y + pDeltaY);
 		double newLon = tb.getLonFromPixel(center.x + pDeltaX, center.y + pDeltaY);
 		tb.setLatLonCenter(newLat, newLon);
-		queue(new GenerationThread(this, tb, pSm));
+		queue(new LazyThread(this, tb, pSm));
 	}
 
 	public void moveImageAnimated(float pDeltaX, float pDeltaY) {

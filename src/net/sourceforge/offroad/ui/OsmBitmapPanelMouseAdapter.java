@@ -105,8 +105,9 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 			return;
 		}
 		Point point = new Point(e.getPoint());
-		int lastX = -(int) drawPanel.getCurrentTileBox().getPixXFromLatLon(lastDragPoint);
-		int lastY = -(int) drawPanel.getCurrentTileBox().getPixYFromLatLon(lastDragPoint);
+		RotatedTileBox ctb = drawPanel.getCurrentTileBox();
+		int lastX = -(int) ctb.getPixXFromLatLon(lastDragPoint);
+		int lastY = -(int) ctb.getPixYFromLatLon(lastDragPoint);
 		point.translate(lastX, lastY);
 		deltaPoint.translate(point.x, point.y);
 		lastDragPoint = getLatLon(e);

@@ -23,6 +23,7 @@ import net.osmand.data.RotatedTileBox;
 import net.sourceforge.offroad.ui.OsmBitmapPanel.ScreenManipulation;
 
 /**
+ * Only generates the image, if for at least one second no other following thread was queued.
  * @author foltin
  * @date 20.05.2016
  */
