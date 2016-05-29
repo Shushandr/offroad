@@ -5,7 +5,6 @@ import java.awt.image.BufferedImage;
 import javax.swing.SwingUtilities;
 
 import net.osmand.data.RotatedTileBox;
-import net.sourceforge.offroad.ui.OsmBitmapPanel.ScreenManipulation;
 
 class GenerationThread extends OffRoadUIThread {
 	/**
@@ -13,12 +12,10 @@ class GenerationThread extends OffRoadUIThread {
 	 */
 	protected final RotatedTileBox mTileCopy;
 	protected BufferedImage mNewBitmap;
-	private ScreenManipulation mManipulation;
 
-	GenerationThread(OsmBitmapPanel pOsmBitmapPanel, RotatedTileBox pTileCopy, ScreenManipulation pManipulation) {
+	GenerationThread(OsmBitmapPanel pOsmBitmapPanel, RotatedTileBox pTileCopy) {
 		super(pOsmBitmapPanel);
 		mTileCopy = pTileCopy.copy();
-		mManipulation = (pManipulation==null)?null:new ScreenManipulation(pManipulation);
 	}
 
 	@Override
@@ -32,19 +29,9 @@ class GenerationThread extends OffRoadUIThread {
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-				if (mManipulation==null) {
-					mOsmBitmapPanel.resetManipulation();
-				} else {
-					mOsmBitmapPanel.addScreenManipulation(mManipulation.negate());
-				}
 				// in the lazy case, the bitmap may not have been generated
 				mOsmBitmapPanel.setImage(mNewBitmap, mTileCopy);
 			}
 		});
-	}
-	
-	@Override
-	public RotatedTileBox getDestinationTileBox() {
-		return mTileCopy;
 	}
 }

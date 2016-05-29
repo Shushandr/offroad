@@ -57,7 +57,7 @@ public class NavigationRotationAction extends OffRoadAction {
 		OsmBitmapPanel drawPanel = mContext.getDrawPanel();
 		double incr = mIncrement;
 		if(mIsAbsolute){
-			incr -= mContext.getDrawPanel().getTileBox().getRotate();
+			incr -= mContext.getDrawPanel().copyCurrentTileBox().getRotate();
 		}
 		drawPanel.directRotateIncrement(incr);
 		drawPanel.rotateIncrement(incr);

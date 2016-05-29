@@ -20,7 +20,6 @@
 package net.sourceforge.offroad.ui;
 
 import net.osmand.data.RotatedTileBox;
-import net.sourceforge.offroad.ui.OsmBitmapPanel.ScreenManipulation;
 
 /**
  * Only generates the image, if for at least one second no other following thread was queued.
@@ -29,8 +28,8 @@ import net.sourceforge.offroad.ui.OsmBitmapPanel.ScreenManipulation;
  */
 public class LazyThread extends GenerationThread {
 
-	LazyThread(OsmBitmapPanel pOsmBitmapPanel, RotatedTileBox pTileCopy, ScreenManipulation pManipulation) {
-		super(pOsmBitmapPanel, pTileCopy, pManipulation);
+	LazyThread(OsmBitmapPanel pOsmBitmapPanel, RotatedTileBox pTileCopy) {
+		super(pOsmBitmapPanel, pTileCopy);
 	}
 
 	public void runInBackground() {

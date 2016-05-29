@@ -156,7 +156,7 @@ public class OsmWindow {
 		
 		@Override
 		public void popupMenuWillBecomeVisible(PopupMenuEvent pE) {
-			RotatedTileBox tileBox = getDrawPanel().getTileBox();
+			RotatedTileBox tileBox = getDrawPanel().copyCurrentTileBox();
 			List<Amenity> res = new Vector<Amenity>();
 			POIMapLayer poiLayer = getDrawPanel().getPoiLayer();
 			poiLayer.getAmenityFromPoint(tileBox, mAdapter.getMouseEvent().getPoint(), res);
@@ -487,8 +487,8 @@ public class OsmWindow {
 		addToMenu(jNavigationMenu, "offroad.left", item -> mDrawPanel.moveImageAnimated(-1f/3,0), "control LEFT");
 		addToMenu(jNavigationMenu, "offroad.right", item -> mDrawPanel.moveImageAnimated(1f/3,0), "control RIGHT");
 		jNavigationMenu.add(new JSeparator());
-		addToMenu(jNavigationMenu, "offroad.zoomin", item -> mAdapter.addWheelEvent(-1, mDrawPanel.getCurrentTileBox()), "control PLUS");
-		addToMenu(jNavigationMenu, "offroad.zoomout", item -> mAdapter.addWheelEvent(1, mDrawPanel.getCurrentTileBox()), "control MINUS");
+		addToMenu(jNavigationMenu, "offroad.zoomin", item -> mAdapter.addWheelEvent(-1, mDrawPanel.copyCurrentTileBox()), "control PLUS");
+		addToMenu(jNavigationMenu, "offroad.zoomout", item -> mAdapter.addWheelEvent(1, mDrawPanel.copyCurrentTileBox()), "control MINUS");
 		jNavigationMenu.add(new JSeparator());
 		addToMenu(jNavigationMenu, "offroad.back", new NavigationBackAction(this), "alt LEFT");
 		addToMenu(jNavigationMenu, "offroad.forward", new NavigationForwardAction(this), "alt RIGHT");
@@ -651,7 +651,7 @@ public class OsmWindow {
 	}
 
 	protected void saveSettings() {
-		RotatedTileBox tileBox = mDrawPanel.getTileBox();
+		RotatedTileBox tileBox = mDrawPanel.copyCurrentTileBox();
 		prefs.setLastKnownMapLocation(tileBox.getLatitude(), tileBox.getLongitude());
 		prefs.setLastKnownMapZoom(tileBox.getZoom());
 		getSettings().SELECTED_POI_FILTER_STRING_FOR_MAP.set(mSearchTextField.getText());
@@ -908,7 +908,7 @@ public class OsmWindow {
 
 	public void move(LatLon pLocation, QuadRectExtendable pQuadRectExtendable) {
 		// make sure that all points of the rect are in:
-		RotatedTileBox tileBox = mDrawPanel.getTileBox();
+		RotatedTileBox tileBox = mDrawPanel.copyCurrentTileBox();
 		if (pQuadRectExtendable!= null) {
 			tileBox.setLatLonCenter(pLocation.getLatitude(), pLocation.getLongitude());
 			tileBox.setZoom(MAX_ZOOM);
@@ -951,7 +951,7 @@ public class OsmWindow {
 				mStatusLabel.setText(""); //$NON-NLS-1$
 				return;
 			}
-			LatLon mousePosition = mDrawPanel.getTileBox().getLatLonFromPixel(e.getX(), e.getY());
+			LatLon mousePosition = mDrawPanel.copyCurrentTileBox().getLatLonFromPixel(e.getX(), e.getY());
 			double distance = MapUtils.getDistance(mousePosition, cursorPosition)/1000d;
 			Object[] messageArguments = { new Double(distance),
 					new Double(cursorPosition.getLatitude()),
@@ -1062,7 +1062,7 @@ public class OsmWindow {
 	}
 
 	public int getZoom() {
-		return getDrawPanel().getTileBox().getZoom();
+		return getDrawPanel().copyCurrentTileBox().getZoom();
 	}
 
 	public void back() {
@@ -1180,7 +1180,7 @@ public class OsmWindow {
 		} else {
 			destination = lastMouseEvent.getPoint();
 		}
-		LatLon destLatLon = mDrawPanel.getTileBox().getLatLonFromPixel(destination.x, destination.y);
+		LatLon destLatLon = mDrawPanel.copyCurrentTileBox().getLatLonFromPixel(destination.x, destination.y);
 		return destLatLon;
 	}
 
@@ -1189,7 +1189,7 @@ public class OsmWindow {
 	}
 
 	public LatLon getCenterPosition() {
-		return mDrawPanel.getTileBox().getCenterLatLon();
+		return mDrawPanel.copyCurrentTileBox().getCenterLatLon();
 	}
 
 	/**

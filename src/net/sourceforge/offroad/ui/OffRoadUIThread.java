@@ -26,7 +26,6 @@ import org.apache.commons.logging.Log;
 
 import net.osmand.PlatformUtil;
 import net.osmand.data.RotatedTileBox;
-import net.sourceforge.offroad.ui.OsmBitmapPanel.ScreenManipulation;
 
 /**
  * @author foltin
@@ -75,13 +74,6 @@ public class OffRoadUIThread implements Runnable {
 		// overwrite if needed.
 	}
 
-	/**
-	 * @return null, if not changed.
-	 */
-	public RotatedTileBox getDestinationTileBox() {
-		return null;
-	}
-
 	@Override
 	public void run() {
 		try {
@@ -101,9 +93,6 @@ public class OffRoadUIThread implements Runnable {
 			runAfterThreadsBeforeHaveFinished();
 		} catch (Exception e) {
 			e.printStackTrace();
-		}
-		if(getDestinationTileBox() != null){
-			mOsmBitmapPanel.setCurrentTileBox(getDestinationTileBox());
 		}
 		synchronized (this) {
 			log.debug("THREAD:" + this + " Notify next threads...");
@@ -132,10 +121,6 @@ public class OffRoadUIThread implements Runnable {
 	
 	public boolean hasFinished() {
 		return hasFinished;
-	}
-
-	public ScreenManipulation getScreenManipulationSum() {
-		throw new IllegalArgumentException("I shouldn't been asked that directly. An animation thread should implement this method.");
 	}
 
 }

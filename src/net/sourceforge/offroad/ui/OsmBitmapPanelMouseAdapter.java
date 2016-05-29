@@ -17,7 +17,6 @@ import net.osmand.PlatformUtil;
 import net.osmand.data.LatLon;
 import net.osmand.data.RotatedTileBox;
 import net.sourceforge.offroad.OsmWindow;
-import net.sourceforge.offroad.ui.OsmBitmapPanel.ScreenManipulation;
 
 public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements ComponentListener {
 	private static final int ZOOM_DELAY_MILLISECONDS = 100;
@@ -55,9 +54,7 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 	}
 	
 	private OsmBitmapPanel drawPanel;
-	private LatLon startPoint;
-	private LatLon lastDragPoint;
-	private Point deltaPoint;
+	private Point lastDragPoint;
 	private Timer mZoomTimer;
 	private ZoomPerformer mZoomPerformer;
 	private Timer mRotateTimer;
@@ -89,29 +86,19 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 		if(isPopup(e)){
 			return;
 		}
-		startPoint = getLatLon(e);
-		lastDragPoint = startPoint;
-		deltaPoint = new Point(0,0);
-	}
-
-	LatLon getLatLon(MouseEvent e) {
-		return drawPanel.getCurrentTileBox().getLatLonFromPixel(e.getPoint().x, e.getPoint().y);
+		lastDragPoint = new Point(e.getPoint());
 	}
 
 	@Override
 	public void mouseDragged(MouseEvent e) {
 		// no button is pressed in that event. !?!
-		if(startPoint == null){
+		Point deltaPoint = lastDragPoint;
+		if(deltaPoint == null){
 			return;
 		}
-		Point point = new Point(e.getPoint());
-		RotatedTileBox ctb = drawPanel.getCurrentTileBox();
-		int lastX = -(int) ctb.getPixXFromLatLon(lastDragPoint);
-		int lastY = -(int) ctb.getPixYFromLatLon(lastDragPoint);
-		point.translate(lastX, lastY);
-		deltaPoint.translate(point.x, point.y);
-		lastDragPoint = getLatLon(e);
-		drawPanel.dragImage(point);
+		deltaPoint.translate(-e.getPoint().x, -e.getPoint().y);
+		lastDragPoint = new Point(e.getPoint());
+		drawPanel.dragImage(deltaPoint);
 	}
 	
 	@Override
@@ -119,12 +106,7 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 		if(isPopup(e)){
 			return;
 		}
-		float startX = drawPanel.getCurrentTileBox().getPixXFromLatLon(startPoint);
-		float startY = drawPanel.getCurrentTileBox().getPixYFromLatLon(startPoint);
-		float delx = e.getX() - startX;
-		float dely = e.getY() - startY;
-		drawPanel.moveImage(-delx, -dely, new ScreenManipulation(0f, deltaPoint.x, deltaPoint.y, 0d));
-		startPoint = null;
+		drawPanel.drawLater();
 	}
 
 	@Override

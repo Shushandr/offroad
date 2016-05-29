@@ -213,7 +213,7 @@ public class SearchAddressAction extends OffRoadAction {
 
 
 	protected LatLon getLatLon() {
-		return mContext.getDrawPanel().getTileBox().getCenterLatLon();
+		return mContext.getDrawPanel().copyCurrentTileBox().getCenterLatLon();
 	}
 
 	abstract class MapObjectStore<T extends MapObject> {

@@ -2,7 +2,9 @@ package net.sourceforge.offroad.ui;
 
 import java.awt.Point;
 
-import net.sourceforge.offroad.ui.OsmBitmapPanel.ScreenManipulation;
+import net.osmand.data.LatLon;
+import net.osmand.data.QuadPoint;
+import net.osmand.data.RotatedTileBox;
 
 class ZoomAnimationThread extends OffRoadUIThread {
 	/**
@@ -19,28 +21,39 @@ class ZoomAnimationThread extends OffRoadUIThread {
 
 	@Override
 	public void runAfterThreadsBeforeHaveFinished() {
+		RotatedTileBox tb = mOsmBitmapPanel.copyCurrentTileBox();
+		int originalZoom = tb.getZoom();
 		int it = 10;
 		for (int i = 0; i < it; ++i) {
-			ScreenManipulation sm = getScreenManipulation(it);
-			mOsmBitmapPanel.addScreenManipulation(sm);
+			tb = getDestinationTileBox(originalZoom, it, i);
+			mOsmBitmapPanel.setCurrentTileBox(tb);
 			mOsmBitmapPanel.repaintAndWait(50);
 		}
 	}
 
-	ScreenManipulation getScreenManipulation(int it) {
-		float dest = (float) Math.pow(2, mWheelRotation);
-		float delta = (dest-1f) / it;
-		ScreenManipulation sm = new ScreenManipulation();
-		sm.scale = delta;
-		// this is not correct. involve the size of the image.
-		sm.originX = (mNewCenter.x * (1f-dest) / it);
-		sm.originY = (mNewCenter.y * (1f-dest) / it);
-		return sm;
-	}
-	
-	public ScreenManipulation getScreenManipulationSum() {
-		ScreenManipulation sm = getScreenManipulation(1);
-		return sm;
+	public RotatedTileBox getDestinationTileBox(int originalZoom, int it, int i) {
+		RotatedTileBox tb = mOsmBitmapPanel.copyCurrentTileBox();
+		// get old center:
+		LatLon oldCenter = tb.getLatLonFromPixel(mNewCenter.x, mNewCenter.y);
+		if (i<it-1) {
+//				tb.setZoomAndAnimation(tb.getZoom(), tb.getZoomAnimation() + deltaB, tb.getZoomFloatPart()+deltaF);
+			float destZoom = mOsmBitmapPanel.checkZoom(originalZoom+(0f+i*mWheelRotation)/it);
+			int baseZoom = (int) Math.floor(destZoom);
+			float fractZoom = destZoom- baseZoom;
+			tb.setZoomAndAnimation(baseZoom, 0d, fractZoom);
+		} else {
+			tb.setZoomAndAnimation((int)mOsmBitmapPanel.checkZoom(originalZoom+mWheelRotation), 0d, 0d);
+		}
+		float oldCenterX = tb.getPixXFromLatLon(oldCenter);
+		float oldCenterY = tb.getPixYFromLatLon(oldCenter);
+		QuadPoint center = tb.getCenterPixelPoint();
+		float originX = mNewCenter.x-oldCenterX;
+		float originY = mNewCenter.y-oldCenterY;
+		double newLat = tb.getLatFromPixel(center.x - originX, center.y - originY);
+		double newLon = tb.getLonFromPixel(center.x - originX, center.y - originY);
+		tb.setLatLonCenter(newLat, newLon);
+		return tb;
 	}
 
+	
 }
