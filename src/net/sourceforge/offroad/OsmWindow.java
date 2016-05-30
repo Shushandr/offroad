@@ -22,6 +22,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,6 +40,7 @@ import java.util.Vector;
 
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
+import javax.swing.Action;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JComboBox;
@@ -109,6 +111,7 @@ import net.osmand.router.RoutingConfiguration;
 import net.osmand.router.RoutingConfiguration.Builder;
 import net.osmand.util.MapUtils;
 import net.sourceforge.offroad.actions.AddFavoriteAction;
+import net.sourceforge.offroad.actions.ChooseRendererAction;
 import net.sourceforge.offroad.actions.ChooseRouteServiceAction;
 import net.sourceforge.offroad.actions.ClearRouteAction;
 import net.sourceforge.offroad.actions.DownloadAction;
@@ -464,6 +467,12 @@ public class OsmWindow {
 		lViewItem.addActionListener(item-> toggleSearchBar());
 		lViewItem.setAccelerator(KeyStroke.getKeyStroke("F11")); //$NON-NLS-1$
 		jViewMenu.add(lViewItem);
+		JMenu jRendererMenu = new JMenu(getOffRoadString("offroad.renderer"));
+		for (String renderer : getRendererRegistry().getRendererNames()) {
+			lViewItem = new JMenuItem(new ChooseRendererAction(this, getOffRoadString("offroad.renderer_"+renderer.replaceAll("[^a-zA-Z]", "_")), null, renderer));
+			jRendererMenu.add(lViewItem);
+		}
+		jViewMenu.add(jRendererMenu);
 		menubar.add(jViewMenu);
 		// Navigation
 		JMenu jNavigationMenu = new JMenu(getOffRoadString("offroad.navigation")); //$NON-NLS-1$
