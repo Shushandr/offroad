@@ -30,7 +30,8 @@ Version History:
 
 0_1_Alpha9:
 ============
-* Import and organize GPX-Tracks added.
+* Import and organization of GPX-Tracks added.
+* Renderer can be chosen (in the view menu)
 
 0_1_Alpha8:
 ============
