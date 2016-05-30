@@ -5,6 +5,66 @@ import net.osmand.PlatformUtil;
 import net.osmand.util.MapUtils;
 
 public class RotatedTileBox {
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + cx;
+		result = prime * result + cy;
+		result = prime * result + Float.floatToIntBits(density);
+		long temp;
+		temp = Double.doubleToLongBits(lat);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		temp = Double.doubleToLongBits(lon);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		temp = Double.doubleToLongBits(mapDensity);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		result = prime * result + pixHeight;
+		result = prime * result + pixWidth;
+		result = prime * result + Float.floatToIntBits(rotate);
+		result = prime * result + zoom;
+		temp = Double.doubleToLongBits(zoomAnimation);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		temp = Double.doubleToLongBits(zoomFloatPart);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		RotatedTileBox other = (RotatedTileBox) obj;
+		if (cx != other.cx)
+			return false;
+		if (cy != other.cy)
+			return false;
+		if (Float.floatToIntBits(density) != Float.floatToIntBits(other.density))
+			return false;
+		if (Double.doubleToLongBits(lat) != Double.doubleToLongBits(other.lat))
+			return false;
+		if (Double.doubleToLongBits(lon) != Double.doubleToLongBits(other.lon))
+			return false;
+		if (Double.doubleToLongBits(mapDensity) != Double.doubleToLongBits(other.mapDensity))
+			return false;
+		if (pixHeight != other.pixHeight)
+			return false;
+		if (pixWidth != other.pixWidth)
+			return false;
+		if (Float.floatToIntBits(rotate) != Float.floatToIntBits(other.rotate))
+			return false;
+		if (zoom != other.zoom)
+			return false;
+		if (Double.doubleToLongBits(zoomAnimation) != Double.doubleToLongBits(other.zoomAnimation))
+			return false;
+		if (Double.doubleToLongBits(zoomFloatPart) != Double.doubleToLongBits(other.zoomFloatPart))
+			return false;
+		return true;
+	}
 	private final static Log log = PlatformUtil.getLog(RotatedTileBox.class);
 
 	/// primary fields

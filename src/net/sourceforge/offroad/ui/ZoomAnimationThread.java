@@ -36,7 +36,6 @@ class ZoomAnimationThread extends OffRoadUIThread {
 		// get old center:
 		LatLon oldCenter = tb.getLatLonFromPixel(mNewCenter.x, mNewCenter.y);
 		if (i<it-1) {
-//				tb.setZoomAndAnimation(tb.getZoom(), tb.getZoomAnimation() + deltaB, tb.getZoomFloatPart()+deltaF);
 			float destZoom = mOsmBitmapPanel.checkZoom(originalZoom+(0f+i*mWheelRotation)/it);
 			int baseZoom = (int) Math.floor(destZoom);
 			float fractZoom = destZoom- baseZoom;
