@@ -2,7 +2,6 @@ package net.sourceforge.offroad.ui;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
@@ -11,11 +10,9 @@ import java.awt.Stroke;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +20,6 @@ import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JPanel;
@@ -46,11 +42,11 @@ import net.osmand.plus.views.FavoritesLayer;
 import net.osmand.plus.views.GPXLayer;
 import net.osmand.plus.views.MapTextLayer;
 import net.osmand.plus.views.OsmandMapLayer;
-import net.osmand.plus.views.OsmandMapLayer.DrawSettings;
 import net.osmand.plus.views.POIMapLayer;
 import net.osmand.plus.views.PointNavigationLayer;
 import net.osmand.plus.views.RouteLayer;
 import net.sourceforge.offroad.OsmWindow;
+import net.sourceforge.offroad.data.Pair;
 import net.sourceforge.offroad.res.OffRoadResources;
 
 @SuppressWarnings("serial")
@@ -156,9 +152,10 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		int upperBound = ctb.getZoom();
 		boolean imageFound=false;
 		for(int biggerZoom = OsmWindow.MIN_ZOOM; biggerZoom <= OsmWindow.MAX_ZOOM; ++biggerZoom){
-			List<RotatedTileBox> tblist = mUnzoomedPicturesAction.getTileBoxesForZoom(biggerZoom);
+			List<Entry<RotatedTileBox,BufferedImage>> tblist = mUnzoomedPicturesAction.getTileBoxesForZoom(biggerZoom);
 			// check for each, if the current image is contained
-			for (RotatedTileBox rtb : tblist) {
+			for (Entry<RotatedTileBox, BufferedImage> tblistEntry : tblist) {
+				RotatedTileBox rtb = tblistEntry.getKey();
 				if ((rtb.intersects(screenLT, screenRB))) {
 					// draw this under it:
 					LatLon rtbLT = rtb.getLeftTopLatLon();
@@ -173,7 +170,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 					double y1 = ctb.getPixYFromLatLon(rtbLT.getLatitude(), rtbLT.getLongitude());
 					double x2 = ctb.getPixXFromLatLon(rtbRB.getLatitude(), rtbRB.getLongitude());
 					double y2=  ctb.getPixYFromLatLon(rtbRB.getLatitude(), rtbRB.getLongitude());
-					BufferedImage image = mUnzoomedPicturesAction.getImage(rtb);
+					BufferedImage image = tblistEntry.getValue();
 					if(image != null){
 						double thetaR = Math.toRadians(theta);
 						g2.rotate(thetaR, xc, yc);
@@ -189,9 +186,9 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 				break;
 			}
 		}
-		if(mLayerImage != null && mLayerImageTileBox.equals(ctb)){
-			g2.drawImage(mLayerImage, 0, 0, null);
-		}
+//		if(mLayerImage != null && mLayerImageTileBox.equals(ctb)){
+//			g2.drawImage(mLayerImage, 0, 0, null);
+//		}
 		// cursor:
 		Stroke oldStroke = g2.getStroke();
 		Color oldColor = g2.getColor();
@@ -533,13 +530,16 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 			}
 		}
 
-		public List<RotatedTileBox> getTileBoxesForZoom(int pZoom) {
+		public List<Entry<RotatedTileBox, BufferedImage>> getTileBoxesForZoom(int pZoom) {
 			synchronized (mImageStore) {
-				ArrayList<RotatedTileBox> ret = new ArrayList<>();
-				for (RotatedTileBox rtb : mImageStore.keySet()) {
-					if (rtb.getZoom() == pZoom) {
+				ArrayList<Entry<RotatedTileBox, BufferedImage>> ret = new ArrayList<>();
+				for (Entry<RotatedTileBox, BufferedImage> rtb : mImageStore.entrySet()) {
+					if (rtb.getKey().getZoom() == pZoom) {
 						ret.add(rtb);
 					}
+				}
+				if(pZoom == mLayerImageTileBox.getZoom()){
+					ret.add(new Pair<RotatedTileBox, BufferedImage>(mLayerImageTileBox, mLayerImage));
 				}
 				return ret;
 			}
