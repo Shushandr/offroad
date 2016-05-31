@@ -34,6 +34,7 @@ import net.osmand.util.Algorithms;
 import net.osmand.util.MapUtils;
 import net.sourceforge.offroad.Cap;
 import net.sourceforge.offroad.DashPathEffect;
+import net.sourceforge.offroad.ui.ColorUtils;
 import net.sourceforge.offroad.ui.Paint;
 import net.sourceforge.offroad.ui.Paint.Style;
 
@@ -708,7 +709,7 @@ public class OsmandRenderer {
 	}
 
 	public Color createColor(int colorInt) {
-		return new Color(colorInt, true);
+		return ColorUtils.createARGB(colorInt);
 	}
 	
 

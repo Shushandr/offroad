@@ -17,30 +17,20 @@
    Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 */
 
-package net.sourceforge.offroad.res;
+package net.sourceforge.offroad.ui;
 
 import java.awt.Color;
 
-import net.sourceforge.offroad.OsmWindow;
-
 /**
  * @author foltin
- * @date 23.05.2016
+ * @date 31.05.2016
  */
-public class OffRoadResources {
-
-	private OsmWindow mOsmWindow;
-
-	public OffRoadResources(OsmWindow pOsmWindow) {
-		mOsmWindow = pOsmWindow;
+public class ColorUtils {
+	public static Color create(int pValue){
+		boolean hasAlpha = 0 != (pValue >> 24);
+		return new Color(pValue, hasAlpha);
 	}
-
-	public int getColor(Color pColor) {
-		return pColor.getRGB() + (pColor.getAlpha()<<24);
+	public static Color createARGB(int pValue){
+		return new Color(pValue, true);
 	}
-
-	public String getString(int pStringId) {
-		return mOsmWindow.getString(pStringId);
-	}
-
 }

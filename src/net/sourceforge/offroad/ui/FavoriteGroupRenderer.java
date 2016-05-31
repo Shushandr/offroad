@@ -55,9 +55,9 @@ public class FavoriteGroupRenderer extends JLabel implements ListCellRenderer {
 		if (value instanceof FavoriteGroup) {
 			FavoriteGroup group = (FavoriteGroup) value;
 			setText(group.name);
-			setBackground(new Color(group.color, true));
+			setBackground(new Color(group.color, false));
 		} else {
-			setText("ERROR: " + value.getClass().getName());
+			setText("ERROR: " + ((value!=null)?value.getClass().getName():"null"));
 			setBackground(Color.white);
 		}
 

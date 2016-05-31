@@ -29,6 +29,7 @@ import net.osmand.render.RenderingRulesStorage;
 import net.osmand.util.Algorithms;
 import net.sf.junidecode.Junidecode;
 import net.sourceforge.offroad.TextStroke;
+import net.sourceforge.offroad.ui.ColorUtils;
 
 public class TextRenderer {
 	private final static Log log = PlatformUtil.getLog(TextRenderer.class);
@@ -291,7 +292,7 @@ public class TextRenderer {
 	}
 
 	public Color createColor(int colorInt) {
-		return new Color(colorInt, true);
+		return ColorUtils.create(colorInt);
 	}
 
 	private void drawShieldIcon(RenderingContext rc, Graphics2D pGraphics2d, TextDrawInfo text, String sr) {

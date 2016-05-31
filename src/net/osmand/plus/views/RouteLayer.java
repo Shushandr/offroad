@@ -29,6 +29,7 @@ import net.osmand.plus.routing.RoutingHelper;
 import net.osmand.render.RenderingRuleSearchRequest;
 import net.osmand.render.RenderingRulesStorage;
 import net.sourceforge.offroad.OsmWindow;
+import net.sourceforge.offroad.ui.ColorUtils;
 import net.sourceforge.offroad.ui.OsmBitmapPanel;
 import net.sourceforge.offroad.ui.PorterDuffMultiplyFilter;
 
@@ -140,7 +141,7 @@ public class RouteLayer extends OsmandMapLayer {
 					isShadowPaint = req.isSpecified(rrs.PROPS.R_SHADOW_RADIUS);
 					if(isShadowPaint) {
 						gshadowPaint.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_IN));
-						gshadowPaint.setColor(new Color(req.getIntPropertyValue(rrs.PROPS.R_SHADOW_COLOR), true));
+						gshadowPaint.setColor(ColorUtils.create(req.getIntPropertyValue(rrs.PROPS.R_SHADOW_COLOR)));
 //						ColorFilter cf = new PorterDuffColorFilter(req.getIntPropertyValue(rrs.PROPS.R_SHADOW_COLOR), Mode.SRC_IN);
 //						shadowPaint.setColorFilter(cf);
 						gshadowPaint.setStroke(deriveStroke(gshadowPaint.getStroke(), 12f*view.getDensity()));

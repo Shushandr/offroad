@@ -139,6 +139,7 @@ import net.sourceforge.offroad.ui.BlindIcon;
 import net.sourceforge.offroad.ui.OsmBitmapPanel;
 import net.sourceforge.offroad.ui.OsmBitmapPanelMouseAdapter;
 import net.sourceforge.offroad.ui.PoiFilterRenderer;
+import net.sourceforge.offroad.ui.SetCursorRadiusAction;
 
 /**
  * OffRoad
@@ -467,6 +468,10 @@ public class OsmWindow {
 		lViewItem.addActionListener(item-> toggleSearchBar());
 		lViewItem.setAccelerator(KeyStroke.getKeyStroke("F11")); //$NON-NLS-1$
 		jViewMenu.add(lViewItem);
+		jViewMenu.add(new JMenuItem(new SetCursorRadiusAction(this, "offroad.cursor_radius_1km", 1000d)));
+		jViewMenu.add(new JMenuItem(new SetCursorRadiusAction(this, "offroad.cursor_radius_2km", 2000d)));
+		jViewMenu.add(new JMenuItem(new SetCursorRadiusAction(this, "offroad.cursor_radius_5km", 5000d)));
+		jViewMenu.add(new JMenuItem(new SetCursorRadiusAction(this, "offroad.remove_cursor_radius", 0d)));
 		JMenu jRendererMenu = new JMenu(getOffRoadString("offroad.renderer"));
 		for (String renderer : getRendererRegistry().getRendererNames()) {
 			lViewItem = new JMenuItem(new ChooseRendererAction(this, getOffRoadString("offroad.renderer_"+renderer.replaceAll("[^a-zA-Z]", "_")), null, renderer));
@@ -555,6 +560,8 @@ public class OsmWindow {
 			}})));
 		popupMenu.add(new JMenuItem(new PointNavigationAction(this, "offroad.clear_all_points",
 				(helper, pos) -> helper.removeAllWayPoints(false, false))));
+		popupMenu.add(new JMenuItem(new SetCursorRadiusAction(this, "offroad.set_cursor_radius", -1d)));
+		popupMenu.add(new JMenuItem(new SetCursorRadiusAction(this, "offroad.remove_cursor_radius", 0d)));
 		mDrawPanel.setComponentPopupMenu(popupMenu);
 		popupMenu.addPopupMenuListener(new PoiContextMenuListener(popupMenu));
 		mFrame.setJMenuBar(menubar);

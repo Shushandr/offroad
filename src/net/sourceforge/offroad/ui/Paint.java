@@ -35,7 +35,7 @@ import java.awt.TexturePaint;
 public class Paint {
 	
 	public enum Style {
-		STROKE, FILL_AND_STROKE
+		STROKE, FILL_AND_STROKE, FILL
 	};
 
 	public enum Align {
@@ -56,6 +56,7 @@ public class Paint {
 	private TexturePaint mTexturePaint;
 	private float mStrokeWidth=2f;
 	private Stroke mStroke;
+	private boolean mFilterBufferedImage;
 
 	public void setAntiAlias(boolean pAntialias) {
 		mAntialias = pAntialias;
@@ -90,7 +91,7 @@ public class Paint {
 	}
 
 	public void setColor(int pColor) {
-		mColor = new Color(pColor, true);
+		mColor = ColorUtils.create(pColor);
 	}
 
 	public void setColorFilter(Composite pCompositeFilter) {
@@ -150,6 +151,11 @@ public class Paint {
 
 	public int getColor() {
 		return mColor.getRGB() + mColor.getAlpha()<<24;
+	}
+
+	public void setFilterBufferedImage(boolean pFilterBufferedImage) {
+		// TODO: what to do with that?
+		mFilterBufferedImage = pFilterBufferedImage;
 	}
 	
 }

@@ -75,6 +75,10 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 	private BufferedImage mLayerImage;
 	private RotatedTileBox mLayerImageTileBox;
 
+	private boolean mCursorRadiusEnabled = false;
+
+	private double mCursorRadiusSizeInMeters = 100;
+
 
 	public OsmBitmapPanel(OsmWindow pWin) {
 		mContext = pWin;
@@ -96,6 +100,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		addLayer(new PointNavigationLayer(mContext), 4);
 		addLayer(new FavoritesLayer(), 5);
 		addLayer(new GPXLayer(), 6);
+		addLayer(new CursorDistanceLayer(), 7);
 		for (OsmandMapLayer layer : layers) {
 			layer.initLayer(this);
 		}
@@ -538,7 +543,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 						ret.add(rtb);
 					}
 				}
-				if(pZoom == mLayerImageTileBox.getZoom()){
+				if(mLayerImageTileBox!= null && pZoom == mLayerImageTileBox.getZoom()){
 					ret.add(new Pair<RotatedTileBox, BufferedImage>(mLayerImageTileBox, mLayerImage));
 				}
 				return ret;
@@ -601,6 +606,22 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		mLayerImage = pLayerImage;
 		mLayerImageTileBox = pTileBox;
 		repaint();
+	}
+
+	public double getCursorRadiusSizeInMeters() {
+		return mCursorRadiusSizeInMeters ;
+	}
+
+	public boolean isCursorRadiusEnabled() {
+		return mCursorRadiusEnabled ;
+	}
+
+	public void setCursorRadiusEnabled(boolean pCursorRadiusEnabled) {
+		mCursorRadiusEnabled = pCursorRadiusEnabled;
+	}
+
+	public void setCursorRadiusSizeInMeters(double pCursorRadiusSizeInMeters) {
+		mCursorRadiusSizeInMeters = pCursorRadiusSizeInMeters;
 	}
 
 }

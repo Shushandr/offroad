@@ -10,6 +10,7 @@ import java.util.TreeMap;
 import net.osmand.plus.views.FavoritesLayer;
 import net.osmand.plus.views.OsmandMapLayer;
 import net.sourceforge.offroad.OsmWindow;
+import net.sourceforge.offroad.ui.ColorUtils;
 import net.sourceforge.offroad.ui.Drawable;
 import net.sourceforge.offroad.ui.PorterDuffMultiplyFilter;
 
@@ -97,9 +98,9 @@ public class FavoriteImageDrawable extends Drawable {
 			int min = Math.min(bs.width, bs.height);
 			int r = (min * 4 / 10);
 			int rs = (r - 1);
-			graphics.setColor(new Color(color == 0 ? 0x88555555 : color, true));
+			graphics.setColor(ColorUtils.create(color == 0 ? 0x88555555 : color));
 			graphics.drawOval(min / 2, min / 2, r, r); // paintOuter
-			graphics.setColor(new Color(color == 0 ? FavoritesLayer.DEFAULT_COLOR : color, true));
+			graphics.setColor(ColorUtils.create(color == 0 ? FavoritesLayer.DEFAULT_COLOR : color));
 			graphics.drawOval(min / 2, min / 2, rs, rs); // paintInnerCircle
 			canvas.drawImage(listDrawable, listDrawable_Bounds.x, listDrawable_Bounds.y, listDrawable_Bounds.width, listDrawable_Bounds.height, null);
 //			listDrawable.draw(canvas);
