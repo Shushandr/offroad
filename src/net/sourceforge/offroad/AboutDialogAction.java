@@ -23,6 +23,7 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.JOptionPane;
 
+import net.sourceforge.offroad.OsmWindow.VersionInfo;
 import net.sourceforge.offroad.actions.OffRoadAction;
 
 /**
@@ -43,8 +44,9 @@ public class AboutDialogAction extends OffRoadAction {
 	 */
 	@Override
 	public void actionPerformed(ActionEvent pE) {
+		VersionInfo ver = mContext.getVersion();
 		JOptionPane.showMessageDialog(mContext.getWindow(),
-				mContext.getOffRoadString("offroad.about_content"),
+				mContext.getOffRoadString("offroad.about_content", new String[]{ver.version, ver.hash}),
 				mContext.getOffRoadString("offroad.about_title"), JOptionPane.PLAIN_MESSAGE);
 	}
 

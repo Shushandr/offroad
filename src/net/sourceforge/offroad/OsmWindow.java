@@ -305,6 +305,9 @@ public class OsmWindow {
 
 	private SavingTrackHelper mSavingTrackHelper;
 
+
+	private VersionInfo mVersionInfo;
+
 	public void createAndShowUI() {
 		mDrawPanel = new OsmBitmapPanel(this);
 		mAdapter = new OsmBitmapPanelMouseAdapter(mDrawPanel);
@@ -663,6 +666,8 @@ public class OsmWindow {
 
 	public static void main(String[] args) throws XmlPullParserException, IOException {
 		final OsmWindow win = OsmWindow.getInstance();
+		VersionInfo version = win.getVersion();
+		log.info("Version: " + version.version + ", hash=" + version.hash);
 		win.init();
 		java.awt.EventQueue.invokeLater(new Runnable() {
 			public void run() {
@@ -797,6 +802,33 @@ public class OsmWindow {
 		return bundle;
 	}
 
+	public static class VersionInfo {
+		String version;
+		String hash;
+		public VersionInfo(String pVersion, String pHash) {
+			super();
+			version = pVersion;
+			hash = pHash;
+		}
+		
+	}
+	public VersionInfo getVersion(){
+		if(mVersionInfo == null){
+			try {
+				InputStream is = getResource("version.properties"); //$NON-NLS-1$
+				if (is == null) {
+					return null;
+				}
+				PropertyResourceBundle bundle = new PropertyResourceBundle(is);
+				is.close();
+				mVersionInfo = new VersionInfo(bundle.getString("version"), bundle.getString("hash"));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return mVersionInfo;
+	}
+	
 	public String getLangTranslation(String l) {
 		return getString("lang_" + l);
 	}

@@ -39,6 +39,10 @@
 			<classpath refid="build-classpath">
 			</classpath>
 		</javac>
+		<exec executable="git" outputproperty="hash"><arg line="rev-parse HEAD"/></exec>
+		<echo file="${build}/version.properties" message="version=${ver}">
+hash=${hash}		
+		</echo>
 	</target>
 
 	<target name="jar" depends="build">
