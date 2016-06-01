@@ -547,6 +547,10 @@ public class OsmWindow {
 		lSelectTrack.setAccelerator(KeyStroke.getKeyStroke("control T")); //$NON-NLS-1$
 		jFavoritesMenu.add(lSelectTrack);
 		menubar.add(jFavoritesMenu);
+		JMenu jHelpMenu = new JMenu(getOffRoadString("offroad.Help")); //$NON-NLS-1$
+		addToMenu(jHelpMenu, "offroad.about", new AboutDialogAction(this), null);
+		menubar.add(jHelpMenu);
+		
 		adaptMenuMnemonics(menubar.getComponents());
 		JPopupMenu popupMenu = new JPopupMenu();
 		popupMenu.add(new JMenuItem(new PointNavigationAction(this, "offroad.set_start_point",
