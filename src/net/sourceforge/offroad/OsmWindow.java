@@ -436,6 +436,7 @@ public class OsmWindow {
 		JMenuItem importGpxItem = new JMenuItem(getOffRoadString("offroad.import_gpx")); //$NON-NLS-1$
 		importGpxItem.addActionListener(new GpxImportAction(this));
 		jFileMenu.add(importGpxItem);
+		addToMenu(jFileMenu, "offroad.export_route", new ExportRouteAction(this), null);
 		menubar.add(jFileMenu);
 		JMenu jSearchMenu = new JMenu(getOffRoadString("offroad.string7")); //$NON-NLS-1$
 		JMenuItem findItem = new JMenuItem(getOffRoadString("offroad.string8")); //$NON-NLS-1$
@@ -453,7 +454,6 @@ public class OsmWindow {
 		});
 		gotoSearchFieldItem.setAccelerator(KeyStroke.getKeyStroke("control K")); //$NON-NLS-1$
 		jSearchMenu.add(gotoSearchFieldItem);
-		
 		menubar.add(jSearchMenu);
 		// Download
 		JMenu jDownloadMenu = new JMenu(getOffRoadString("offroad.download")); //$NON-NLS-1$
@@ -485,6 +485,18 @@ public class OsmWindow {
 		jNavigationMenu.add(new JMenuItem(new RouteAction(this, ApplicationMode.BICYCLE)));
 		jNavigationMenu.add(new JMenuItem(new RouteAction(this, ApplicationMode.PEDESTRIAN)));
 		jNavigationMenu.add(new JMenuItem(new ClearRouteAction(this)));
+		PointNavigationAction clearIntermediatePointsAction = new PointNavigationAction(this, "offroad.clear_intermediate_points",
+				new HelperAction(){
+			@Override
+			public void act(TargetPointsHelper pHelper, LatLon pPosition) {
+				while(!pHelper.getIntermediatePoints().isEmpty()){
+					pHelper.removeWayPoint(false, 0);
+				}
+			}});
+		PointNavigationAction clearAllPointsAction = new PointNavigationAction(this, "offroad.clear_all_points",
+				(helper, pos) -> helper.removeAllWayPoints(false, false));
+		jNavigationMenu.add(clearIntermediatePointsAction);
+		jNavigationMenu.add(clearAllPointsAction);
 		jNavigationMenu.add(new JSeparator());
 		JMenu lRoutingServiceMenu = new JMenu(getOffRoadString("offroad.routing_service"));
 		for (int i = 0; i < RouteService.values().length; i++) {
@@ -550,16 +562,8 @@ public class OsmWindow {
 		popupMenu.add(new JMenuItem(new RouteAction(this, ApplicationMode.BICYCLE)));
 		popupMenu.add(new JMenuItem(new RouteAction(this, ApplicationMode.PEDESTRIAN)));
 		popupMenu.add(new JSeparator());
-		popupMenu.add(new JMenuItem(new PointNavigationAction(this, "offroad.clear_intermediate_points",
-				new HelperAction(){
-			@Override
-			public void act(TargetPointsHelper pHelper, LatLon pPosition) {
-				while(!pHelper.getIntermediatePoints().isEmpty()){
-					pHelper.removeWayPoint(false, 0);
-				}
-			}})));
-		popupMenu.add(new JMenuItem(new PointNavigationAction(this, "offroad.clear_all_points",
-				(helper, pos) -> helper.removeAllWayPoints(false, false))));
+		popupMenu.add(new JMenuItem(clearIntermediatePointsAction));
+		popupMenu.add(new JMenuItem(clearAllPointsAction));
 		popupMenu.add(new JMenuItem(new SetCursorRadiusAction(this, "offroad.set_cursor_radius", -1d)));
 		popupMenu.add(new JMenuItem(new SetCursorRadiusAction(this, "offroad.remove_cursor_radius", 0d)));
 		mDrawPanel.setComponentPopupMenu(popupMenu);
