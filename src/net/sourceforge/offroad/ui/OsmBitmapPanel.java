@@ -5,11 +5,13 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Stroke;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,6 +22,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JPanel;
@@ -404,12 +407,16 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 	}
 
 	public void saveImage(File pSelectedFile) {
-		//FIXME
-//		try {
-////			ImageIO.write(bImage, "png", pSelectedFile);
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
+		// Create an image containing the map:
+		BufferedImage myImage = (BufferedImage) createImage(
+				getWidth(), getHeight());
+		Graphics g = myImage.getGraphics();
+		print(g);
+		try {
+			ImageIO.write(myImage, "png", pSelectedFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void rotateIncrement(double pDegrees) {
