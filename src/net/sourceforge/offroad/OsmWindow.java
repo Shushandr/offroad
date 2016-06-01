@@ -410,10 +410,7 @@ public class OsmWindow {
 		mFrame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent pE) {
-				// save properties:
-				saveSettings();
-				mFrame.dispose();
-				System.exit(0);
+				closeWindow();
 			}
 		});
 		mFrame.setResizable(true);
@@ -437,6 +434,7 @@ public class OsmWindow {
 		importGpxItem.addActionListener(new GpxImportAction(this));
 		jFileMenu.add(importGpxItem);
 		addToMenu(jFileMenu, "offroad.export_route", new ExportRouteAction(this), null);
+		addToMenu(jFileMenu, "offroad.exit", item -> closeWindow(), "control Q");
 		menubar.add(jFileMenu);
 		JMenu jSearchMenu = new JMenu(getOffRoadString("offroad.string7")); //$NON-NLS-1$
 		JMenuItem findItem = new JMenuItem(getOffRoadString("offroad.string8")); //$NON-NLS-1$
@@ -1328,6 +1326,13 @@ public class OsmWindow {
 			mSavingTrackHelper = new SavingTrackHelper(this);
 		}
 		return mSavingTrackHelper;
+	}
+
+	private void closeWindow() {
+		// save properties:
+		saveSettings();
+		mFrame.dispose();
+		System.exit(0);
 	}
 	
 }
