@@ -25,7 +25,6 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 
 import net.osmand.PlatformUtil;
-import net.osmand.data.RotatedTileBox;
 
 /**
  * @author foltin

@@ -52,7 +52,7 @@ public class GenerateLayerOverlayThread extends OffRoadUIThread {
 				if(counter >=500){
 					// we have waited half a second.
 					// this is not done, unless we have for one second no other thread:
-					log.info("THREAD:" + this + " executes its background task.");
+					log.debug("THREAD:" + this + " executes its background task.");
 					createLayers();
 					return;
 				}
@@ -60,7 +60,7 @@ public class GenerateLayerOverlayThread extends OffRoadUIThread {
 				e.printStackTrace();
 			}
 		}
-		log.info("THREAD:" + this + " should continue without background task.");
+		log.debug("THREAD:" + this + " should continue without background task.");
 	}
 
 	private void createLayers() {

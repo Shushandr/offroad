@@ -428,6 +428,7 @@ public class OsmWindow {
 				JFileChooser chooser = new JFileChooser();
 				int showSaveDialog = chooser.showSaveDialog(mFrame);
 				if(showSaveDialog == JFileChooser.APPROVE_OPTION){
+					// TODO: Ask for overwrite.
 					mDrawPanel.saveImage(chooser.getSelectedFile());
 				}
 			}
