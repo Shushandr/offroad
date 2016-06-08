@@ -41,6 +41,7 @@ import org.apache.commons.logging.Log;
 import net.osmand.PlatformUtil;
 import net.sourceforge.offroad.OsmWindow;
 import net.sourceforge.offroad.data.persistence.ComponentLocationStorage;
+import net.sourceforge.offroad.ui.StayOpenCheckBoxMenuItem;
 
 /**
  * @author foltin
@@ -137,7 +138,7 @@ public abstract class OffRoadAction extends AbstractAction {
 		return true;
 	}
 
-	public static class OffRoadMenuItem extends JCheckBoxMenuItem {
+	public static class OffRoadMenuItem extends StayOpenCheckBoxMenuItem {
 		private JMenu mMenu;
 
 		public OffRoadMenuItem(OffRoadAction pPoiFilterAction, JMenu pMenu) {

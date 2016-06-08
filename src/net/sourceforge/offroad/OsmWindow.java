@@ -2,7 +2,6 @@ package net.sourceforge.offroad;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -22,7 +21,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
-import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,6 +28,7 @@ import java.net.Authenticator;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.text.MessageFormat;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -40,7 +39,6 @@ import java.util.Vector;
 
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
-import javax.swing.Action;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JComboBox;
@@ -91,6 +89,7 @@ import net.osmand.plus.GpxSelectionHelper;
 import net.osmand.plus.MapMarkersHelper;
 import net.osmand.plus.OsmAndLocationProvider;
 import net.osmand.plus.OsmandSettings;
+import net.osmand.plus.OsmandSettings.CommonPreference;
 import net.osmand.plus.TargetPointsHelper;
 import net.osmand.plus.activities.SavingTrackHelper;
 import net.osmand.plus.api.SQLiteAPI;
@@ -105,6 +104,7 @@ import net.osmand.plus.resources.ResourceManager;
 import net.osmand.plus.routing.RouteProvider.RouteService;
 import net.osmand.plus.routing.RoutingHelper;
 import net.osmand.plus.views.POIMapLayer;
+import net.osmand.render.RenderingRuleProperty;
 import net.osmand.render.RenderingRulesStorage;
 import net.osmand.router.GeneralRouter;
 import net.osmand.router.RoutingConfiguration;
@@ -125,6 +125,7 @@ import net.sourceforge.offroad.actions.PointNavigationAction;
 import net.sourceforge.offroad.actions.PointNavigationAction.HelperAction;
 import net.sourceforge.offroad.actions.RouteAction;
 import net.sourceforge.offroad.actions.SearchAddressAction;
+import net.sourceforge.offroad.actions.SetRenderingRule;
 import net.sourceforge.offroad.actions.ShowFavoriteAction;
 import net.sourceforge.offroad.actions.ShowWikipediaAction;
 import net.sourceforge.offroad.data.QuadRectExtendable;
@@ -480,6 +481,28 @@ public class OsmWindow {
 			jRendererMenu.add(lViewItem);
 		}
 		jViewMenu.add(jRendererMenu);
+		// rendering properties
+		JMenu jRenderPropertiesMenu = new JMenu(getString("map_widget_renderer"));
+		
+		HashMap<String, JMenu> categoryMenus = new HashMap<>();
+		for (RenderingRuleProperty customProp : getRenderingRulesStorage().PROPS.getCustomRules()) {
+			if (customProp.isBoolean()) {
+				if(customProp.getCategory()==null){
+					continue;
+				}
+				if(!categoryMenus.containsKey(customProp.getCategory())){
+					JMenu jMenu = new JMenu(getString("rendering_category_" + customProp.getCategory()));
+					jRenderPropertiesMenu.add(jMenu);
+					categoryMenus.put(customProp.getCategory(), jMenu);
+				}
+				CommonPreference<Boolean> pref = prefs.getCustomRenderBooleanProperty(customProp.getAttrName());
+				log.info("PROP: "  + customProp.getAttrName()+ ", " + customProp.getCategory() + "=" + pref.get());
+				JMenu jMenu = categoryMenus.get(customProp.getCategory());
+				JMenuItem item = new OffRoadMenuItem(new SetRenderingRule(this, customProp), jMenu);
+				jMenu.add(item);
+			}
+		}
+		jViewMenu.add(jRenderPropertiesMenu);
 		menubar.add(jViewMenu);
 		// Navigation
 		JMenu jNavigationMenu = new JMenu(getOffRoadString("offroad.navigation")); //$NON-NLS-1$

@@ -112,7 +112,7 @@ public class RenderingRuleSearchRequest {
 	public boolean search(int state) {
 		return search(state, true);
 	}
-	
+
 	public boolean search(int state, boolean loadOutput) {
 		searchResult = false;
 		int tagKey = values[storage.PROPS.R_TAG.getId()];

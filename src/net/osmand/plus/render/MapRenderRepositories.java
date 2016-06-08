@@ -559,6 +559,7 @@ public class MapRenderRepositories {
 					} else {
 						CommonPreference<Boolean> pref = prefs.getCustomRenderBooleanProperty(customProp.getAttrName());
 						renderingReq.setBooleanFilter(customProp, pref.get());
+						log.debug("Property : " + customProp.getAttrName() + " is  "  + pref.get());
 					}
 				} else if (RenderingRuleStorageProperties.UI_CATEGORY_HIDDEN.equals(customProp.getCategory())) {
 					if (customProp.isString()) {

@@ -34,7 +34,7 @@ public class LazyThread extends GenerationThread {
 
 	public void runInBackground() {
 		int counter = 0;
-		while(mNextThread == null){
+		while(!findSuccessor(GenerationThread.class)){
 			try {
 				int millis = 20;
 				counter += millis;
@@ -42,7 +42,7 @@ public class LazyThread extends GenerationThread {
 				if(counter >=1000){
 					// we have waited one second.
 					// this is not done, unless we have for one second no other thread:
-					log.debug("THREAD:" + this + " executes its background task.");
+					log.info("THREAD:" + this + " executes its background task.");
 					super.runInBackground();
 					return;
 				}
@@ -50,7 +50,7 @@ public class LazyThread extends GenerationThread {
 				e.printStackTrace();
 			}
 		}
-		log.debug("THREAD:" + this + " should continue without background task.");
+		log.info("THREAD:" + this + " should continue without background task: " + printQueue());
 	}
 
 }

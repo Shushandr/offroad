@@ -5,7 +5,6 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Stroke;
 import java.awt.event.ActionEvent;
@@ -51,6 +50,7 @@ import net.osmand.plus.views.RouteLayer;
 import net.sourceforge.offroad.OsmWindow;
 import net.sourceforge.offroad.data.Pair;
 import net.sourceforge.offroad.res.OffRoadResources;
+import net.sourceforge.offroad.ui.OffRoadUIThread.OffRoadUIThreadListener;
 
 @SuppressWarnings("serial")
 public class OsmBitmapPanel extends JPanel implements IRouteInformationListener {
@@ -81,6 +81,7 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 	private boolean mCursorRadiusEnabled = false;
 
 	private double mCursorRadiusSizeInMeters = 100;
+	private boolean mZoomIsRunning = false;
 
 
 	public OsmBitmapPanel(OsmWindow pWin) {
@@ -254,6 +255,10 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 	}
 
 	public void zoomChange(final int pWheelRotation, final Point pNewCenter) {
+		if(mZoomIsRunning){
+			log.info("Don't zoom as there is something running.");
+			return ;
+		}
 		final RotatedTileBox tileCopy = copyCurrentTileBox();
 		int delta = pWheelRotation;
 		int newZoom = tileCopy.getZoom() + delta;
@@ -263,6 +268,18 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 			return;
 		}
 		ZoomAnimationThread animationThread = new ZoomAnimationThread(this, delta, pNewCenter);
+		animationThread.addListener(new OffRoadUIThreadListener() {
+			
+			@Override
+			public void threadStarted() {
+				mZoomIsRunning = true;
+			}
+			
+			@Override
+			public void threadFinished() {
+				mZoomIsRunning = false;
+			}
+		});
 		RotatedTileBox destinationTileBox = animationThread.getDestinationTileBox(tileCopy.getZoom(), 10, 9);
 		queue(animationThread);
 		GenerationThread genThread = new LazyThread(this, destinationTileBox);

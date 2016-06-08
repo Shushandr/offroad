@@ -121,5 +121,23 @@ public class OffRoadUIThread implements Runnable {
 	public boolean hasFinished() {
 		return hasFinished;
 	}
+	
+	protected boolean findSuccessor(Class<? extends OffRoadUIThread> pTypeOfSuccessor){
+		if(mNextThread==null){
+			return false;
+		}
+		if(pTypeOfSuccessor.isAssignableFrom(mNextThread.getClass())){
+			return true;
+		}
+		return mNextThread.findSuccessor(pTypeOfSuccessor);
+	}
+	
+	protected String printQueue() {
+		String ret = "This: " + this + ", ";
+		if(mNextThread!=null){
+			ret += mNextThread.printQueue();
+		}
+		return ret;
+	}
 
 }
