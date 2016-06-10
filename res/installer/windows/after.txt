@@ -1,0 +1,6 @@
+		    AUTHORS AND CONTRIBUTORS
+	
+
+The current project director is Christian Foltin.
+
+This project wouldn't have been possible without of the OsmAnd project and its contributors. Many, many thanks!

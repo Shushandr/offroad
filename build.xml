@@ -174,4 +174,71 @@ hash=${hash}
 		</exec>
 	</target>
 
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: create_windows_installer                      
+         - - - - - - - - - - - - - - - - - -->
+	<target name="create_windows_installer">
+		<ant dir="${inst.windows.installer}" target="${inst.windows.variant}">
+		</ant>
+		<exec dir="${inst.windows.installer}" executable="wine" os="Linux">
+			<arg value="/home/foltin/.wine/drive_c/Programme/Inno Setup 5/ISCC.exe"/>
+			<arg value="offroad.iss"/>
+		</exec>
+		<exec dir="${inst.windows.installer}" executable="wine" os="Mac OS X">
+			<arg value="/Users/foltin/.wine/drive_c/Programme/Inno Setup 5/ISCC.exe"/>
+			<arg value="offroad.iss"/>
+		</exec>
+	</target>
+
+	<!-- =================================
+          target: installers, for Chris' computers
+         ================================= -->
+	<target name="installers_chris" depends="" description="--> Creates all installers. This is a task that only works on Chris laptops. But it should be informative to others who want to build the installers">
+		<property name="gitRoot" value="git://git.code.sf.net/p/offroadosm/code"/>
+		<property name="macName" value="mahler.local"/>
+
+		<property name="inst.dir" location="/tmp/fm_installer"/>
+		<property name="inst.dest.dir" location="installers"/>
+		<property name="inst.windows.installer" location="${inst.dir}/res/installer/windows"/>
+		<mkdir dir="${inst.dest.dir}"/>
+		<delete dir="${inst.dir}" failonerror="false"/>
+		<mkdir dir="${inst.dir}"/>
+		<exec dir="." executable="git">
+			<arg value="clone"/>
+			<arg value="${gitRoot}"/>
+			<arg value="${inst.dir}/"/>
+		</exec>
+		<ant dir="${inst.dir}" target="post" inheritall="false">
+		</ant>
+		<copy todir="${inst.dest.dir}">
+			<fileset dir="${inst.dir}/post">
+				<include name="*"/>
+			</fileset>
+		</copy>
+		<copy todir="${inst.windows.installer}">
+			<fileset dir="res/installer/windows/">
+				<include name="jre_installer.exe"/>
+				<include name="jre/**"/>
+			</fileset>
+		</copy> 
+<!--		<copy todir="${inst.dir}">
+			<fileset dir=".">
+				<include name="**"/>
+			</fileset>
+		</copy> --> 
+		<property name="offroad.version" value="${ver}"/>
+		<antcall target="create_windows_installer">
+			<param name="inst.windows.variant" value="installer"/>
+		</antcall>
+		<antcall target="create_windows_installer">
+			<param name="inst.windows.variant" value="installer_java_installer_embedded"/>
+		</antcall>
+		<copy todir="${inst.dest.dir}">
+			<fileset dir="${inst.windows.installer}/Output/">
+				<include name="*.exe"/>
+			</fileset>
+		</copy>
+		<delete dir="${inst.dir}" failonerror="false"/> 
+	</target>
+
 </project>

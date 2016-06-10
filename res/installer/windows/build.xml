@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ====================================================================== 
+     22.02.2008 06:23:22                                                        
+
+     offroad_installer_windows    
+     Creates the installer offroad.iss file for different purposes
+                   
+     foltin                                                                
+     ====================================================================== -->
+<project name="offroad_installer_windows" default="installer">
+	<description>
+            Creates the installer OffRoad.iss file for different purposes
+    </description>
+	<property name="offroad.version" value="1.0.0" />
+	<property name="offroad.installer_year" value="2013"/>
+
+	<!-- ================================= 
+          target: installer              
+         ================================= -->
+	<target name="installer" depends="" description="--> Creates the installer OffRoad.iss file.">
+		<property name="offroad.installer.additional_sources" value="" />
+		<property name="offroad.version.extension" value="" />
+		<antcall target="write_installer">
+		</antcall>
+	</target>
+	<!-- ================================= 
+          target: installer_java_installer_embedded              
+         ================================= -->
+	<target name="installer_java_installer_embedded" depends="" description="--> Creates the jre installer embedded max installer OffRoad.iss file.">
+		<available property="jre_installer_present" file="jre_installer.exe" />
+		<fail message="No  java installer found in directory admin/installer/windows." unless="jre_installer_present" />
+		<property name="offroad.installer.additional_sources" value="" />
+		<property name="offroad.installer.embedded_jre" value="Source: jre_installer.exe; Flags: dontcopy" />
+		<property name="offroad.version.extension" value="-java-installer-embedded" />
+		<property name="offroad.installer.jre_check" value="  Result := InstallJavaVersion;" />
+		<antcall target="write_installer_base">
+		</antcall>
+	</target>
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: write_installer                      
+         - - - - - - - - - - - - - - - - - -->
+	<target name="write_installer">
+		<property name="offroad.installer.embedded_jre" value="" />
+		<property name="offroad.installer.jre_check" value="  Result := CheckJavaVersion;" />
+		<antcall target="write_installer_base">
+		</antcall>
+	</target>
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: write_installer base                 
+         - - - - - - - - - - - - - - - - - -->
+	<target name="write_installer_base">
+		<echo file="offroad.iss" append="false" encoding="ISO-8859-1">
+;****************************************************************************
+;* Install Script for OffRoad
+;****************************************************************************
+;* Before using this be sure to download and install Inno Setup from
+;* www.jrsoftware.org and ISTool from www.istool.org. These are required to
+;* make changes and compile this script. To use the billboard feature please
+;* dowload and install the ISX BillBoard DLL.
+;****************************************************************************
+;* Christian Foltin   (FC ) 10/06/2016 - Universial Version 
+;****************************************************************************
+
+[Files]
+Source: isxbb.dll; DestDir: {tmp}; Flags: dontcopy
+
+Source: OffRoad.bat;   DestDir: {app}; Flags: promptifolder overwritereadonly
+;Source: ..\..\..\bin\dist\OffRoad.exe;   DestDir: {app}; Flags: promptifolder overwritereadonly; 
+
+Source: ..\..\..\dist\LICENSE; DestDir: {app}; Flags: promptifolder overwritereadonly
+Source: ..\..\..\dist\OffRoad.jar; DestDir: {app}; Flags: promptifolder overwritereadonly
+Source: ..\..\..\readme.txt; DestDir: {app}; Flags: promptifolder overwritereadonly
+Source: ..\..\..\dist\lib\*.jar; DestDir: {app}\accessories; Flags: promptifolder overwritereadonly
+${offroad.installer.additional_sources}
+${offroad.installer.embedded_jre}
+
+
+Source: offroad.gif; DestDir: {tmp}; Flags: dontcopy
+Source: offroad1.gif; DestDir: {tmp}; Flags: dontcopy
+
+[Code]
+const
+  TOPLEFT			= 1;
+  TOPRIGHT			= 2;
+  BOTTOMLEFT		= 3;
+  BOTTOMRIGHT		= 4;
+  CENTER			= 5;
+  BACKGROUND		= 6;
+  TOP				= 7;
+  BOTTOM			= 8;
+  LEFT				= 9;
+  RIGHT				= 10;
+  TIMER				= 16;
+
+
+
+function isxbb_AddImage(Image: PAnsiChar; Flags: Cardinal): Integer;
+external 'isxbb_AddImage@files:isxbb.dll stdcall';
+
+function isxbb_Init(hWnd: Integer): Integer;
+external 'isxbb_Init@files:isxbb.dll stdcall';
+
+function isxbb_StartTimer(Seconds: Integer; Flags: Cardinal): Integer;
+external 'isxbb_StartTimer@files:isxbb.dll stdcall';
+
+function isxbb_KillTimer(Flags: Cardinal): Integer;
+external 'isxbb_KillTimer@files:isxbb.dll stdcall';
+
+
+function SearchForJavaVersion: Boolean;
+var
+  AVersion: String;
+begin
+  Result := False;
+  if RegQueryStringValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\JavaSoft\Java Runtime Environment', 'CurrentVersion', AVersion) then
+  begin
+	if (AVersion = '1.4') or (AVersion = '1.5') or (AVersion = '1.6') or (AVersion = '1.7')  or (AVersion = '1.8') or (AVersion = '1.9') then
+		Result := True;
+  end;
+  if IsWin64 and RegQueryStringValue(HKEY_LOCAL_MACHINE_64, 'SOFTWARE\JavaSoft\Java Runtime Environment', 'CurrentVersion', AVersion) then
+  begin
+	if (AVersion = '1.4') or (AVersion = '1.5') or (AVersion = '1.6') or (AVersion = '1.7')  or (AVersion = '1.8') or (AVersion = '1.9') then
+		Result := True;
+  end;
+end;
+
+function CheckJavaVersion: Boolean;
+begin
+  Result := SearchForJavaVersion;
+  if Result = False then	// Java not found/detected
+  begin
+	if MsgBox( 'Java 8 or greater not detected. - You have to download and install Java from http://www.java.com/ - Continue with installation?', mbError, MB_YESNO) = MRYES then
+		Result := True
+	else
+		Result := False;
+  end;
+end;
+
+function InstallJavaVersion: Boolean;
+var
+  ErrorCode: Integer;
+        	
+begin
+  Result := SearchForJavaVersion;
+  if Result = False then	// Java not found/detected
+	  begin
+		if MsgBox( 'Java not detected. It is needed for OffRoad. Do you want to install it?', mbError, MB_YESNO) = MRYES then
+        	begin
+	        	ExtractTemporaryFile('jre_installer.exe');
+	        	if not Exec(ExpandConstant('{tmp}\jre_installer.exe'), '', '',  SW_SHOWNORMAL, ewWaitUntilTerminated, ErrorCode) then
+	        	begin
+	        		MsgBox('Java Installation:' #13#13 'Execution of ''jre_installer.exe'' failed. ' + SysErrorMessage(ErrorCode) + '.', mbError, MB_OK);
+	        		Result := False;
+	        	end;
+        	end;
+      end;
+  // in any case, we proceed.
+  Result := True;
+end;
+
+function InitializeSetup(): Boolean;
+begin
+// AJI - Displays the two gifs on the main (blue) screen.
+// AJI - Cannot guarantee that this will work on ALL Windows versions. May need tweaking.
+    ExtractTemporaryFile('offroad.gif');
+    ExtractTemporaryFile('offroad1.gif');
+
+    isxbb_AddImage(ExpandConstant('{tmp}')+'\offroad.gif',BOTTOMLEFT);
+    isxbb_AddImage(ExpandConstant('{tmp}')+'\offroad1.gif',TOPRIGHT);
+
+    isxbb_Init(StrToInt(ExpandConstant('{hwnd}')));
+${offroad.installer.jre_check}
+
+        	
+end;
+[Setup]
+AppName=OffRoad
+AppVerName=OffRoad ${offroad.version}
+AppPublisherURL=http://OffRoadOsm.sourceforge.net
+AppSupportURL=http://OffRoadOsm.sourceforge.net
+AppUpdatesURL=http://OffRoadOsm.sourceforge.net
+;the version is not a number. doesn't work: VersionInfoVersion=${offroad.version}
+VersionInfoVersion=0.0.1.0
+        	
+DefaultDirName={pf}\offroad
+DefaultGroupName=OffRoad
+AllowNoIcons=true
+LicenseFile=..\..\..\LICENSE
+WindowVisible=true
+ShowLanguageDialog=true
+
+
+AppCopyright=Copyright © 2000-${offroad.installer_year} Christian Foltin, the OsmAnd-team and others
+AppVersion=${offroad.version}
+InfoAfterFile=after.txt
+InfoBeforeFile=before.txt
+PrivilegesRequired=admin
+UninstallDisplayIcon={app}\offroad.exe
+UninstallDisplayName=offroad
+
+AppID=B991B020-2968-11D8-AF23-444553540000
+UninstallRestartComputer=false
+ChangesAssociations=true
+FlatComponentsList=false
+OutputBaseFilename=OffRoad-Windows-Installer-${offroad.version}${offroad.version.extension}
+SolidCompression=false
+; old: InternalCompressLevel=9
+Compression=zip/9
+ShowTasksTreeLines=true
+
+ShowUndisplayableLanguages=true
+; no 64bit binary: ArchitecturesInstallIn64BitMode=x64
+
+[Languages]
+Name: english; MessagesFile: compiler:Default.isl
+; old Name: basque; MessagesFile: compiler:Languages\Basque.isl
+Name: brazilianportuguese; MessagesFile: compiler:Languages\BrazilianPortuguese.isl
+Name: catalan; MessagesFile: compiler:Languages\Catalan.isl
+;Name: croatian; MessagesFile: compiler:Languages\Croatian.isl
+Name: czech; MessagesFile: compiler:Languages\Czech.isl
+Name: danish; MessagesFile: compiler:Languages\Danish.isl
+Name: dutch; MessagesFile: compiler:Languages\Dutch.isl
+Name: finnish; MessagesFile: compiler:Languages\Finnish.isl
+Name: french; MessagesFile: compiler:Languages\French.isl
+Name: german; MessagesFile: compiler:Languages\German.isl
+Name: hebrew; MessagesFile: compiler:Languages\Hebrew.isl
+Name: hungarian; MessagesFile: compiler:Languages\Hungarian.isl
+Name: italian; MessagesFile: compiler:Languages\Italian.isl
+Name: norwegian; MessagesFile: compiler:Languages\Norwegian.isl
+Name: polish; MessagesFile: compiler:Languages\Polish.isl
+Name: portuguese; MessagesFile: compiler:Languages\Portuguese.isl
+Name: russian; MessagesFile: compiler:Languages\Russian.isl
+; Name: slovak; MessagesFile: compiler:Languages\Slovak.isl
+Name: slovenian; MessagesFile: compiler:Languages\Slovenian.isl
+Name: spanish; MessagesFile: compiler:Languages\Spanish.isl
+
+[Tasks]
+Name: desktopicon; Description: {cm:CreateDesktopIcon}; GroupDescription: {cm:AdditionalIcons}
+Name: quicklaunchicon; Description: {cm:CreateQuickLaunchIcon}; GroupDescription: {cm:AdditionalIcons}
+
+Name: associate; Description: {cm:AssocFileExtension,offroad,.gpx}; GroupDescription: {cm:AssocingFileExtension,offroad,.gpx}
+
+
+[Icons]
+Name: {group}\offroad; Filename: {app}\offroad.exe; WorkingDir: {app}; IconIndex: 0; IconFilename: {app}\offroad.exe
+Name: {group}\Uninstall offroad; Filename: {uninstallexe}
+Name: {userdesktop}\offroad; Filename: {app}\offroad.exe; Tasks: desktopicon; WorkingDir: {app}; IconIndex: 0; IconFilename: {app}\offroad.exe
+Name: {userstartmenu}\offroad; Filename: {app}\offroad.exe; Tasks: quicklaunchicon; WorkingDir: {app}; IconIndex: 0; IconFilename: {app}\offroad.exe
+
+[Run]
+; NOTE: The following entry contains an English phrase ("Launch"). You are free to translate it into another language if required.
+Filename: {app}\offroad.exe; Description: Launch offroad; Flags: skipifsilent postinstall unchecked
+[_ISTool]
+Use7zip=false
+EnableISX=true
+
+
+[Registry]
+Root: HKCR; Subkey: .mm; ValueType: string; ValueName: ; ValueData: offroad; Flags: uninsdeletevalue
+;".myp" is the extension we're associating. "MyProgramFile" is the internal name for the file type as stored in the registry. Make sure you use a unique name for this so you don't inadvertently overwrite another application's registry key.
+Root: HKCR; Subkey: offroad; ValueType: string; ValueName: ; ValueData: offroad; Flags: uninsdeletekey
+
+;"My Program File" above is the name for the file type as shown in Explorer.
+Root: HKCR; Subkey: offroad\DefaultIcon; ValueType: string; ValueName: ; ValueData: {app}\offroad.exe,1
+;"DefaultIcon" is the registry key that specifies the filename containing the icon to associate with the file type. ",0" tells Explorer to use the first icon from MYPROG.EXE. (",1" would mean the second icon.)
+Root: HKCR; Subkey: offroad\shell\open\command; ValueType: string; ValueName: ; ValueData: """{app}\offroad.exe"" ""%1"""; Flags: uninsdeletekey
+</echo>
+	</target>
+
+</project>
