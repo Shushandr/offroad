@@ -25,12 +25,13 @@ import javax.swing.Icon;
 
 import net.osmand.plus.render.RendererRegistry;
 import net.sourceforge.offroad.OsmWindow;
+import net.sourceforge.offroad.actions.OffRoadAction.SelectableAction;
 
 /**
  * @author foltin
  * @date 30.05.2016
  */
-public class ChooseRendererAction extends OffRoadAction {
+public class ChooseRendererAction extends OffRoadAction implements SelectableAction {
 
 	private String mRenderer;
 
@@ -48,6 +49,11 @@ public class ChooseRendererAction extends OffRoadAction {
 		registry.setCurrentSelectedRender(registry.getRenderer(mRenderer));
 		mContext.getSettings().RENDERER.set(mRenderer);
 		mContext.getDrawPanel().drawLater();
+	}
+	
+	@Override
+	public boolean isSelected() {
+		return mRenderer.equals(mContext.getRendererRegistry().getCurrentSelectedRenderer().getName());
 	}
 
 }

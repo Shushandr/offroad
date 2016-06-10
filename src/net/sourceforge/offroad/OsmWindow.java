@@ -477,7 +477,7 @@ public class OsmWindow {
 		jViewMenu.add(new JMenuItem(new SetCursorRadiusAction(this, "offroad.remove_cursor_radius", 0d)));
 		JMenu jRendererMenu = new JMenu(getOffRoadString("offroad.renderer"));
 		for (String renderer : getRendererRegistry().getRendererNames()) {
-			lViewItem = new JMenuItem(new ChooseRendererAction(this, getOffRoadString("offroad.renderer_"+renderer.replaceAll("[^a-zA-Z]", "_")), null, renderer));
+			lViewItem = new OffRoadMenuItem(new ChooseRendererAction(this, getOffRoadString("offroad.renderer_"+renderer.replaceAll("[^a-zA-Z]", "_")), null, renderer), jRendererMenu);
 			jRendererMenu.add(lViewItem);
 		}
 		jViewMenu.add(jRendererMenu);

@@ -5971,7 +5971,7 @@
 			<apply_if moreDetailed="false" maxzoom="15" icon=""/>
 		</case>
 		<case minzoom="15" tag="noexit" value="yes" intersectsWith="">
-			<case maxzoom="16" icon="barrier_small_red_2" iconVisibleSize="0"/>
+			<case maxzoom="16" moreDetailed="true" icon="barrier_small_red_2" iconVisibleSize="0"/>
 			<case minzoom="17" icon="highway_noexit" iconVisibleSize="12"/>
 		</case>
 		<switch minzoom="14">
@@ -6796,7 +6796,7 @@
 					<case minzoom="16" tag="barrier" value="kissing_gate" icon="barrier_kissing_gate" shield="barrier_kissing_gate_shield"/>
 					<case minzoom="16" tag="barrier" value="horse_stile" icon="barrier_horse_stile" shield="barrier_horse_stile_shield"/>
 					<case minzoom="16" tag="barrier" value="entrance" icon="barrier_entrance" shield="barrier_entrance_shield"/>
-					<apply_if minzoom="16" maxzoom="16" icon="barrier_small_black_2" shield="" iconVisibleSize="0">
+					<apply_if moreDetailed="true" minzoom="16" maxzoom="16" icon="barrier_small_black_2" shield="" iconVisibleSize="0">
 						<apply_if nightMode="true" icon="barrier_small_white_2"/>
 					</apply_if>
 				</switch>
@@ -6820,8 +6820,8 @@
 						<apply_if nightMode="true" shield="gray_gray_square_shield"/>
 					</apply_if>
 				</case>
-				<apply_if showAccess="true" minzoom="16" maxzoom="16" additional="access=private" icon="barrier_small_red_2" iconVisibleSize="0" shield=""/>
-				<apply_if showAccess="true" minzoom="16" maxzoom="16" additional="access=no" icon="barrier_small_red_2" iconVisibleSize="0" shield=""/>
+				<apply_if moreDetailed="true" showAccess="true" minzoom="16" maxzoom="16" additional="access=private" icon="barrier_small_red_2" iconVisibleSize="0" shield=""/>
+				<apply_if moreDetailed="true" showAccess="true" minzoom="16" maxzoom="16" additional="access=no" icon="barrier_small_red_2" iconVisibleSize="0" shield=""/>
 			</switch>
 
 			<!-- Impassable barriers -->
@@ -6838,7 +6838,7 @@
 				<case tag="barrier" value="jersey_barrier">
 					<apply_if minzoom="16" icon="barrier_jersey_barrier" shield="barrier_jersey_barrier_shield"/>
 				</case>
-				<apply_if minzoom="16" maxzoom="16" icon="barrier_small_red_2" iconVisibleSize="0" shield=""/>
+				<apply_if minzoom="16" maxzoom="16" moreDetailed="true" icon="barrier_small_red_2" iconVisibleSize="0" shield=""/>
 				<apply>
 					<switch> <!-- These barriers are passable by bicycle and pedestrian -->
 						<case appMode="bicycle"/>
