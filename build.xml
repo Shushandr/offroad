@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project default="dist" name="OffRoad">
 
-	<property name="ver" value="0.1_Alpha9"/>
+	<property name="ver" value="0.1_Beta1"/>
 	<property name="src" location="src"/>
 	<property name="res" location="res"/>
 	<property name="lib" location="lib"/>
@@ -146,7 +146,7 @@ hash=${hash}
 		<delete dir="${post}/${ver}/"  quiet="true"/>
 	</target>
 
-	<target name="release" depends="post">
+	<target name="release" depends="installers_chris">
 		<echo message="Test for readme.txt for containing ${ver}">
 		</echo>
 		<loadfile property="test.readme.updated" srcfile="readme.txt">

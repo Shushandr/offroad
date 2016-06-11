@@ -28,6 +28,12 @@ An offline map viewer based on OsmAnd.
 
 Version History:
 
+0_1_Beta1:
+============
+* Perimeter added
+* Rendering properties added
+* Windows installer added
+
 0_1_Alpha9:
 ============
 * Import and organization of GPX-Tracks added.
