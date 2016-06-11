@@ -198,7 +198,7 @@ hash=${hash}
 		<property name="macName" value="mahler.local"/>
 
 		<property name="inst.dir" location="/tmp/fm_installer"/>
-		<property name="inst.dest.dir" location="post"/>
+		<property name="inst.dest.dir" location="${post}/${ver}"/>
 		<property name="inst.windows.installer" location="${inst.dir}/res/installer/windows"/>
 		<mkdir dir="${inst.dest.dir}"/>
 		<delete dir="${inst.dir}" failonerror="false"/>
