@@ -1,2 +1,2 @@
 @echo off
-java -Xmx1024M -Xss8M -jar lib\OffRoad.jar
+java -Xmx1024M -Xss8M -jar OffRoad.jar

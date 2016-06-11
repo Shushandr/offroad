@@ -48,7 +48,7 @@ hash=${hash}
 	<target name="jar" depends="build">
 		<mkdir dir="${dist.lib}" />
 		<jar destfile="${dist.lib}/Resources.jar">
-			<zipfileset dir="${res}" includes="**"/>
+			<zipfileset dir="${res}" includes="**" excludes="installer/**"/>
 		</jar>
 		<!-- third party libs -->
 		<copy todir="${dist.lib}">
@@ -198,7 +198,7 @@ hash=${hash}
 		<property name="macName" value="mahler.local"/>
 
 		<property name="inst.dir" location="/tmp/fm_installer"/>
-		<property name="inst.dest.dir" location="installers"/>
+		<property name="inst.dest.dir" location="post"/>
 		<property name="inst.windows.installer" location="${inst.dir}/res/installer/windows"/>
 		<mkdir dir="${inst.dest.dir}"/>
 		<delete dir="${inst.dir}" failonerror="false"/>
@@ -212,7 +212,7 @@ hash=${hash}
 		</ant>
 		<copy todir="${inst.dest.dir}">
 			<fileset dir="${inst.dir}/post">
-				<include name="*"/>
+				<include name="**"/>
 			</fileset>
 		</copy>
 		<copy todir="${inst.windows.installer}">
@@ -221,11 +221,13 @@ hash=${hash}
 				<include name="jre/**"/>
 			</fileset>
 		</copy> 
-<!--		<copy todir="${inst.dir}">
+<!--
+		<copy todir="${inst.dir}">
 			<fileset dir=".">
 				<include name="**"/>
 			</fileset>
-		</copy> --> 
+		</copy> 
+		--> 
 		<property name="offroad.version" value="${ver}"/>
 		<antcall target="create_windows_installer">
 			<param name="inst.windows.variant" value="installer"/>

@@ -11,8 +11,8 @@
 	<description>
             Creates the installer OffRoad.iss file for different purposes
     </description>
-	<property name="offroad.version" value="1.0.0" />
-	<property name="offroad.installer_year" value="2013"/>
+	<property name="offroad.version" value="0.0.1" />
+	<property name="offroad.installer_year" value="2016"/>
 
 	<!-- ================================= 
           target: installer              
@@ -65,12 +65,12 @@
 Source: isxbb.dll; DestDir: {tmp}; Flags: dontcopy
 
 Source: OffRoad.bat;   DestDir: {app}; Flags: promptifolder overwritereadonly
-;Source: ..\..\..\bin\dist\OffRoad.exe;   DestDir: {app}; Flags: promptifolder overwritereadonly; 
+Source: OffRoad.exe;   DestDir: {app}; Flags: promptifolder overwritereadonly 
 
-Source: ..\..\..\dist\LICENSE; DestDir: {app}; Flags: promptifolder overwritereadonly
+Source: ..\..\..\LICENSE; DestDir: {app}; Flags: promptifolder overwritereadonly
 Source: ..\..\..\dist\OffRoad.jar; DestDir: {app}; Flags: promptifolder overwritereadonly
 Source: ..\..\..\readme.txt; DestDir: {app}; Flags: promptifolder overwritereadonly
-Source: ..\..\..\dist\lib\*.jar; DestDir: {app}\accessories; Flags: promptifolder overwritereadonly
+Source: ..\..\..\dist\lib\*.jar; DestDir: {app}\lib; Flags: promptifolder overwritereadonly
 ${offroad.installer.additional_sources}
 ${offroad.installer.embedded_jre}
 
@@ -182,7 +182,7 @@ AppUpdatesURL=http://OffRoadOsm.sourceforge.net
 ;the version is not a number. doesn't work: VersionInfoVersion=${offroad.version}
 VersionInfoVersion=0.0.1.0
         	
-DefaultDirName={pf}\offroad
+DefaultDirName={pf}\OffRoad
 DefaultGroupName=OffRoad
 AllowNoIcons=true
 LicenseFile=..\..\..\LICENSE
@@ -192,10 +192,10 @@ ShowLanguageDialog=true
 
 AppCopyright=Copyright © 2000-${offroad.installer_year} Christian Foltin, the OsmAnd-team and others
 AppVersion=${offroad.version}
-InfoAfterFile=after.txt
+InfoAfterFile=..\..\..\readme.txt
 InfoBeforeFile=before.txt
 PrivilegesRequired=admin
-UninstallDisplayIcon={app}\offroad.exe
+UninstallDisplayIcon={app}\OffRoad.exe
 UninstallDisplayName=offroad
 
 AppID=B991B020-2968-11D8-AF23-444553540000
@@ -242,14 +242,14 @@ Name: associate; Description: {cm:AssocFileExtension,offroad,.gpx}; GroupDescrip
 
 
 [Icons]
-Name: {group}\offroad; Filename: {app}\offroad.exe; WorkingDir: {app}; IconIndex: 0; IconFilename: {app}\offroad.exe
+Name: {group}\offroad; Filename: {app}\OffRoad.exe; WorkingDir: {app}; IconIndex: 0; IconFilename: {app}\OffRoad.exe
 Name: {group}\Uninstall offroad; Filename: {uninstallexe}
-Name: {userdesktop}\offroad; Filename: {app}\offroad.exe; Tasks: desktopicon; WorkingDir: {app}; IconIndex: 0; IconFilename: {app}\offroad.exe
-Name: {userstartmenu}\offroad; Filename: {app}\offroad.exe; Tasks: quicklaunchicon; WorkingDir: {app}; IconIndex: 0; IconFilename: {app}\offroad.exe
+Name: {userdesktop}\offroad; Filename: {app}\OffRoad.exe; Tasks: desktopicon; WorkingDir: {app}; IconIndex: 0; IconFilename: {app}\OffRoad.exe
+Name: {userstartmenu}\offroad; Filename: {app}\OffRoad.exe; Tasks: quicklaunchicon; WorkingDir: {app}; IconIndex: 0; IconFilename: {app}\OffRoad.exe
 
 [Run]
 ; NOTE: The following entry contains an English phrase ("Launch"). You are free to translate it into another language if required.
-Filename: {app}\offroad.exe; Description: Launch offroad; Flags: skipifsilent postinstall unchecked
+Filename: {app}\OffRoad.exe; Description: Launch offroad; Flags: skipifsilent postinstall unchecked
 [_ISTool]
 Use7zip=false
 EnableISX=true
@@ -261,9 +261,9 @@ Root: HKCR; Subkey: .mm; ValueType: string; ValueName: ; ValueData: offroad; Fla
 Root: HKCR; Subkey: offroad; ValueType: string; ValueName: ; ValueData: offroad; Flags: uninsdeletekey
 
 ;"My Program File" above is the name for the file type as shown in Explorer.
-Root: HKCR; Subkey: offroad\DefaultIcon; ValueType: string; ValueName: ; ValueData: {app}\offroad.exe,1
+Root: HKCR; Subkey: offroad\DefaultIcon; ValueType: string; ValueName: ; ValueData: {app}\OffRoad.exe,0
 ;"DefaultIcon" is the registry key that specifies the filename containing the icon to associate with the file type. ",0" tells Explorer to use the first icon from MYPROG.EXE. (",1" would mean the second icon.)
-Root: HKCR; Subkey: offroad\shell\open\command; ValueType: string; ValueName: ; ValueData: """{app}\offroad.exe"" ""%1"""; Flags: uninsdeletekey
+Root: HKCR; Subkey: offroad\shell\open\command; ValueType: string; ValueName: ; ValueData: """{app}\OffRoad.exe"" ""%1"""; Flags: uninsdeletekey
 </echo>
 	</target>
 
