@@ -49,7 +49,7 @@
           target: write_installer base                 
          - - - - - - - - - - - - - - - - - -->
 	<target name="write_installer_base">
-		<echo file="offroad.iss" append="false" encoding="ISO-8859-1">
+		<echo file="offroad.iss" append="false" encoding="UTF-8">
 ;****************************************************************************
 ;* Install Script for OffRoad
 ;****************************************************************************
@@ -196,9 +196,9 @@ InfoAfterFile=..\..\..\readme.txt
 InfoBeforeFile=before.txt
 PrivilegesRequired=admin
 UninstallDisplayIcon={app}\OffRoad.exe
-UninstallDisplayName=offroad
+UninstallDisplayName=OffRoad
 
-AppID=B991B020-2968-11D8-AF23-444553540000
+AppID=OffRoadApplicationFromOsmAnd
 UninstallRestartComputer=false
 ChangesAssociations=true
 FlatComponentsList=false
@@ -208,7 +208,6 @@ SolidCompression=false
 Compression=zip/9
 ShowTasksTreeLines=true
 
-ShowUndisplayableLanguages=true
 ; no 64bit binary: ArchitecturesInstallIn64BitMode=x64
 
 [Languages]
@@ -242,14 +241,14 @@ Name: associate; Description: {cm:AssocFileExtension,offroad,.gpx}; GroupDescrip
 
 
 [Icons]
-Name: {group}\offroad; Filename: {app}\OffRoad.exe; WorkingDir: {app}; IconIndex: 0; IconFilename: {app}\OffRoad.exe
-Name: {group}\Uninstall offroad; Filename: {uninstallexe}
-Name: {userdesktop}\offroad; Filename: {app}\OffRoad.exe; Tasks: desktopicon; WorkingDir: {app}; IconIndex: 0; IconFilename: {app}\OffRoad.exe
-Name: {userstartmenu}\offroad; Filename: {app}\OffRoad.exe; Tasks: quicklaunchicon; WorkingDir: {app}; IconIndex: 0; IconFilename: {app}\OffRoad.exe
+Name: {group}\OffRoad; Filename: {app}\OffRoad.exe; WorkingDir: {app}; IconIndex: 0; IconFilename: {app}\OffRoad.exe
+Name: {group}\Uninstall OffRoad; Filename: {uninstallexe}
+Name: {userdesktop}\OffRoad; Filename: {app}\OffRoad.exe; Tasks: desktopicon; WorkingDir: {app}; IconIndex: 0; IconFilename: {app}\OffRoad.exe
+Name: {userstartmenu}\OffRoad; Filename: {app}\OffRoad.exe; Tasks: quicklaunchicon; WorkingDir: {app}; IconIndex: 0; IconFilename: {app}\OffRoad.exe
 
 [Run]
 ; NOTE: The following entry contains an English phrase ("Launch"). You are free to translate it into another language if required.
-Filename: {app}\OffRoad.exe; Description: Launch offroad; Flags: skipifsilent postinstall unchecked
+Filename: {app}\OffRoad.exe; Description: Launch OffRoad; Flags: skipifsilent postinstall unchecked
 [_ISTool]
 Use7zip=false
 EnableISX=true

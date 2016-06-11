@@ -1,4 +1,4 @@
-		    AUTHORS AND CONTRIBUTORS
+﻿		    AUTHORS AND CONTRIBUTORS
 	
 
 The current project director is Christian Foltin.
