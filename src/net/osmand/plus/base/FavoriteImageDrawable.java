@@ -8,7 +8,6 @@ import java.awt.image.BufferedImage;
 import java.util.TreeMap;
 
 import net.osmand.plus.views.FavoritesLayer;
-import net.osmand.plus.views.OsmandMapLayer;
 import net.sourceforge.offroad.OsmWindow;
 import net.sourceforge.offroad.ui.ColorUtils;
 import net.sourceforge.offroad.ui.Drawable;
@@ -39,9 +38,9 @@ public class FavoriteImageDrawable extends Drawable {
 		int col = color == 0 ? FavoritesLayer.DEFAULT_COLOR : color;
 		paintBackground_Composite = new PorterDuffMultiplyFilter(new Color(col, true));
 //		paintIcon = new Paint();
-		favIcon = OsmandMapLayer.readImage("map_favorite", ctx);
-		favBackground = OsmandMapLayer.readImage("map_white_favorite_shield", ctx);
-		listDrawable = OsmandMapLayer.readImage("ic_action_fav_dark", ctx);
+		favIcon = ctx.readImage("map_favorite");
+		favBackground = ctx.readImage("map_white_favorite_shield");
+		listDrawable = ctx.readImage("ic_action_fav_dark");
 
 //		paintOuter = new Paint();
 //		paintOuter.setAntiAlias(true);

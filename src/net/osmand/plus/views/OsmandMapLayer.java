@@ -5,13 +5,10 @@ import java.awt.Polygon;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import javax.imageio.ImageIO;
 import javax.swing.JMenu;
 
 import org.apache.commons.logging.Log;
@@ -323,20 +320,6 @@ public abstract class OsmandMapLayer {
 	}
 
 	public BufferedImage readImage(String image, OsmBitmapPanel view) {
-		return readImage(image, view.getContext());
-	}
-	
-	public static BufferedImage readImage(String image, OsmWindow ctx) {
-		try {
-			InputStream resource = ctx.getResource(OsmWindow.IMAGE_PATH + image + ".png");
-			if(resource == null){
-				log.error("Resource " + image + " not found!");
-				return null;
-			}
-			return ImageIO.read(resource);
-		} catch (IOException e) {
-			e.printStackTrace();
-			return null;
-		}
+		return view.getContext().readImage(image);
 	}
 }

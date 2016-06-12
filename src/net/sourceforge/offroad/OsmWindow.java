@@ -37,6 +37,7 @@ import java.util.Properties;
 import java.util.PropertyResourceBundle;
 import java.util.Vector;
 
+import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.DefaultComboBoxModel;
@@ -405,6 +406,7 @@ public class OsmWindow {
 		mToolBar.add(mComboBox, new GridBagConstraints(2, 0, 1, 1, 0, 0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 
 		mFrame = new JFrame(getOffRoadString("offroad.string4")); //$NON-NLS-1$
+		mFrame.setIconImage(readImage("offroad_icon.png"));
 		mFrame.getContentPane().setLayout(new BorderLayout());
 		mFrame.getContentPane().add(mToolBar, BorderLayout.NORTH);
 		mSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, mAmenityTable, mDrawPanel);
@@ -496,7 +498,7 @@ public class OsmWindow {
 					categoryMenus.put(customProp.getCategory(), jMenu);
 				}
 				CommonPreference<Boolean> pref = prefs.getCustomRenderBooleanProperty(customProp.getAttrName());
-				log.info("PROP: "  + customProp.getAttrName()+ ", " + customProp.getCategory() + "=" + pref.get());
+				log.debug("PROP: "  + customProp.getAttrName()+ ", " + customProp.getCategory() + "=" + pref.get());
 				JMenu jMenu = categoryMenus.get(customProp.getCategory());
 				JMenuItem item = new OffRoadMenuItem(new SetRenderingRule(this, customProp), jMenu);
 				jMenu.add(item);
@@ -1393,6 +1395,20 @@ public class OsmWindow {
 		saveSettings();
 		mFrame.dispose();
 		System.exit(0);
+	}
+
+	public BufferedImage readImage(String image) {
+		try {
+			InputStream resource = getResource(IMAGE_PATH + image + ".png");
+			if (resource == null) {
+				log.error("Resource " + image + " not found!");
+				return null;
+			}
+			return ImageIO.read(resource);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 	
 }
