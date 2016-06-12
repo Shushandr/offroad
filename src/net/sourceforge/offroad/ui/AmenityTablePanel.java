@@ -52,14 +52,13 @@ import net.osmand.data.LatLon;
 import net.osmand.plus.poi.PoiUIFilter;
 import net.osmand.util.MapUtils;
 import net.sourceforge.offroad.OsmWindow;
-import net.sourceforge.offroad.OsmWindow.CursorPositionListener;
 import net.sourceforge.offroad.R;
 
 /**
  * @author foltin
  * @date 23.04.2016
  */
-public class AmenityTablePanel extends JPanel implements CursorPositionListener {
+public class AmenityTablePanel extends JPanel {
 
 	private final static Log log = PlatformUtil.getLog(AmenityTablePanel.class);
 
@@ -230,7 +229,6 @@ public class AmenityTablePanel extends JPanel implements CursorPositionListener 
 
 	public AmenityTablePanel(OsmWindow pContext) {
 		mContext = pContext;
-		mContext.addCursorPositionListener(this);
 		GridBagLayout gbl = new GridBagLayout();
 		gbl.columnWeights = new double[] { 1.0f };
 		gbl.rowWeights = new double[] { 1.0f };
@@ -270,35 +268,13 @@ public class AmenityTablePanel extends JPanel implements CursorPositionListener 
 				GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 	}
 
-	public void destroy() {
-		mContext.removeCursorPositionListener(this);
-	}
-
 	protected void select(Amenity pSelectedRow) {
+		if(pSelectedRow == null){
+			return;
+		}
 		LatLon loc = pSelectedRow.getLocation();
 		mContext.move(loc, null);
 	}
-
-	@Override
-	public void cursorPositionChanged(LatLon pPosition) {
-		mContext.refreshSearchTable();
-		// recalculate distances.
-		int distanceColumn = mSourceModel.getDistanceColumn();
-		for (int i = 0; i < mSourceModel.getRowCount(); i++) {
-			mSourceModel.fireTableCellUpdated(i, distanceColumn);
-		}
-		// this removes the cell heights....
-//		mSourceModel.fireTableDataChanged();
-	}
-
-	// public void setPoiFilter(PoiUIFilter pFilter){
-	// mFilter = pFilter;
-	// mSourceModel.clear();
-	// for (Amenity am : pFilter.getCurrentSearchResult()) {
-	// mSourceModel.addRow(am);
-	// }
-	// mSourceModel.fireTableDataChanged();
-	// }
 
 	public void setSearchResult(List<Amenity> pResult) {
 		mSourceModel.clear();
@@ -307,6 +283,14 @@ public class AmenityTablePanel extends JPanel implements CursorPositionListener 
 		}
 		mSourceModel.fireTableDataChanged();
 		updateRowHeights();
+	}
+
+	private void recalculateDistances() {
+		// recalculate distances.
+		int distanceColumn = mSourceModel.getDistanceColumn();
+		for (int i = 0; i < mSourceModel.getRowCount(); i++) {
+			mSourceModel.fireTableCellUpdated(i, distanceColumn);
+		}
 	}
 
 	private void updateRowHeights() {

@@ -137,6 +137,7 @@ import net.sourceforge.offroad.res.OffRoadResources;
 import net.sourceforge.offroad.res.ResourceTest;
 import net.sourceforge.offroad.res.Resources;
 import net.sourceforge.offroad.ui.AmenityTablePanel;
+import net.sourceforge.offroad.ui.AmenityTableUpdateThread;
 import net.sourceforge.offroad.ui.BlindIcon;
 import net.sourceforge.offroad.ui.OsmBitmapPanel;
 import net.sourceforge.offroad.ui.OsmBitmapPanelMouseAdapter;
@@ -1192,6 +1193,8 @@ public class OsmWindow {
 	public void setCursorPosition(LatLon pLoc) {
 		mDrawPanel.setCursor(pLoc);
 		addPoint(pLoc);
+		// queue update of the amenity table.
+		getDrawPanel().queue(new AmenityTableUpdateThread(getDrawPanel(), pLoc, mAmenityTable));
 		for (CursorPositionListener listener : mCursorPositionListeners) {
 			listener.cursorPositionChanged(pLoc);
 		}
@@ -1283,12 +1286,13 @@ public class OsmWindow {
 		}
 		getSettings().SELECTED_POI_FILTER_FOR_MAP.set(filterId);
 		getSettings().SELECTED_POI_FILTER_STRING_FOR_MAP.set(pFilterText);
-		refreshSearchTable();
+		setWaitingCursor(true);
+		mAmenityTable.setSearchResult(getSearchResult());
+		setWaitingCursor(false);
 		getDrawPanel().refreshMap();
 	}
 
-	public void refreshSearchTable() {
-		setWaitingCursor(true);
+	public List<Amenity> getSearchResult() {
 		List<Amenity> result = new Vector<>();
 		String filterId = getSettings().SELECTED_POI_FILTER_FOR_MAP.get();
 		if (filterId != null) {
@@ -1311,8 +1315,7 @@ public class OsmWindow {
 						}
 					});
 		}
-		mAmenityTable.setSearchResult(result);
-		setWaitingCursor(false);
+		return result;
 	}
 
 	public String getOffRoadString(String pString, Object[] pObjects) {

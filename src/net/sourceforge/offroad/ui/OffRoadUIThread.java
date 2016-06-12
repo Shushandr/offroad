@@ -19,12 +19,16 @@
 
 package net.sourceforge.offroad.ui;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashSet;
 import java.util.Set;
+
+import javax.swing.SwingUtilities;
 
 import org.apache.commons.logging.Log;
 
 import net.osmand.PlatformUtil;
+import net.sourceforge.offroad.OsmWindow;
 
 /**
  * @author foltin
@@ -69,7 +73,12 @@ public class OffRoadUIThread implements Runnable {
 		// overwrite if needed.
 	};
 
-	public void runAfterThreadsBeforeHaveFinished() {
+	/**
+	 * Is NOT executed in the ui thread!
+	 * @throws InterruptedException 
+	 * @throws InvocationTargetException 
+	 */
+	public void runAfterThreadsBeforeHaveFinished() throws InvocationTargetException, InterruptedException {
 		// overwrite if needed.
 	}
 
@@ -89,7 +98,7 @@ public class OffRoadUIThread implements Runnable {
 		}
 		waitForThreadBeforeHaveFinished();
 		try {
-			runAfterThreadsBeforeHaveFinished();
+				runAfterThreadsBeforeHaveFinished();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -138,6 +147,10 @@ public class OffRoadUIThread implements Runnable {
 			ret += mNextThread.printQueue();
 		}
 		return ret;
+	}
+	
+	protected OsmWindow getContext(){
+		return mOsmBitmapPanel.getContext();
 	}
 
 }
