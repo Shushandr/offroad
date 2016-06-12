@@ -30,7 +30,7 @@ public class PoiFilterAction extends OffRoadAction implements SelectableAction {
 	
 	@Override
 	public void actionPerformed(ActionEvent pE) {
-		mContext.setPoiFilter(mFilter, mContext.getSearchTextField().getText());
+		mContext.setPoiFilter(mFilter, (mUseTextFilter)?mContext.getSearchTextField().getText():null);
 	}
 
 
