@@ -208,10 +208,10 @@ hash=${hash}
 			<arg value="${gitRoot}"/>
 			<arg value="${inst.dir}/"/>
 		</exec>
-		<ant dir="${inst.dir}" target="post" inheritall="false">
+		<ant dir="${inst.dir}" target="post" inheritall="false" useNativeBasedir="true">
 		</ant>
 		<copy todir="${inst.dest.dir}">
-			<fileset dir="${inst.dir}/${post}/${ver}">
+			<fileset dir="${inst.dir}/post/${ver}">
 				<include name="**"/>
 			</fileset>
 		</copy>
@@ -248,7 +248,7 @@ hash=${hash}
 			<fileset dir="${inst.windows.installer}/Output/">
 				<include name="*.exe"/>
 			</fileset>
-			<fileset file="${inst.dir}">
+			<fileset dir="${inst.dir}">
 				<include name="*.deb"/>
 			</fileset>
 		</copy>

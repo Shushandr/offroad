@@ -363,8 +363,8 @@ public abstract class AsyncTask<Params, Progress, Result> {
 
     public void execute() {
     	onPreExecute();
-    	mResult = doInBackground(null);
-    	onProgressUpdate(null);
+    	mResult = doInBackground((Params[])null);
+    	onProgressUpdate((Progress[])null);
     	onPostExecute(mResult);
     }
     
