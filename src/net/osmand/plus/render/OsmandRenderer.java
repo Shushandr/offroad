@@ -321,9 +321,9 @@ public class OsmandRenderer {
 		float coeff = rc.getDensityValue(rc.screenDensityRatio * rc.textScale);
 		float left = icon.x - visbleWidth / 2 * coeff;
 		float top = icon.y - visbleHeight / 2 * coeff;
-		float right = left + visbleWidth * coeff;
-		float bottom = top + visbleHeight * coeff;
-		rf = new Rectangle2D.Double(left, top, right, bottom);
+		float width = visbleWidth * coeff;
+		float height = visbleHeight * coeff;
+		rf = new Rectangle2D.Double(left, top, width, height);
 		return rf;
 	}
 	
