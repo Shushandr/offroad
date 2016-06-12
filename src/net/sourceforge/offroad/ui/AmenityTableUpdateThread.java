@@ -26,6 +26,7 @@ import javax.swing.SwingUtilities;
 
 import net.osmand.data.Amenity;
 import net.osmand.data.LatLon;
+import net.osmand.data.MapObject;
 
 /**
  * @author foltin
@@ -34,7 +35,7 @@ import net.osmand.data.LatLon;
 public class AmenityTableUpdateThread extends OffRoadUIThread {
 
 	private LatLon mLocation;
-	private List<Amenity> mSearchResult;
+	private List<MapObject> mSearchResult;
 	private AmenityTablePanel mAmenityTable;
 
 	public AmenityTableUpdateThread(OsmBitmapPanel pOsmBitmapPanel, LatLon pLocation, AmenityTablePanel pAmenityTable) {

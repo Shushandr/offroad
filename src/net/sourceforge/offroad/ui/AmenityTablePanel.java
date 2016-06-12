@@ -49,6 +49,7 @@ import org.apache.commons.logging.Log;
 import net.osmand.PlatformUtil;
 import net.osmand.data.Amenity;
 import net.osmand.data.LatLon;
+import net.osmand.data.MapObject;
 import net.osmand.plus.poi.PoiUIFilter;
 import net.osmand.util.MapUtils;
 import net.sourceforge.offroad.OsmWindow;
@@ -64,11 +65,18 @@ public class AmenityTablePanel extends JPanel {
 
 	public static class ImageHolder {
 		public BufferedImage image;
-		public Amenity item;
-		public ImageHolder(BufferedImage pImage, Amenity pItem) {
+		public MapObject item;
+		public ImageHolder(BufferedImage pImage, MapObject pItem) {
 			super();
 			image = pImage;
 			item = pItem;
+		}
+		String getTypeTranslation(){
+			if (item instanceof Amenity) {
+				Amenity amenity = (Amenity) item;
+				return amenity.getType().getTranslation();
+			}
+			return null;
 		}
 		
 	}
@@ -90,7 +98,7 @@ public class AmenityTablePanel extends JPanel {
 					setSize(new Dimension(20, 20));
 				}
 				setText("");
-				setToolTipText(holder.item.getType().getTranslation());
+				setToolTipText(holder.getTypeTranslation());
 			}
 			return this;
 		}
@@ -115,7 +123,7 @@ public class AmenityTablePanel extends JPanel {
 	}
 
 	interface AmenityToColumn {
-		Object get(Amenity pItem);
+		Object get(MapObject pItem);
 	}
 
 	public static class AmenityTableColumn {
@@ -135,7 +143,7 @@ public class AmenityTablePanel extends JPanel {
 
 	public class AmenityTableModel extends AbstractTableModel {
 		private Vector<AmenityTableColumn> mColumns = new Vector<>();
-		private Vector<Amenity> mRows = new Vector<>();
+		private Vector<MapObject> mRows = new Vector<>();
 
 		public AmenityTableModel() {
 			mColumns.addElement(new AmenityTableColumn("icon", ImageHolder.class, item -> new ImageHolder(mContext.getBitmap(item), item),
@@ -160,11 +168,11 @@ public class AmenityTablePanel extends JPanel {
 			return mContext.getOffRoadString("offroad.amenity." + mColumns.get(pColumn).mName);
 		}
 
-		public void addRow(Amenity pItem) {
+		public void addRow(MapObject pItem) {
 			mRows.add(pItem);
 		}
 
-		public Amenity getItemAt(int pJ) {
+		public MapObject getItemAt(int pJ) {
 			return mRows.get(pJ);
 		}
 
@@ -187,7 +195,7 @@ public class AmenityTablePanel extends JPanel {
 			return result;
 		}
 
-		public Amenity getSelectedRow() {
+		public MapObject getSelectedRow() {
 			int sel = mTable.getSelectedRow();
 			if (sel < 0) {
 				return null;
@@ -195,9 +203,9 @@ public class AmenityTablePanel extends JPanel {
 			return getItemAt(mTable.convertRowIndexToModel(sel));
 		}
 
-		public List<Amenity> getSelectedRows() {
+		public List<MapObject> getSelectedRows() {
 			int[] selectedRows = mTable.getSelectedRows();
-			Vector<Amenity> res = new Vector<>();
+			Vector<MapObject> res = new Vector<>();
 			for (int i = 0; i < selectedRows.length; i++) {
 				int j = mTable.convertRowIndexToModel(selectedRows[i]);
 				res.add(getItemAt(j));
@@ -268,7 +276,7 @@ public class AmenityTablePanel extends JPanel {
 				GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 	}
 
-	protected void select(Amenity pSelectedRow) {
+	protected void select(MapObject pSelectedRow) {
 		if(pSelectedRow == null){
 			return;
 		}
@@ -276,9 +284,9 @@ public class AmenityTablePanel extends JPanel {
 		mContext.move(loc, null);
 	}
 
-	public void setSearchResult(List<Amenity> pResult) {
+	public void setSearchResult(List<MapObject> pResult) {
 		mSourceModel.clear();
-		for (Amenity am : pResult) {
+		for (MapObject am : pResult) {
 			mSourceModel.addRow(am);
 		}
 		mSourceModel.fireTableDataChanged();

@@ -76,6 +76,7 @@ import net.osmand.ResultMatcher;
 import net.osmand.data.Amenity;
 import net.osmand.data.FavouritePoint;
 import net.osmand.data.LatLon;
+import net.osmand.data.MapObject;
 import net.osmand.data.PointDescription;
 import net.osmand.data.RotatedTileBox;
 import net.osmand.map.OsmandRegions;
@@ -915,19 +916,22 @@ public class OsmWindow {
 		return null;
 	}
 	
-	public BufferedImage getBitmap(Amenity o) {
-		String id = null;
-		PoiType st = o.getType().getPoiTypeByKeyName(o.getSubType());
-		if (st != null) {
-			if (RenderingIcons.containsSmallIcon(st.getIconKeyName())) {
-				id = st.getIconKeyName();
-			} else if (RenderingIcons.containsSmallIcon(st.getOsmTag() + "_" + st.getOsmValue())) {
-				id = st.getOsmTag() + "_" + st.getOsmValue();
-			}
-		}
+	public BufferedImage getBitmap(MapObject obj) {
 		BufferedImage bmp = null;
-		if (id != null) {
-			bmp = RenderingIcons.getIcon(id, false);
+		if (obj instanceof Amenity) {
+			Amenity o = (Amenity) obj;
+			String id = null;
+			PoiType st = o.getType().getPoiTypeByKeyName(o.getSubType());
+			if (st != null) {
+				if (RenderingIcons.containsSmallIcon(st.getIconKeyName())) {
+					id = st.getIconKeyName();
+				} else if (RenderingIcons.containsSmallIcon(st.getOsmTag() + "_" + st.getOsmValue())) {
+					id = st.getOsmTag() + "_" + st.getOsmValue();
+				}
+			}
+			if (id != null) {
+				bmp = RenderingIcons.getIcon(id, false);
+			}
 		}
 		return bmp;
 	}
@@ -1292,15 +1296,15 @@ public class OsmWindow {
 		getDrawPanel().refreshMap();
 	}
 
-	public List<Amenity> getSearchResult() {
-		List<Amenity> result = new Vector<>();
+	public List<MapObject> getSearchResult() {
+		List<MapObject> result = new Vector<>();
 		String filterId = getSettings().SELECTED_POI_FILTER_FOR_MAP.get();
 		if (filterId != null) {
 			PoiUIFilter filter = getPoiFilters().getFilterById(filterId);
 			String filterString = getSettings().SELECTED_POI_FILTER_STRING_FOR_MAP.get();
 			filter.setFilterByName(filterString);
 			LatLon latLon = getCursorPosition();
-			result = filter.initializeNewSearch(latLon.getLatitude(), latLon.getLongitude(), -1,
+			result.addAll(filter.initializeNewSearch(latLon.getLatitude(), latLon.getLongitude(), -1,
 					new ResultMatcher<Amenity>() {
 
 						@Override
@@ -1313,7 +1317,7 @@ public class OsmWindow {
 						public boolean isCancelled() {
 							return false;
 						}
-					});
+					}));
 		}
 		return result;
 	}
