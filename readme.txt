@@ -31,6 +31,7 @@ Version History:
 0_1_Beta2:
 ============
 * routing results are displayed in the search table, now
+* application mode (car, bike, etc.) as view option added.
 
 0_1_Beta1:
 ============

@@ -119,6 +119,7 @@ import net.osmand.router.RoutingConfiguration;
 import net.osmand.router.RoutingConfiguration.Builder;
 import net.osmand.util.MapUtils;
 import net.sourceforge.offroad.actions.AddFavoriteAction;
+import net.sourceforge.offroad.actions.ChooseApplicationModeAction;
 import net.sourceforge.offroad.actions.ChooseRendererAction;
 import net.sourceforge.offroad.actions.ChooseRouteServiceAction;
 import net.sourceforge.offroad.actions.ClearRouteAction;
@@ -495,6 +496,13 @@ public class OsmWindow  implements IRouteInformationListener {
 		jViewMenu.add(new JMenuItem(new SetCursorRadiusAction(this, "offroad.cursor_radius_2km", 2000d)));
 		jViewMenu.add(new JMenuItem(new SetCursorRadiusAction(this, "offroad.cursor_radius_5km", 5000d)));
 		jViewMenu.add(new JMenuItem(new SetCursorRadiusAction(this, "offroad.remove_cursor_radius", 0d)));
+		jViewMenu.add(new JSeparator());
+		JMenu jApplicationModeMenu = new JMenu(getString("app_modes_choose"));
+		jApplicationModeMenu.add(new OffRoadMenuItem(new ChooseApplicationModeAction(this, ApplicationMode.DEFAULT), jApplicationModeMenu));
+		jApplicationModeMenu.add(new OffRoadMenuItem(new ChooseApplicationModeAction(this, ApplicationMode.CAR), jApplicationModeMenu));
+		jApplicationModeMenu.add(new OffRoadMenuItem(new ChooseApplicationModeAction(this, ApplicationMode.BICYCLE), jApplicationModeMenu));
+		jApplicationModeMenu.add(new OffRoadMenuItem(new ChooseApplicationModeAction(this, ApplicationMode.PEDESTRIAN), jApplicationModeMenu));
+		jViewMenu.add(jApplicationModeMenu);
 		JMenu jRendererMenu = new JMenu(getOffRoadString("offroad.renderer"));
 		for (String renderer : getRendererRegistry().getRendererNames()) {
 			lViewItem = new OffRoadMenuItem(new ChooseRendererAction(this, getOffRoadString("offroad.renderer_"+renderer.replaceAll("[^a-zA-Z]", "_")), null, renderer), jRendererMenu);
