@@ -151,7 +151,7 @@ public class AmenityTablePanel extends JPanel {
 			mColumns.addElement(new AmenityTableColumn("name", String.class,
 					item -> item.getName(mContext.getLanguage()), new DefaultTableCellRenderer()));
 			mColumns.addElement(new AmenityTableColumn("distance", Double.class,
-					item -> MapUtils.getDistance(item.getLocation(), mContext.getCursorPosition()) / 1000d,
+					item -> item.getDistance(mContext.getCursorPosition()) / 1000d,
 					new DistanceTableCellRenderer()));
 			for (AmenityTableColumn column : mColumns) {
 				mTable.setDefaultRenderer(column.mClass, column.mRenderer);

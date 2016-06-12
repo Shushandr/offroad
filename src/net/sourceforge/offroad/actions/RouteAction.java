@@ -44,7 +44,6 @@ public class RouteAction extends OffRoadAction implements RouteCalculationProgre
 		super(pCtx);
 		mMode = pMode;
 		this.putValue(Action.NAME, mContext.getOffRoadString("offroad.route", new Object[]{pMode.toHumanStringCtx()}));
-		mContext.getRoutingHelper().setProgressBar(this);
 	}
 	
 	/* (non-Javadoc)
@@ -52,6 +51,7 @@ public class RouteAction extends OffRoadAction implements RouteCalculationProgre
 	 */
 	@Override
 	public void actionPerformed(ActionEvent pE) {
+		mContext.getRoutingHelper().setProgressBar(this);
 		// check for all points:
 		TargetPointsHelper helper = mContext.getTargetPointsHelper();
 		if(helper.getPointToStart() == null){
@@ -62,13 +62,6 @@ public class RouteAction extends OffRoadAction implements RouteCalculationProgre
 			mContext.showToastMessage(mContext.getOffRoadString("offroad.destination_position_undefined"));
 			return;
 		}
-		// get destination point:
-//		LatLon destLatLon = mContext.getMouseLocation();
-//		LatLon start =  mContext.getCursorPosition();
-//		Location startLocation = new Location("");
-//		startLocation.setLatitude(start.getLatitude());
-//		startLocation.setLongitude(start.getLongitude());
-//		System.out.println("Routing from " + startLocation + " to " + destLatLon);
 		mContext.getRoutingHelper().setAppMode(mMode);
 		mContext.getRoutingHelper().setFinalAndCurrentLocation(helper.getPointToNavigate().point,
 				helper.getIntermediatePointsLatLon(), helper.getPointToStartLocation());
@@ -93,8 +86,6 @@ public class RouteAction extends OffRoadAction implements RouteCalculationProgre
 	@Override
 	public void finish() {
 		mContext.setProgress(100);
-		float dist = mContext.getRoutingHelper().getRoute().getWholeDistance()/1000f;
-		mContext.setStatus(mContext.getOffRoadString("offroad.routing_finished", new Object[]{dist}));
 	}
 
 	@Override

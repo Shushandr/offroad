@@ -13,6 +13,7 @@ import java.util.Map.Entry;
 import net.osmand.Collator;
 import net.osmand.OsmAndCollator;
 import net.osmand.util.Algorithms;
+import net.osmand.util.MapUtils;
 import net.sf.junidecode.Junidecode;
 
 
@@ -215,6 +216,11 @@ public abstract class MapObject implements Comparable<MapObject> {
 		public int compare(MapObject o1, MapObject o2) {
 			return collator.compare(o1.getName(l), o2.getName(l));
 		}
+	}
+
+	// new in offroad:
+	public double getDistance(LatLon pCursorPosition) {
+		return MapUtils.getDistance(getLocation(), pCursorPosition);
 	}	
 
 }

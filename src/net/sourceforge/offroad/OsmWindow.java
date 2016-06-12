@@ -71,11 +71,14 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import net.osmand.IProgress;
 import net.osmand.IndexConstants;
+import net.osmand.Location;
 import net.osmand.PlatformUtil;
 import net.osmand.ResultMatcher;
+import net.osmand.ValueHolder;
 import net.osmand.data.Amenity;
 import net.osmand.data.FavouritePoint;
 import net.osmand.data.LatLon;
+import net.osmand.data.LocationPoint;
 import net.osmand.data.MapObject;
 import net.osmand.data.PointDescription;
 import net.osmand.data.RotatedTileBox;
@@ -103,7 +106,10 @@ import net.osmand.plus.render.MapRenderRepositories;
 import net.osmand.plus.render.RendererRegistry;
 import net.osmand.plus.render.RenderingIcons;
 import net.osmand.plus.resources.ResourceManager;
+import net.osmand.plus.routing.RouteCalculationResult;
+import net.osmand.plus.routing.RouteDirectionInfo;
 import net.osmand.plus.routing.RouteProvider.RouteService;
+import net.osmand.plus.routing.RoutingHelper.IRouteInformationListener;
 import net.osmand.plus.routing.RoutingHelper;
 import net.osmand.plus.views.POIMapLayer;
 import net.osmand.render.RenderingRuleProperty;
@@ -130,6 +136,7 @@ import net.sourceforge.offroad.actions.SearchAddressAction;
 import net.sourceforge.offroad.actions.SetRenderingRule;
 import net.sourceforge.offroad.actions.ShowFavoriteAction;
 import net.sourceforge.offroad.actions.ShowWikipediaAction;
+import net.sourceforge.offroad.data.LocationAsMapObject;
 import net.sourceforge.offroad.data.QuadRectExtendable;
 import net.sourceforge.offroad.data.SQLiteImpl;
 import net.sourceforge.offroad.data.persistence.ComponentLocationStorage;
@@ -152,7 +159,7 @@ import net.sourceforge.offroad.ui.SetCursorRadiusAction;
  * @author foltin
  * @date 26.03.2016
  */
-public class OsmWindow {
+public class OsmWindow  implements IRouteInformationListener {
 	private class PoiContextMenuListener implements PopupMenuListener {
 		
 		private JPopupMenu mMenu;
@@ -311,7 +318,16 @@ public class OsmWindow {
 
 
 	private VersionInfo mVersionInfo;
+	
+	private enum SearchType {
+		AMENITY, ROUTE
+	};
 
+	private SearchType mSearchType = SearchType.AMENITY;
+
+
+	private List<MapObject> mRouteResult = new Vector<>(); 
+	
 	public void createAndShowUI() {
 		mDrawPanel = new OsmBitmapPanel(this);
 		mAdapter = new OsmBitmapPanelMouseAdapter(mDrawPanel);
@@ -743,6 +759,7 @@ public class OsmWindow {
 		mRendererRegistry = new RendererRegistry(this);
 		mRendererRegistry.initRenderers(IProgress.EMPTY_PROGRESS);
 		mRoutingHelper = new RoutingHelper(this);
+		getRoutingHelper().addListener(this);
 		mGeocodingLookupService = new GeocodingLookupService(this);
 		mTargetPointsHelper = new TargetPointsHelper(this);
 		mPoiFilters = new PoiFiltersHelper(this);
@@ -843,9 +860,10 @@ public class OsmWindow {
 	public VersionInfo getVersion(){
 		if(mVersionInfo == null){
 			try {
+				mVersionInfo = new VersionInfo("x.x.x", "0815");
 				InputStream is = getResource("version.properties"); //$NON-NLS-1$
 				if (is == null) {
-					return null;
+					return mVersionInfo;
 				}
 				PropertyResourceBundle bundle = new PropertyResourceBundle(is);
 				is.close();
@@ -1197,11 +1215,15 @@ public class OsmWindow {
 	public void setCursorPosition(LatLon pLoc) {
 		mDrawPanel.setCursor(pLoc);
 		addPoint(pLoc);
-		// queue update of the amenity table.
-		getDrawPanel().queue(new AmenityTableUpdateThread(getDrawPanel(), pLoc, mAmenityTable));
+		queueAmenityTableUpdate(pLoc);
 		for (CursorPositionListener listener : mCursorPositionListeners) {
 			listener.cursorPositionChanged(pLoc);
 		}
+	}
+
+	private void queueAmenityTableUpdate(LatLon pLoc) {
+		// queue update of the amenity table.
+		getDrawPanel().queue(new AmenityTableUpdateThread(getDrawPanel(), pLoc, mAmenityTable));
 	}
 
 	
@@ -1292,6 +1314,7 @@ public class OsmWindow {
 		getSettings().SELECTED_POI_FILTER_STRING_FOR_MAP.set(pFilterText);
 		setWaitingCursor(true);
 		mAmenityTable.setSearchResult(getSearchResult());
+		setSearchType(SearchType.AMENITY);
 		setWaitingCursor(false);
 		getDrawPanel().refreshMap();
 	}
@@ -1299,25 +1322,31 @@ public class OsmWindow {
 	public List<MapObject> getSearchResult() {
 		List<MapObject> result = new Vector<>();
 		String filterId = getSettings().SELECTED_POI_FILTER_FOR_MAP.get();
-		if (filterId != null) {
-			PoiUIFilter filter = getPoiFilters().getFilterById(filterId);
-			String filterString = getSettings().SELECTED_POI_FILTER_STRING_FOR_MAP.get();
-			filter.setFilterByName(filterString);
-			LatLon latLon = getCursorPosition();
-			result.addAll(filter.initializeNewSearch(latLon.getLatitude(), latLon.getLongitude(), -1,
-					new ResultMatcher<Amenity>() {
-
-						@Override
-						public boolean publish(Amenity pObject) {
-							log.debug("Adding " + pObject.getName(getLanguage()));
-							return true;
-						}
-
-						@Override
-						public boolean isCancelled() {
-							return false;
-						}
-					}));
+		switch(mSearchType){
+		case AMENITY:
+			if (filterId != null) {
+				PoiUIFilter filter = getPoiFilters().getFilterById(filterId);
+				String filterString = getSettings().SELECTED_POI_FILTER_STRING_FOR_MAP.get();
+				filter.setFilterByName(filterString);
+				LatLon latLon = getCursorPosition();
+				result.addAll(filter.initializeNewSearch(latLon.getLatitude(), latLon.getLongitude(), -1,
+						new ResultMatcher<Amenity>() {
+					
+					@Override
+					public boolean publish(Amenity pObject) {
+						log.debug("Adding " + pObject.getName(getLanguage()));
+						return true;
+					}
+					
+					@Override
+					public boolean isCancelled() {
+						return false;
+					}
+				}));
+			}
+			break;
+		case ROUTE:
+			result.addAll(mRouteResult);
 		}
 		return result;
 	}
@@ -1417,5 +1446,42 @@ public class OsmWindow {
 			return null;
 		}
 	}
+
+	public void setRouteCalculated() {
+		RouteCalculationResult route = getRoutingHelper().getRoute();
+		List<RouteDirectionInfo> currentRoute = route.getRouteDirections();
+		List<Location> locations = route.getImmutableAllLocations();
+		List<MapObject> routeResult = new Vector<MapObject>();
+		for (RouteDirectionInfo directionInfo : currentRoute) {
+			routeResult.add(new LocationAsMapObject(locations.get(directionInfo.routePointOffset), directionInfo.getDescriptionRoutePart(),
+					route.getDistanceToPoint(directionInfo.routePointOffset)));
+		}
+		mRouteResult = routeResult;
+		setSearchType(SearchType.ROUTE);
+	}
+
+	private void setSearchType(SearchType pSearchType) {
+		mSearchType = pSearchType;
+		queueAmenityTableUpdate(null);
+	}
 	
+	
+	@Override
+	public void newRouteIsCalculated(boolean pNewRoute, ValueHolder<Boolean> pShowToast) {
+		float dist = getRoutingHelper().getRoute().getWholeDistance()/1000f;
+		setStatus(getOffRoadString("offroad.routing_finished", new Object[]{dist}));
+		setRouteCalculated();
+		getDrawPanel().drawLater();
+	}
+
+	@Override
+	public void routeWasCancelled() {
+		getDrawPanel().drawLater();
+	}
+
+	@Override
+	public void routeWasFinished() {
+	}
+
+
 }

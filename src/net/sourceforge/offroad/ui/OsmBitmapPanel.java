@@ -53,7 +53,7 @@ import net.sourceforge.offroad.res.OffRoadResources;
 import net.sourceforge.offroad.ui.OffRoadUIThread.OffRoadUIThreadListener;
 
 @SuppressWarnings("serial")
-public class OsmBitmapPanel extends JPanel implements IRouteInformationListener {
+public class OsmBitmapPanel extends JPanel {
 	private static final int INACTIVITY_TIME_IN_MILLISECONDS = 2000;
 
 	private final static Log log = PlatformUtil.getLog(OsmBitmapPanel.class);
@@ -108,7 +108,6 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		for (OsmandMapLayer layer : layers) {
 			layer.initLayer(this);
 		}
-		mContext.getRoutingHelper().addListener(this);
 		Action updateCursorAction = new AbstractAction() {
 			public void actionPerformed(ActionEvent e) {
 				mShowCursor = !mShowCursor;
@@ -400,16 +399,6 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		return mContext;
 	}
 
-	@Override
-	public void newRouteIsCalculated(boolean pNewRoute, ValueHolder<Boolean> pShowToast) {
-		drawLater();
-	}
-
-	@Override
-	public void routeWasCancelled() {
-		drawLater();
-	}
-
 	/**
 	 */
 	public void drawLater() {
@@ -417,10 +406,6 @@ public class OsmBitmapPanel extends JPanel implements IRouteInformationListener 
 		tb.setPixelDimensions(getWidth(), getHeight());
 		setCurrentTileBox(tb);
 		queue(new GenerationThread(this, tb));
-	}
-
-	@Override
-	public void routeWasFinished() {
 	}
 
 	public void saveImage(File pSelectedFile) {

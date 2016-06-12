@@ -28,6 +28,10 @@ An offline map viewer based on OsmAnd.
 
 Version History:
 
+0_1_Beta2:
+============
+* routing results are displayed in the search table, now
+
 0_1_Beta1:
 ============
 * Perimeter added
