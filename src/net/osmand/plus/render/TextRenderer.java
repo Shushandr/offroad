@@ -12,6 +12,7 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -372,7 +373,7 @@ public class TextRenderer {
 						public boolean execute(int tagid, String nname) {
 							String tagNameN2 = o.getMapIndex().decodeType(tagid).tag;
 							if (tagName2.equals(tagNameN2)) {
-								if (nname != null && nname.trim().length() > 0) {
+								if (nname != null && nname.trim().length() > 0 && !name.equals(nname)) {
 									text.text += " (" + nname +")";
 								}
 								return false;
@@ -413,45 +414,41 @@ public class TextRenderer {
 			final TagValuePair pair, final double xMid, final double yMid, final Path2D pPath, final Point2D[] points) {
 		final TIntObjectHashMap<String> map = obj.getObjectNames();
 		if (map != null) {
-			String[] nameTags = { "name:" + rc.preferredLocale, "name:en", "" };
-			for (int i = 0; i < nameTags.length; i++) {
-				String nameTag = nameTags[i];
-				Integer langTag = obj.getMapIndex().getRule(nameTag, null);
-				if(langTag == null){
-					langTag = obj.getMapIndex().nameEncodingType;
-				}
-				if(map.containsKey(langTag)) {
-					String name = map.get(langTag);
-					if (name != null) {
-						if (name.length()>0) {
-							createTextDrawInfo(obj, render, pGraphics2d, rc, pair, xMid, yMid, pPath, points, name, "");
-							break;
+			// find preferred language key (first the given language, then english, then the rest)
+			Integer langTagL = obj.getMapIndex().getRule("name:" + rc.preferredLocale, null);
+			boolean langContainedL = map.containsKey(langTagL);
+			if(!langContainedL){
+				langTagL = obj.getMapIndex().getRule("name:en", null);
+				langContainedL = map.containsKey(langTagL);
+			}
+			// assign final variables:
+			boolean langContained = langContainedL;
+			int langTag = langTagL;
+			map.forEachEntry(new TIntObjectProcedure<String>() {
+				@Override
+				public boolean execute(int tag, String name) {
+					if (name != null && name.trim().length() > 0) {
+						boolean isName = tag == obj.getMapIndex().nameEncodingType;
+						String nameTag = isName ? "" : obj.getMapIndex().decodeType(tag).tag;
+						boolean skip = false;
+						if (isName && langContained) {
+							skip = true;
+						} 
+						if(nameTag.startsWith("name:")) {
+							if (tag != langTag) {
+								skip = true;
+							} else {
+								nameTag = "";
+							}
+						}
+						if(!skip) {
+//							System.out.println("tag: " + nameTag + " (" + tag + "), name="+name + ", isName="+isName);
+							createTextDrawInfo(obj, render, pGraphics2d, rc, pair, xMid, yMid, pPath, points, name, nameTag);
 						}
 					}
+					return true;
 				}
-			}
-//			map.forEachEntry(new TIntObjectProcedure<String>() {
-//				@Override
-//				public boolean execute(int tag, String name) {
-//					if (name != null && name.trim().length() > 0) {
-//						boolean isName = tag == obj.getMapIndex().nameEncodingType;
-//						String nameTag = isName ? "" : obj.getMapIndex().decodeType(tag).tag;
-//						boolean skip = false;
-//						// not completely correct we should check "name"+rc.preferredLocale
-//						if (isName && !rc.preferredLocale.equals("") && 
-//								map.containsKey(obj.getMapIndex().nameEnEncodingType)) {
-//							skip = true;
-//						} 
-////						if (tag == obj.getMapIndex().nameEnEncodingType && !rc.useEnglishNames) {
-////							skip = true;
-////						}
-//						if(!skip) {
-//							createTextDrawInfo(obj, render, pGraphics2d, rc, pair, xMid, yMid, pPath, points, name, nameTag);
-//						}
-//					}
-//					return true;
-//				}
-//			});
+			});
 		}
 	}
 

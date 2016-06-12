@@ -73,14 +73,15 @@ public class BinaryInspector {
 //				"-vaddress", 
 //				"-vcities",//"-vstreetgroups", 
 //				"-vstreets", "-vbuildings", "-vintersections", 
-//				"-zoom=15",
+//				"-zoom=21",
 //				"-bbox=1.74,51.17,1.75,51.16",
-				"-bbox=29.4,33.3,32,28.9",
+//				"-bbox=29.4,33.3,32,28.9",
 //				"-vstats",
 //				"/Users/victorshcherb/osmand/maps/Synthetic_test_rendering.obf"
 //				"/Users/victorshcherb/osmand/maps/Netherlands_europe_2.road.obf"
 //				"/Users/victorshcherb/osmand/maps/C_11_03_06.obf"
-				"/home/foltin/.OffRoad/World_basemap.obf"
+//				"/home/foltin/.OffRoad/World_basemap.obf"
+				"/home/foltin/.OffRoad/Germany_bremen_europe.obf"
 					});
 		} else {
 			in.inspector(args);
