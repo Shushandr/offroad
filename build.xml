@@ -211,7 +211,7 @@ hash=${hash}
 		<ant dir="${inst.dir}" target="post" inheritall="false">
 		</ant>
 		<copy todir="${inst.dest.dir}">
-			<fileset dir="${inst.dir}/post">
+			<fileset dir="${inst.dir}/${post}/${ver}">
 				<include name="**"/>
 			</fileset>
 		</copy>
@@ -235,9 +235,21 @@ hash=${hash}
 		<antcall target="create_windows_installer">
 			<param name="inst.windows.variant" value="installer_java_installer_embedded"/>
 		</antcall>
+		<!-- Debian installer -->
+		<property name="inst.debian.installer" location="${inst.dir}/res/installer/debian/offroad.equivs"/>
+		<replaceregexp file="${inst.debian.installer}"
+		               match="Version: .*"
+		               replace="Version: ${ver}"
+		               byline="true"/>
+		<exec executable="/usr/bin/equivs-build" os="Linux">
+			<arg value="res/installer/debian/offroad.equivs"/>
+		</exec>
 		<copy todir="${inst.dest.dir}">
 			<fileset dir="${inst.windows.installer}/Output/">
 				<include name="*.exe"/>
+			</fileset>
+			<fileset file="${inst.dir}">
+				<include name="*.deb"/>
 			</fileset>
 		</copy>
 		<delete dir="${inst.dir}" failonerror="false"/> 
