@@ -10,7 +10,7 @@ Package: offroad
 Version: 0.0.1
 Maintainer: Christian Foltin <christianfoltin@users.sf.net>
 # Pre-Depends: <comma-separated list of packages>
-Depends: openjdk-8-jre
+Depends: default-jre (>= 2:1.8) | java8-runtime
 # Recommends: <comma-separated list of packages>
 # Suggests: <comma-separated list of packages>
 # Provides: <comma-separated list of packages>

@@ -128,7 +128,7 @@ public class TextRenderer {
 			return QuadRect.intersects(tRect, sRect);
 		}
 		double dist = Math.sqrt(sqr(tRect.centerX() - sRect.centerX()) + sqr(tRect.centerY() - sRect.centerY()));
-		if (dist < 3) {
+		if (dist < 200) {
 			return true;
 		}
 

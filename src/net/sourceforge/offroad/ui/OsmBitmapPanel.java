@@ -31,7 +31,6 @@ import javax.swing.Timer;
 import org.apache.commons.logging.Log;
 
 import net.osmand.PlatformUtil;
-import net.osmand.ValueHolder;
 import net.osmand.binary.OsmandIndex;
 import net.osmand.binary.OsmandIndex.MapLevel;
 import net.osmand.data.LatLon;
@@ -39,9 +38,9 @@ import net.osmand.data.QuadPoint;
 import net.osmand.data.RotatedTileBox;
 import net.osmand.data.RotatedTileBox.RotatedTileBoxBuilder;
 import net.osmand.plus.OsmandSettings;
-import net.osmand.plus.routing.RoutingHelper.IRouteInformationListener;
 import net.osmand.plus.views.FavoritesLayer;
 import net.osmand.plus.views.GPXLayer;
+import net.osmand.plus.views.MapInfoLayer;
 import net.osmand.plus.views.MapTextLayer;
 import net.osmand.plus.views.OsmandMapLayer;
 import net.osmand.plus.views.POIMapLayer;
@@ -97,7 +96,8 @@ public class OsmBitmapPanel extends JPanel {
 				.setPixelDimensions(getWidth(), getHeight()).setRotate(0).setMapDensity(1d).build());
 		mCursorLength = (int) (15 * mCurrentTileBox.getMapDensity());
 		mStroke = new BasicStroke((float) (2f * mCurrentTileBox.getMapDensity()));
-		addLayer(new RouteLayer(mContext.getRoutingHelper()), 1);
+		RouteLayer routeLayer = new RouteLayer(mContext.getRoutingHelper());
+		addLayer(routeLayer, 1);
 		addLayer(new MapTextLayer(), 2);
 		mPoiLayer = new POIMapLayer(pWin);
 		addLayer(mPoiLayer, 3);
@@ -105,6 +105,7 @@ public class OsmBitmapPanel extends JPanel {
 		addLayer(new FavoritesLayer(), 5);
 		addLayer(new GPXLayer(), 6);
 		addLayer(new CursorDistanceLayer(), 7);
+		addLayer(new MapInfoLayer(this, routeLayer), 8);
 		for (OsmandMapLayer layer : layers) {
 			layer.initLayer(this);
 		}
