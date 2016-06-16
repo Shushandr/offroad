@@ -60,6 +60,8 @@ import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.UIManager;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import javax.xml.bind.JAXBContext;
@@ -327,7 +329,13 @@ public class OsmWindow  implements IRouteInformationListener {
 	private SearchType mSearchType = SearchType.AMENITY;
 
 
-	private List<MapObject> mRouteResult = new Vector<>(); 
+	private List<MapObject> mRouteResult = new Vector<>();
+
+
+	private JMenuItem mAddFavourite;
+
+
+	private JMenuItem mSelectTrack; 
 	
 	public void createAndShowUI() {
 		mDrawPanel = new OsmBitmapPanel(this);
@@ -587,20 +595,35 @@ public class OsmWindow  implements IRouteInformationListener {
 		menubar.add(jPointOfInterestMenu);
 		// Favorites
 		JMenu jFavoritesMenu = new JMenu(getOffRoadString("offroad.Favorites")); //$NON-NLS-1$
-		JMenuItem lAddFavourite = new JMenuItem(new AddFavoriteAction(this, getOffRoadString("offroad.addFavorite"), null, null));
-		lAddFavourite.setAccelerator(KeyStroke.getKeyStroke("control D")); //$NON-NLS-1$
-		jFavoritesMenu.add(lAddFavourite);
-		for (FavoriteGroup	 fg : getFavorites().getFavoriteGroups()) {
-			JMenu groupMenu = new JMenu(fg.name);
-			for (FavouritePoint fp : fg.points) {
-				JMenuItem lFavoritesItem = new JMenuItem(new ShowFavoriteAction(this, fp));
-				groupMenu.add(lFavoritesItem);
+		mAddFavourite = new JMenuItem(new AddFavoriteAction(this, getOffRoadString("offroad.addFavorite"), null, null));
+		mAddFavourite.setAccelerator(KeyStroke.getKeyStroke("control D")); //$NON-NLS-1$
+		mSelectTrack = new JMenuItem(new SelectTrackAction(this, getOffRoadString("offroad.selectTrack")));
+		mSelectTrack.setAccelerator(KeyStroke.getKeyStroke("control T")); //$NON-NLS-1$
+		jFavoritesMenu.addMenuListener(new MenuListener(){
+
+			@Override
+			public void menuSelected(MenuEvent pE) {
+				// Must be dynamic, as the favorites may change...
+				jFavoritesMenu.removeAll();
+				jFavoritesMenu.add(mAddFavourite);
+				for (FavoriteGroup	 fg : getFavorites().getFavoriteGroups()) {
+					JMenu groupMenu = new JMenu(fg.name);
+					for (FavouritePoint fp : fg.points) {
+						JMenuItem lFavoritesItem = new JMenuItem(new ShowFavoriteAction(OsmWindow.this, fp));
+						groupMenu.add(lFavoritesItem);
+					}
+					jFavoritesMenu.add(groupMenu);
+				}
+				jFavoritesMenu.add(mSelectTrack);
 			}
-			jFavoritesMenu.add(groupMenu);
-		}
-		JMenuItem lSelectTrack = new JMenuItem(new SelectTrackAction(this, getOffRoadString("offroad.selectTrack")));
-		lSelectTrack.setAccelerator(KeyStroke.getKeyStroke("control T")); //$NON-NLS-1$
-		jFavoritesMenu.add(lSelectTrack);
+
+			@Override
+			public void menuDeselected(MenuEvent pE) {
+			}
+
+			@Override
+			public void menuCanceled(MenuEvent pE) {
+			}});
 		menubar.add(jFavoritesMenu);
 		JMenu jHelpMenu = new JMenu(getOffRoadString("offroad.Help")); //$NON-NLS-1$
 		addToMenu(jHelpMenu, "offroad.about", new AboutDialogAction(this), null);
@@ -1335,7 +1358,9 @@ public class OsmWindow  implements IRouteInformationListener {
 			if (filterId != null) {
 				PoiUIFilter filter = getPoiFilters().getFilterById(filterId);
 				String filterString = getSettings().SELECTED_POI_FILTER_STRING_FOR_MAP.get();
-				filter.setFilterByName(filterString);
+				if(!filterString.isEmpty()){
+					filter.setFilterByName(filterString);
+				}
 				LatLon latLon = getCursorPosition();
 				result.addAll(filter.initializeNewSearch(latLon.getLatitude(), latLon.getLongitude(), -1,
 						new ResultMatcher<Amenity>() {
