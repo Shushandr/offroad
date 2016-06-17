@@ -17,6 +17,10 @@ import net.osmand.plus.views.OsmandMapLayer;
 import net.sourceforge.offroad.R;
 import net.sourceforge.offroad.ui.Paint.Style;
 
+/** Creates the perimeter circle around the current position, if enabled in the view.
+ * @author foltin
+ * @date 16.06.2016
+ */
 public class CursorDistanceLayer extends OsmandMapLayer implements IContextMenuProvider {
 	private static final Log LOG = PlatformUtil.getLog(CursorDistanceLayer.class);
 
@@ -107,7 +111,9 @@ public class CursorDistanceLayer extends OsmandMapLayer implements IContextMenuP
 
 	@Override
 	public void collectObjectsFromPoint(Point2D point, RotatedTileBox tileBox, List<Object> o) {
-		getMyLocationFromPoint(tileBox, point, o);
+		if (view.isCursorRadiusEnabled()) {
+			getMyLocationFromPoint(tileBox, point, o);
+		}
 	}
 
 	@Override

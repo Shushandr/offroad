@@ -4,14 +4,12 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-
-import javax.swing.JDialog;
-import javax.swing.JOptionPane;
 
 import net.osmand.PlatformUtil;
 import net.osmand.ResultMatcher;
@@ -22,21 +20,20 @@ import net.osmand.data.PointDescription;
 import net.osmand.data.QuadRect;
 import net.osmand.data.QuadTree;
 import net.osmand.data.RotatedTileBox;
-import net.osmand.osm.PoiType;
 import net.osmand.plus.OsmAndFormatter;
 import net.osmand.plus.OsmandSettings;
 import net.osmand.plus.poi.PoiFiltersHelper;
 import net.osmand.plus.poi.PoiUIFilter;
-import net.osmand.plus.render.RenderingIcons;
 import net.osmand.plus.resources.ResourceManager;
 import net.osmand.plus.routing.RoutingHelper;
 import net.osmand.plus.routing.RoutingHelper.IRouteInformationListener;
 import net.osmand.plus.views.MapTextLayer.MapTextProvider;
 import net.osmand.util.Algorithms;
 import net.sourceforge.offroad.OsmWindow;
+import net.sourceforge.offroad.ui.IContextMenuProvider;
 import net.sourceforge.offroad.ui.OsmBitmapPanel;
 
-public class POIMapLayer extends OsmandMapLayer implements /*ContextMenuLayer.IContextMenuProvider,*/
+public class POIMapLayer extends OsmandMapLayer implements IContextMenuProvider,
 		MapTextProvider<Amenity>,  IRouteInformationListener {
 	private static final int startZoom = 9;
 
@@ -117,11 +114,11 @@ public class POIMapLayer extends OsmandMapLayer implements /*ContextMenuLayer.IC
 	}
 
 
-	public void getAmenityFromPoint(RotatedTileBox tb, Point point, List<? super Amenity> am) {
+	public void getAmenityFromPoint(RotatedTileBox tb, Point2D pPoint, List<? super Amenity> am) {
 		List<Amenity> objects = data.getResults();
 		if (objects != null) {
-			int ex = (int) point.x;
-			int ey = (int) point.y;
+			int ex = (int) pPoint.getX();
+			int ey = (int) pPoint.getY();
 			final int rp = getRadiusPoi(tb);
 			int compare = rp;
 			int radius = rp * 3 / 2;
@@ -305,6 +302,7 @@ public class POIMapLayer extends OsmandMapLayer implements /*ContextMenuLayer.IC
 //		JOptionPane.showMessageDialog(null, text, title, JOptionPane.INFORMATION_MESSAGE);
 	}
 
+	@Override
 	public String getObjectDescription(Object o) {
 		if (o instanceof Amenity) {
 			return buildPoiInformation(new StringBuilder(), (Amenity) o).toString();
@@ -312,6 +310,7 @@ public class POIMapLayer extends OsmandMapLayer implements /*ContextMenuLayer.IC
 		return null;
 	}
 
+	@Override
 	public PointDescription getObjectName(Object o) {
 		if (o instanceof Amenity) {
 			return new PointDescription(PointDescription.POINT_TYPE_POI, ((Amenity) o).getName(
@@ -320,18 +319,22 @@ public class POIMapLayer extends OsmandMapLayer implements /*ContextMenuLayer.IC
 		return null;
 	}
 
+	@Override
 	public boolean disableSingleTap() {
 		return false;
 	}
 
+	@Override
 	public boolean disableLongPressOnMap() {
 		return false;
 	}
 
-	public void collectObjectsFromPoint(Point point, RotatedTileBox tileBox, List<Object> objects) {
+	@Override
+	public void collectObjectsFromPoint(Point2D point, RotatedTileBox tileBox, List<Object> objects) {
 		getAmenityFromPoint(tileBox, point, objects);
 	}
 
+	@Override
 	public LatLon getObjectLocation(Object o) {
 		if (o instanceof Amenity) {
 			return ((Amenity) o).getLocation();
@@ -344,6 +347,7 @@ public class POIMapLayer extends OsmandMapLayer implements /*ContextMenuLayer.IC
 	}
 
 
+	@Override
 	public LatLon getTextLocation(Amenity o) {
 		return o.getLocation();
 	}
@@ -373,4 +377,6 @@ public class POIMapLayer extends OsmandMapLayer implements /*ContextMenuLayer.IC
 	public static int dpToPx(OsmWindow ctx, float dp) {
 		return -1;
 	}
+
+
 }

@@ -37,6 +37,7 @@ public class AddFavoriteAction extends OffRoadAction implements DocumentListener
 	private JColorChooser mGroupColorChooser;
 	private FavouritePoint mUpdatePoint;
 	private JButton mOkButton;
+	private int mInitialSelectedIndex = -1;
 
 	public AddFavoriteAction(OsmWindow pContext, String pName, Icon pIcon, FavouritePoint pUpdatePoint) {
 		super(pContext, pName, pIcon);
@@ -46,7 +47,7 @@ public class AddFavoriteAction extends OffRoadAction implements DocumentListener
 	@Override
 	public void actionPerformed(ActionEvent pE) {
 		createDialog();
-		mDialog.setTitle(getResourceString("offroad.addFavorite"));
+		mDialog.setTitle(getWindowTitle());
 		Container contentPane = mDialog.getContentPane();
 		GridBagLayout gbl = new GridBagLayout();
 		gbl.columnWeights = new double[] { 1.0f };
@@ -118,6 +119,7 @@ public class AddFavoriteAction extends OffRoadAction implements DocumentListener
 				if(fg.name != null && fg.name.equals(mUpdatePoint.getCategory())){
 					if(fg.color == mUpdatePoint.getColor()){
 						mComboBox.setSelectedIndex(i);
+						mInitialSelectedIndex  = i;
 						break;
 					}
 				}
@@ -152,6 +154,10 @@ public class AddFavoriteAction extends OffRoadAction implements DocumentListener
 
 	}
 
+	protected String getWindowTitle() {
+		return getResourceString("offroad.addFavorite");
+	}
+
 	private void toggleNewGroup() {
 		boolean sel = mNewGroupCheckBox.isSelected();
 		mGroupNameTextField.setEnabled(sel);
@@ -161,22 +167,32 @@ public class AddFavoriteAction extends OffRoadAction implements DocumentListener
 	}
 
 	private void terminate(boolean pSaveResults) {
+		LatLon pos = mContext.getCursorPosition();
 		if (pSaveResults) {
-			LatLon pos = mContext.getCursorPosition();
-			String groupName;
-			if (mNewGroupCheckBox.isSelected()) {
-				groupName = mGroupNameTextField.getText();
-				mContext.getFavorites().addEmptyCategory(groupName, mGroupColorChooser.getColor().getRGB());
+			String groupName=(mNewGroupCheckBox.isSelected())?createEmptyCategory():getSelectedCategory();
+			if(mUpdatePoint!=null){
+				// edit favorite:
+				mContext.getFavorites().editFavouriteName(mUpdatePoint, mNameTextField.getText(), groupName, mDescriptionTextField.getText());
 			} else {
-				groupName = mComboBoxModel.getElementAt(mComboBox.getSelectedIndex()).name;
+				FavouritePoint point = new FavouritePoint(pos.getLatitude(), pos.getLongitude(), mNameTextField.getText(),
+						groupName);
+				point.setDescription(mDescriptionTextField.getText());
+				mContext.getFavorites().addFavourite(point);
 			}
-			FavouritePoint point = new FavouritePoint(pos.getLatitude(), pos.getLongitude(), mNameTextField.getText(),
-					groupName);
-			point.setDescription(mDescriptionTextField.getText());
-			mContext.getFavorites().addFavourite(point);
 			mContext.getDrawPanel().drawLater();
 		}
 		disposeDialog();
+	}
+
+	protected String createEmptyCategory() {
+		String groupName;
+		groupName = mGroupNameTextField.getText();
+		mContext.getFavorites().addEmptyCategory(groupName, mGroupColorChooser.getColor().getRGB());
+		return groupName;
+	}
+
+	protected String getSelectedCategory() {
+		return mComboBoxModel.getElementAt(mComboBox.getSelectedIndex()).name;
 	}
 
 	@Override

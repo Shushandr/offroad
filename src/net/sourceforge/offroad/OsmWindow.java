@@ -41,6 +41,7 @@ import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
@@ -80,7 +81,6 @@ import net.osmand.ValueHolder;
 import net.osmand.data.Amenity;
 import net.osmand.data.FavouritePoint;
 import net.osmand.data.LatLon;
-import net.osmand.data.LocationPoint;
 import net.osmand.data.MapObject;
 import net.osmand.data.PointDescription;
 import net.osmand.data.RotatedTileBox;
@@ -111,8 +111,8 @@ import net.osmand.plus.resources.ResourceManager;
 import net.osmand.plus.routing.RouteCalculationResult;
 import net.osmand.plus.routing.RouteDirectionInfo;
 import net.osmand.plus.routing.RouteProvider.RouteService;
-import net.osmand.plus.routing.RoutingHelper.IRouteInformationListener;
 import net.osmand.plus.routing.RoutingHelper;
+import net.osmand.plus.routing.RoutingHelper.IRouteInformationListener;
 import net.osmand.plus.views.POIMapLayer;
 import net.osmand.render.RenderingRuleProperty;
 import net.osmand.render.RenderingRulesStorage;
@@ -150,6 +150,8 @@ import net.sourceforge.offroad.res.Resources;
 import net.sourceforge.offroad.ui.AmenityTablePanel;
 import net.sourceforge.offroad.ui.AmenityTableUpdateThread;
 import net.sourceforge.offroad.ui.BlindIcon;
+import net.sourceforge.offroad.ui.IContextMenuProvider;
+import net.sourceforge.offroad.ui.OffRoadPopupMenuListener;
 import net.sourceforge.offroad.ui.OsmBitmapPanel;
 import net.sourceforge.offroad.ui.OsmBitmapPanelMouseAdapter;
 import net.sourceforge.offroad.ui.PoiFilterRenderer;
@@ -163,67 +165,6 @@ import net.sourceforge.offroad.ui.SetCursorRadiusAction;
  * @date 26.03.2016
  */
 public class OsmWindow  implements IRouteInformationListener {
-	private class PoiContextMenuListener implements PopupMenuListener {
-		
-		private JPopupMenu mMenu;
-		private Vector<JMenuItem> items = new Vector<>();
-
-		public PoiContextMenuListener(JPopupMenu pMenu) {
-			mMenu = pMenu;
-		}
-		
-		@Override
-		public void popupMenuWillBecomeVisible(PopupMenuEvent pE) {
-			RotatedTileBox tileBox = getDrawPanel().copyCurrentTileBox();
-			List<Amenity> res = new Vector<Amenity>();
-			POIMapLayer poiLayer = getDrawPanel().getPoiLayer();
-			poiLayer.getAmenityFromPoint(tileBox, mAdapter.getMouseEvent().getPoint(), res);
-			HashSet<Amenity> resSet = new HashSet<>(res);
-			System.out.println("res: " + res);
-			for (Amenity am : resSet) {
-				String name = am.getName(getLanguage());
-				JMenuItem item = new JMenuItem(name, getImageIcon(am));
-				item.addActionListener(new ActionListener() {
-					
-					@Override
-					public void actionPerformed(ActionEvent pE) {
-						if(am.getType().isWiki()){
-							POIMapLayer.showWikipediaDialog(OsmWindow.this, OsmWindow.this, am);
-						} else {
-							String locationName = PointDescription.getLocationName(OsmWindow.this,
-	                                am.getLocation().getLatitude(), am.getLocation().getLongitude(), true);
-							POIMapLayer.showDescriptionDialog(OsmWindow.this, getInstance(), am.getAdditionalInfo().toString(), name);
-						}
-					}
-				});
-				items.add(item);
-				mMenu.add(item);
-			}
-		}
-
-		public javax.swing.Icon getImageIcon(Amenity am) {
-			BufferedImage bitmap = getBitmap(am);
-			if(bitmap != null)	{
-				return new ImageIcon(bitmap);
-			} else {
-				return new BlindIcon(20);
-			}
-		}
-
-		@Override
-		public void popupMenuWillBecomeInvisible(PopupMenuEvent pE) {
-			for (JMenuItem jMenuItem : items) {
-				mMenu.remove(jMenuItem);
-			}
-			items.clear();
-		}
-
-		@Override
-		public void popupMenuCanceled(PopupMenuEvent pE) {
-			popupMenuWillBecomeInvisible(pE);
-		}
-	}
-
 	public class MapPointStorage {
 
 		private LatLon mPoint;
@@ -638,16 +579,16 @@ public class OsmWindow  implements IRouteInformationListener {
 		popupMenu.add(new JMenuItem(new PointNavigationAction(this, "offroad.set_destination_point",
 				(helper, pos) -> helper.navigateToPoint(pos, false, -1))));
 		popupMenu.add(new JSeparator());
-		popupMenu.add(new JMenuItem(new RouteAction(this, ApplicationMode.CAR)));
-		popupMenu.add(new JMenuItem(new RouteAction(this, ApplicationMode.BICYCLE)));
-		popupMenu.add(new JMenuItem(new RouteAction(this, ApplicationMode.PEDESTRIAN)));
-		popupMenu.add(new JSeparator());
+//		popupMenu.add(new JMenuItem(new RouteAction(this, ApplicationMode.CAR)));
+//		popupMenu.add(new JMenuItem(new RouteAction(this, ApplicationMode.BICYCLE)));
+//		popupMenu.add(new JMenuItem(new RouteAction(this, ApplicationMode.PEDESTRIAN)));
+//		popupMenu.add(new JSeparator());
 		popupMenu.add(new JMenuItem(clearIntermediatePointsAction));
 		popupMenu.add(new JMenuItem(clearAllPointsAction));
 		popupMenu.add(new JMenuItem(new SetCursorRadiusAction(this, "offroad.set_cursor_radius", -1d)));
 		popupMenu.add(new JMenuItem(new SetCursorRadiusAction(this, "offroad.remove_cursor_radius", 0d)));
 		mDrawPanel.setComponentPopupMenu(popupMenu);
-		popupMenu.addPopupMenuListener(new PoiContextMenuListener(popupMenu));
+		popupMenu.addPopupMenuListener(new OffRoadPopupMenuListener(this, popupMenu));
 		mFrame.setJMenuBar(menubar);
 		mDrawPanel.init();
 		mFrame.pack();
@@ -1358,7 +1299,7 @@ public class OsmWindow  implements IRouteInformationListener {
 			if (filterId != null) {
 				PoiUIFilter filter = getPoiFilters().getFilterById(filterId);
 				String filterString = getSettings().SELECTED_POI_FILTER_STRING_FOR_MAP.get();
-				if(!filterString.isEmpty()){
+				if(filterString != null && !filterString.isEmpty()){
 					filter.setFilterByName(filterString);
 				}
 				LatLon latLon = getCursorPosition();
@@ -1516,5 +1457,73 @@ public class OsmWindow  implements IRouteInformationListener {
 	public void routeWasFinished() {
 	}
 
+	public JMenuItem createJMenuItemForObject(IContextMenuProvider provider, Object am) {
+		PointDescription pointDescription = provider.getObjectName(am);
+		String name="UNKNOWN";
+		if(pointDescription != null){
+			name = pointDescription.getName();
+		} else {
+			// strange...
+		}
+		String description = provider.getObjectDescription(am);
+		Icon icon = null;
+		if (am instanceof MapObject) {
+			MapObject mapObject = (MapObject) am;
+			icon = getImageIcon(mapObject);
+		}
+		JMenuItem item = new JMenuItem(name, icon);
+		item.setToolTipText(description);
+		return item;
+	}
+	
+	public javax.swing.Icon getImageIcon(MapObject am) {
+		BufferedImage bitmap = getBitmap(am);
+		if (bitmap != null) {
+			return new ImageIcon(bitmap);
+		} else {
+			return new BlindIcon(20);
+		}
+	}
+
+	public List<JMenuItem> getContextActionsForObject(IContextMenuProvider pProvider, Object pAm) {
+		List<JMenuItem> result = new Vector<JMenuItem>();
+		if (pAm instanceof Amenity) {
+			Amenity am = (Amenity) pAm;
+			JMenuItem item = createJMenuItemForObject(pProvider, pAm);
+			item.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent pE) {
+					if (am.getType().isWiki()) {
+						POIMapLayer.showWikipediaDialog(OsmWindow.this, OsmWindow.this, am);
+					} else {
+						String locationName = PointDescription.getLocationName(OsmWindow.this,
+								am.getLocation().getLatitude(), am.getLocation().getLongitude(), true);
+						POIMapLayer.showDescriptionDialog(OsmWindow.this, getInstance(),
+								am.getAdditionalInfo().toString(), am.getName(getLanguage()));
+					}
+				}
+			});
+			result.add(item);
+		} 
+		if (pAm instanceof FavouritePoint) {
+			FavouritePoint point = (FavouritePoint) pAm;
+			String editString = getOffRoadString("offroad.editFavourite", new String[]{point.getName(), point.getCategory()});
+			JMenuItem item = new JMenuItem(new AddFavoriteAction(this, editString, null, point){
+				@Override
+				protected String getWindowTitle() {
+					return editString;
+				}
+			});
+			result.add(item);
+			item = new JMenuItem(new DeleteFavoriteAction(this, getOffRoadString("offroad.deleteFavourite", new String[]{point.getName(), point.getCategory()}), null, point));
+			result.add(item);
+			
+		}
+		return result;
+	}
+
+
 
 }
+
