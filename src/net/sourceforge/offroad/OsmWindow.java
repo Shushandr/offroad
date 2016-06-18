@@ -63,8 +63,6 @@ import javax.swing.Timer;
 import javax.swing.UIManager;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
-import javax.swing.event.PopupMenuEvent;
-import javax.swing.event.PopupMenuListener;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -91,8 +89,10 @@ import net.osmand.osm.PoiType;
 import net.osmand.plus.ApplicationMode;
 import net.osmand.plus.FavouritesDbHelper;
 import net.osmand.plus.FavouritesDbHelper.FavoriteGroup;
+import net.osmand.plus.GPXUtilities.WptPt;
 import net.osmand.plus.GeocodingLookupService;
 import net.osmand.plus.GpxSelectionHelper;
+import net.osmand.plus.GpxSelectionHelper.SelectedGpxFile;
 import net.osmand.plus.MapMarkersHelper;
 import net.osmand.plus.OsmAndLocationProvider;
 import net.osmand.plus.OsmandSettings;
@@ -1519,6 +1519,14 @@ public class OsmWindow  implements IRouteInformationListener {
 			item = new JMenuItem(new DeleteFavoriteAction(this, getOffRoadString("offroad.deleteFavourite", new String[]{point.getName(), point.getCategory()}), null, point));
 			result.add(item);
 			
+		}
+		HashSet<SelectedGpxFile> files = new HashSet<>();
+		if (pAm instanceof WptPt) {
+			WptPt waypt = (WptPt) pAm;
+			files.add(getSelectedGpxHelper().getSelectedGPXFile(waypt));
+		}
+		for (SelectedGpxFile selectedGpxFile : files) {
+			result.add(new JMenuItem(selectedGpxFile.getGpxFile().path));
 		}
 		return result;
 	}

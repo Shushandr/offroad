@@ -437,6 +437,7 @@ public class GPXLayer extends OsmandMapLayer implements IContextMenuProvider,
 		int ey = (int) point.getY();
 		for (SelectedGpxFile g : selectedGpxHelper.getSelectedGPXFiles()) {
 			List<WptPt> pts = getListStarPoints(g);
+			System.out.println("Sel " + g + " and points " + pts);
 			// int fcolor = g.getColor() == 0 ? clr : g.getColor();
 			for (WptPt n : pts) {
 				int x = (int) tb.getPixXFromLatLon(n.lat, n.lon);

@@ -147,7 +147,6 @@ public class AddFavoriteAction extends OffRoadAction implements DocumentListener
 			});
 			helper.addMapMarker(position, null);
 		}
-		mOkButton.setEnabled(false);
 		mDialog.pack();
 		decorateDialog();
 		mDialog.setVisible(true);
