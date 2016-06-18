@@ -79,4 +79,19 @@ public class Drawable {
 		
 	}
 
+	public int getMinimumHeight() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public int getMinimumWidth() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public void setChangingConfigurations(int pConfigs) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

@@ -4135,6 +4135,12 @@ public class R {
 		public static final Color white_50_transparent = ColorUtils.create(0x8FFF);
 		public static final Color white_80_transparent = ColorUtils.create(0xCFFF);
 	}
+
+	public static class id {
+
+		public static final int map_compass_button = 0;
+		
+	}
 }
 
 

@@ -24,6 +24,7 @@ import java.util.concurrent.Executors;
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
@@ -40,6 +41,7 @@ import net.osmand.data.RotatedTileBox.RotatedTileBoxBuilder;
 import net.osmand.plus.OsmandSettings;
 import net.osmand.plus.views.FavoritesLayer;
 import net.osmand.plus.views.GPXLayer;
+import net.osmand.plus.views.MapControlsLayer;
 import net.osmand.plus.views.MapInfoLayer;
 import net.osmand.plus.views.MapTextLayer;
 import net.osmand.plus.views.OsmandMapLayer;
@@ -71,6 +73,7 @@ public class OsmBitmapPanel extends JPanel {
 	private OffRoadUIThread mLastThread;
 	private InactivityListener mInactivityListener;
 	private CalculateUnzoomedPicturesAction mUnzoomedPicturesAction;
+	private RoundButton mCompassButton;
 
 	private int mZoomCounter;
 
@@ -106,6 +109,9 @@ public class OsmBitmapPanel extends JPanel {
 		addLayer(new GPXLayer(), 6);
 		addLayer(new CursorDistanceLayer(), 7);
 		addLayer(new MapInfoLayer(this, routeLayer), 8);
+		mCompassButton = new RoundButton();
+		addLayer(new MapControlsLayer(this), 9);
+		
 		for (OsmandMapLayer layer : layers) {
 			layer.initLayer(this);
 		}
@@ -117,6 +123,8 @@ public class OsmBitmapPanel extends JPanel {
 		};
 		new Timer(INACTIVITY_TIME_IN_MILLISECONDS, updateCursorAction).start();
 		mThreadPool = Executors.newFixedThreadPool(4);
+		add(mCompassButton, getComponentCount()-1);
+		mCompassButton.setLocation(100, 100);
 	}
 
 	public void init() {
@@ -632,6 +640,14 @@ public class OsmBitmapPanel extends JPanel {
 
 	public void setCursorRadiusSizeInMeters(double pCursorRadiusSizeInMeters) {
 		mCursorRadiusSizeInMeters = pCursorRadiusSizeInMeters;
+	}
+
+	public OsmWindow getMyApplication() {
+		return getApplication();
+	}
+
+	public JButton findViewById(int pMapCompassButton) {
+		return mCompassButton;
 	}
 
 }
