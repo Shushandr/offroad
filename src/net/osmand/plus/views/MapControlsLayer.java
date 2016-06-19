@@ -17,11 +17,12 @@ import net.osmand.plus.routing.RoutingHelper;
 import net.sourceforge.offroad.OsmWindow;
 import net.sourceforge.offroad.R;
 import net.sourceforge.offroad.actions.NavigationRotationAction;
+import net.sourceforge.offroad.ui.DirectOffroadLayer;
 import net.sourceforge.offroad.ui.Drawable;
 import net.sourceforge.offroad.ui.OsmBitmapPanel;
 import net.sourceforge.offroad.ui.RoundButton;
 
-public class MapControlsLayer extends OsmandMapLayer {
+public class MapControlsLayer extends OsmandMapLayer implements DirectOffroadLayer{
 
 	private static final int TIMEOUT_TO_SHOW_BUTTONS = 7000;
 	public static final int REQUEST_ADDRESS_SELECT = 2;

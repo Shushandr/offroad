@@ -19,6 +19,7 @@ import net.osmand.plus.OsmandSettings;
 import net.osmand.plus.base.FavoriteImageDrawable;
 import net.osmand.plus.views.MapTextLayer.MapTextProvider;
 import net.sourceforge.offroad.R;
+import net.sourceforge.offroad.ui.DirectOffroadLayer;
 import net.sourceforge.offroad.ui.IContextMenuProvider;
 import net.sourceforge.offroad.ui.OsmBitmapPanel;
 import net.sourceforge.offroad.ui.PorterDuffMultiplyFilter;

@@ -73,7 +73,7 @@ public class RoundButton extends JButton {
 	/**
 	 * @return
 	 */
-	private int getZoomedCircleRadius() {
+	public int getZoomedCircleRadius() {
 		return 40;
 	}
 

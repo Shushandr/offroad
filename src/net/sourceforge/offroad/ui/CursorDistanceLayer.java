@@ -21,7 +21,7 @@ import net.sourceforge.offroad.ui.Paint.Style;
  * @author foltin
  * @date 16.06.2016
  */
-public class CursorDistanceLayer extends OsmandMapLayer implements IContextMenuProvider {
+public class CursorDistanceLayer extends OsmandMapLayer implements DirectOffroadLayer, IContextMenuProvider {
 	private static final Log LOG = PlatformUtil.getLog(CursorDistanceLayer.class);
 
 	protected final static int RADIUS = 7;

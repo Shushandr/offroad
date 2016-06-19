@@ -2,7 +2,7 @@ package net.osmand.plus.views;
 
 import java.awt.Font;
 import java.awt.Graphics2D;
-import java.awt.Point;
+import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.Iterator;
 import java.util.List;
@@ -14,9 +14,11 @@ import net.osmand.data.RotatedTileBox;
 import net.osmand.plus.TargetPointsHelper;
 import net.osmand.plus.TargetPointsHelper.TargetPoint;
 import net.sourceforge.offroad.OsmWindow;
+import net.sourceforge.offroad.ui.DirectOffroadLayer;
+import net.sourceforge.offroad.ui.IContextMenuProvider;
 import net.sourceforge.offroad.ui.OsmBitmapPanel;
 
-public class PointNavigationLayer extends OsmandMapLayer /* implements IContextMenuProvider*/ {
+public class PointNavigationLayer extends OsmandMapLayer implements DirectOffroadLayer, IContextMenuProvider {
 	protected final static int DIST_TO_SHOW = 80;
 
 //	private Stroke point;
@@ -178,7 +180,8 @@ public class PointNavigationLayer extends OsmandMapLayer /* implements IContextM
 		return false;
 	}
 
-	public void collectObjectsFromPoint(Point point, RotatedTileBox tileBox, List<Object> o) {
+	@Override
+	public void collectObjectsFromPoint(Point2D point, RotatedTileBox tileBox, List<Object> o) {
 		TargetPointsHelper tg = map.getTargetPointsHelper();
 		List<TargetPoint> intermediatePoints = tg.getAllPoints();
 		int r = getRadiusPoi(tileBox);
@@ -186,8 +189,8 @@ public class PointNavigationLayer extends OsmandMapLayer /* implements IContextM
 			TargetPoint tp = intermediatePoints.get(i);
 			LatLon latLon = tp.point;
 			if (latLon != null) {
-				int ex = (int) point.x;
-				int ey = (int) point.y;
+				int ex = (int) point.getX();
+				int ey = (int) point.getY();
 				int x = (int) tileBox.getPixXFromLatLon(latLon.getLatitude(), latLon.getLongitude());
 				int y = (int) tileBox.getPixYFromLatLon(latLon.getLatitude(), latLon.getLongitude());
 				if (calculateBelongs(ex, ey, x, y, r)) {

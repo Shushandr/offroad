@@ -59,6 +59,8 @@ public class PointNavigationAction extends OffRoadAction {
 		LatLon destLatLon = mContext.getMouseLocation();
 		TargetPointsHelper helper = mContext.getTargetPointsHelper();
 		mAction.act(helper, destLatLon);
+		// remove route as well
+		mContext.getRoutingHelper().clearCurrentRoute(null, null);
 		mContext.getDrawPanel().drawLater();
 	}
 

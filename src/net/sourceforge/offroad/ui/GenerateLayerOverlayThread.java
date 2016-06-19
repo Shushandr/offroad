@@ -68,26 +68,7 @@ public class GenerateLayerOverlayThread extends OffRoadUIThread {
 		Dimension size = mOsmBitmapPanel.getSize();
 		BufferedImage layerImage = new BufferedImage(size.width, size.height, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D lg = layerImage.createGraphics();
-		final QuadPoint c = mTileBox.getCenterPixelPoint();
-		DrawSettings settings = new DrawSettings(false);
-		List<OsmandMapLayer> layers = mOsmBitmapPanel.getLayers();
-		for (int i = 0; i < layers.size(); i++) {
-			Graphics2D glayer = mOsmBitmapPanel.createGraphics(lg);
-			try {
-				OsmandMapLayer layer = layers.get(i);
-				// rotate if needed
-				if (!layer.drawInScreenPixels()) {
-					glayer.rotate(mTileBox.getRotate(), c.x, c.y);
-				}
-				layer.onPrepareBufferImage(glayer, mTileBox, settings);
-				layer.onDraw(glayer, mTileBox, settings);
-				// canvas.restore();
-			} catch (Exception e) {
-				// skip it
-				e.printStackTrace();
-			}
-			glayer.dispose();
-		}
+		mOsmBitmapPanel.drawLayers(mTileBox, lg, false);
 		mOsmBitmapPanel.setLayerImage(layerImage, mTileBox);
 	}
 

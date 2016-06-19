@@ -98,6 +98,7 @@ import net.osmand.plus.OsmAndLocationProvider;
 import net.osmand.plus.OsmandSettings;
 import net.osmand.plus.OsmandSettings.CommonPreference;
 import net.osmand.plus.TargetPointsHelper;
+import net.osmand.plus.TargetPointsHelper.TargetPoint;
 import net.osmand.plus.activities.SavingTrackHelper;
 import net.osmand.plus.api.SQLiteAPI;
 import net.osmand.plus.inapp.util.Base64;
@@ -276,7 +277,10 @@ public class OsmWindow  implements IRouteInformationListener {
 	private JMenuItem mAddFavourite;
 
 
-	private JMenuItem mSelectTrack; 
+	private JMenuItem mSelectTrack;
+
+
+	private HashMap<String, BufferedImage> mBufferedImageCache = new HashMap<>(); 
 	
 	public void createAndShowUI() {
 		mDrawPanel = new OsmBitmapPanel(this);
@@ -1407,14 +1411,27 @@ public class OsmWindow  implements IRouteInformationListener {
 		System.exit(0);
 	}
 
+	/**
+	 * Cached loading of buffered images.
+	 * The image is the name of the image. Path and extension (.png) are 
+	 * added by this method.
+	 * 
+	 * @param image
+	 * @return
+	 */
 	public BufferedImage readImage(String image) {
+		if(mBufferedImageCache.containsKey(image)){
+			return mBufferedImageCache .get(image);
+		}
 		try {
 			InputStream resource = getResource(IMAGE_PATH + image + ".png");
 			if (resource == null) {
 				log.error("Resource " + image + " not found!");
 				return null;
 			}
-			return ImageIO.read(resource);
+			BufferedImage res = ImageIO.read(resource);
+			mBufferedImageCache.put(image, res);
+			return res;
 		} catch (IOException e) {
 			e.printStackTrace();
 			return null;
@@ -1517,6 +1534,28 @@ public class OsmWindow  implements IRouteInformationListener {
 			});
 			result.add(item);
 			item = new JMenuItem(new DeleteFavoriteAction(this, getOffRoadString("offroad.deleteFavourite", new String[]{point.getName(), point.getCategory()}), null, point));
+			result.add(item);
+			
+		}
+		if (pAm instanceof TargetPoint) {
+			TargetPoint targetPoint = (TargetPoint) pAm;
+			PointNavigationAction removePointAction = new PointNavigationAction(this, "offroad.remove_navigation_point",
+					new HelperAction(){
+				@Override
+				public void act(TargetPointsHelper pHelper, LatLon pPosition) {
+					if(targetPoint == pHelper.getPointToStart()){
+						pHelper.clearStartPoint(false);
+					} 
+					if(targetPoint == pHelper.getPointToNavigate()){
+						pHelper.clearPointToNavigate(false);
+					} 
+					int index = pHelper.getIntermediatePoints().indexOf(targetPoint);
+					if(index >= 0){
+						pHelper.removeWayPoint(false, index);
+					}
+				}});
+
+			JMenuItem item = new JMenuItem(removePointAction);
 			result.add(item);
 			
 		}

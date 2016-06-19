@@ -11,9 +11,10 @@ import net.osmand.plus.views.mapwidgets.RouteInfoWidgetsFactory;
 import net.osmand.plus.views.mapwidgets.RouteInfoWidgetsFactory.RulerWidget;
 import net.sourceforge.offroad.OsmWindow;
 import net.sourceforge.offroad.R;
+import net.sourceforge.offroad.ui.DirectOffroadLayer;
 import net.sourceforge.offroad.ui.OsmBitmapPanel;
 
-public class MapInfoLayer extends OsmandMapLayer {
+public class MapInfoLayer extends OsmandMapLayer implements DirectOffroadLayer {
 
 	
 	private final OsmBitmapPanel map;

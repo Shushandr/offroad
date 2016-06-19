@@ -48,6 +48,7 @@ import net.osmand.plus.views.OsmandMapLayer;
 import net.osmand.plus.views.POIMapLayer;
 import net.osmand.plus.views.PointNavigationLayer;
 import net.osmand.plus.views.RouteLayer;
+import net.osmand.plus.views.OsmandMapLayer.DrawSettings;
 import net.sourceforge.offroad.OsmWindow;
 import net.sourceforge.offroad.data.Pair;
 import net.sourceforge.offroad.res.OffRoadResources;
@@ -88,6 +89,8 @@ public class OsmBitmapPanel extends JPanel {
 
 	public OsmBitmapPanel(OsmWindow pWin) {
 		mContext = pWin;
+		// absolute positioning
+		this.setLayout(null);
 		mUnzoomedPicturesAction = new CalculateUnzoomedPicturesAction();
 		LatLon latLon = new LatLon(51.03325, 13.64656);
 		int zoom = 17;
@@ -124,7 +127,8 @@ public class OsmBitmapPanel extends JPanel {
 		new Timer(INACTIVITY_TIME_IN_MILLISECONDS, updateCursorAction).start();
 		mThreadPool = Executors.newFixedThreadPool(4);
 		add(mCompassButton, getComponentCount()-1);
-		mCompassButton.setLocation(100, 100);
+		int size = mCompassButton.getZoomedCircleRadius();
+		mCompassButton.setBounds(100, 100, size, size);
 	}
 
 	public void init() {
@@ -206,6 +210,7 @@ public class OsmBitmapPanel extends JPanel {
 //		if(mLayerImage != null && mLayerImageTileBox.equals(ctb)){
 //			g2.drawImage(mLayerImage, 0, 0, null);
 //		}
+		drawLayers(ctb, g2, true);
 		// cursor:
 		Stroke oldStroke = g2.getStroke();
 		Color oldColor = g2.getColor();
@@ -488,6 +493,33 @@ public class OsmBitmapPanel extends JPanel {
 
 	public List<OsmandMapLayer> getLayers() {
 		return layers;
+	}
+	
+	public void drawLayers(RotatedTileBox pTileBox, Graphics2D lg, boolean pDrawDirectLayers){
+		final QuadPoint c = pTileBox.getCenterPixelPoint();
+		DrawSettings settings = new DrawSettings(false);
+		List<OsmandMapLayer> layers = getLayers();
+		for (int i = 0; i < layers.size(); i++) {
+			OsmandMapLayer layer = layers.get(i);
+			if(pDrawDirectLayers != (layer instanceof DirectOffroadLayer)){
+				continue;
+			}
+			Graphics2D glayer = createGraphics(lg);
+			try {
+				// rotate if needed
+				if (!layer.drawInScreenPixels()) {
+					glayer.rotate(pTileBox.getRotate(), c.x, c.y);
+				}
+				layer.onPrepareBufferImage(glayer, pTileBox, settings);
+				layer.onDraw(glayer, pTileBox, settings);
+				// canvas.restore();
+			} catch (Exception e) {
+				// skip it
+				e.printStackTrace();
+			}
+			glayer.dispose();
+		}
+
 	}
 
 	@SuppressWarnings("unchecked")
