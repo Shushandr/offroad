@@ -28,7 +28,7 @@ An offline map viewer based on OsmAnd.
 
 Version History:
 
-0_1_Beta2:
+0_1-Beta2:
 ============
 * routing results are displayed in the search table, now
 * application mode (car, bike, etc.) as view option added.
