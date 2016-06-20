@@ -126,6 +126,7 @@ import net.sourceforge.offroad.actions.ChooseApplicationModeAction;
 import net.sourceforge.offroad.actions.ChooseRendererAction;
 import net.sourceforge.offroad.actions.ChooseRouteServiceAction;
 import net.sourceforge.offroad.actions.ClearRouteAction;
+import net.sourceforge.offroad.actions.CopyLocationToClipboardAction;
 import net.sourceforge.offroad.actions.DownloadAction;
 import net.sourceforge.offroad.actions.GpxImportAction;
 import net.sourceforge.offroad.actions.NavigationBackAction;
@@ -414,6 +415,7 @@ public class OsmWindow  implements IRouteInformationListener {
 		importGpxItem.addActionListener(new GpxImportAction(this));
 		jFileMenu.add(importGpxItem);
 		addToMenu(jFileMenu, "offroad.export_route", new ExportRouteAction(this), null);
+		addToMenu(jFileMenu, "offroad.copy_location", new CopyLocationToClipboardAction(this), "control C");
 		addToMenu(jFileMenu, "offroad.exit", item -> closeWindow(), "control Q");
 		menubar.add(jFileMenu);
 		JMenu jSearchMenu = new JMenu(getOffRoadString("offroad.string7")); //$NON-NLS-1$
@@ -491,6 +493,7 @@ public class OsmWindow  implements IRouteInformationListener {
 		addToMenu(jNavigationMenu, null, new RouteAction(this, ApplicationMode.CAR), "F1");
 		addToMenu(jNavigationMenu, null, new RouteAction(this, ApplicationMode.BICYCLE), "F2");
 		addToMenu(jNavigationMenu, null, new RouteAction(this, ApplicationMode.PEDESTRIAN), "F3");
+		jNavigationMenu.add(new JSeparator());
 		addToMenu(jNavigationMenu, "offroad.go_source", new ShowTargetPointAction(this, t->t.getPointToStart()), "control HOME");
 		addToMenu(jNavigationMenu, "offroad.go_dest", new ShowTargetPointAction(this, t->t.getPointToNavigate()), "control END");
 		jNavigationMenu.add(new JSeparator());
