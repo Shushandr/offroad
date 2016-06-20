@@ -2,8 +2,6 @@ package net.sourceforge.offroad.actions;
 
 import java.awt.event.ActionEvent;
 
-import javax.swing.Icon;
-
 import net.osmand.data.FavouritePoint;
 import net.osmand.data.LatLon;
 import net.sourceforge.offroad.OsmWindow;

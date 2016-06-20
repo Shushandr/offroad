@@ -139,6 +139,7 @@ import net.sourceforge.offroad.actions.RouteAction;
 import net.sourceforge.offroad.actions.SearchAddressAction;
 import net.sourceforge.offroad.actions.SetRenderingRule;
 import net.sourceforge.offroad.actions.ShowFavoriteAction;
+import net.sourceforge.offroad.actions.ShowTargetPointAction;
 import net.sourceforge.offroad.actions.ShowWikipediaAction;
 import net.sourceforge.offroad.data.LocationAsMapObject;
 import net.sourceforge.offroad.data.QuadRectExtendable;
@@ -487,9 +488,12 @@ public class OsmWindow  implements IRouteInformationListener {
 		menubar.add(jViewMenu);
 		// Navigation
 		JMenu jNavigationMenu = new JMenu(getOffRoadString("offroad.navigation")); //$NON-NLS-1$
-		jNavigationMenu.add(new JMenuItem(new RouteAction(this, ApplicationMode.CAR)));
-		jNavigationMenu.add(new JMenuItem(new RouteAction(this, ApplicationMode.BICYCLE)));
-		jNavigationMenu.add(new JMenuItem(new RouteAction(this, ApplicationMode.PEDESTRIAN)));
+		addToMenu(jNavigationMenu, null, new RouteAction(this, ApplicationMode.CAR), "F1");
+		addToMenu(jNavigationMenu, null, new RouteAction(this, ApplicationMode.BICYCLE), "F2");
+		addToMenu(jNavigationMenu, null, new RouteAction(this, ApplicationMode.PEDESTRIAN), "F3");
+		addToMenu(jNavigationMenu, "offroad.go_source", new ShowTargetPointAction(this, t->t.getPointToStart()), "control HOME");
+		addToMenu(jNavigationMenu, "offroad.go_dest", new ShowTargetPointAction(this, t->t.getPointToNavigate()), "control END");
+		jNavigationMenu.add(new JSeparator());
 		jNavigationMenu.add(new JMenuItem(new ClearRouteAction(this)));
 		PointNavigationAction clearIntermediatePointsAction = new PointNavigationAction(this, "offroad.clear_intermediate_points",
 				new HelperAction(){
@@ -654,8 +658,19 @@ public class OsmWindow  implements IRouteInformationListener {
 		}
 	}
 	
+	/**
+	 * @param jNavigationMenu
+	 * @param name may be null, if set later.
+	 * @param action
+	 * @param keyStroke
+	 */
 	void addToMenu(JMenu jNavigationMenu, String name, ActionListener action, String keyStroke) {
-		JMenuItem navigationBackItem = new JMenuItem(getOffRoadString(name)); //$NON-NLS-1$
+		String actionName = (name!=null)?getOffRoadString(name):"UNKNOWN";
+		if (name==null && action instanceof AbstractAction) {
+			AbstractAction abstractAction = (AbstractAction) action;
+			actionName = (String) abstractAction.getValue(AbstractAction.NAME);
+		}
+		JMenuItem navigationBackItem = new JMenuItem(actionName); //$NON-NLS-1$
 		navigationBackItem.addActionListener(action);
 		if (keyStroke != null) {
 			navigationBackItem.setAccelerator(KeyStroke.getKeyStroke(keyStroke)); //$NON-NLS-1$
