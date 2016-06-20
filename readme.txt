@@ -32,6 +32,11 @@ Version History:
 ============
 * routing results are displayed in the search table, now
 * application mode (car, bike, etc.) as view option added.
+* debian package created
+* optical additions: ruler and compass
+* context menus enhanced
+* more navigation actions
+* copy link (to http://osm.org/) of current selected location to clipboard added
 
 0_1_Beta1:
 ============
