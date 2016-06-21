@@ -102,7 +102,7 @@ public class BinaryMapIndexReader {
 	private final BinaryMapAddressReaderAdapter addressAdapter;
 	private final BinaryMapRouteReaderAdapter routeAdapter;
 	
-	private static String BASEMAP_NAME = "basemap";
+	public static String BASEMAP_NAME = "basemap";
 
 	
 	public BinaryMapIndexReader(final RandomAccessFile raf, File file) throws IOException {

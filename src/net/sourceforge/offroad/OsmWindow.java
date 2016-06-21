@@ -50,6 +50,7 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JProgressBar;
@@ -76,6 +77,7 @@ import net.osmand.Location;
 import net.osmand.PlatformUtil;
 import net.osmand.ResultMatcher;
 import net.osmand.ValueHolder;
+import net.osmand.binary.BinaryMapIndexReader;
 import net.osmand.data.Amenity;
 import net.osmand.data.FavouritePoint;
 import net.osmand.data.LatLon;
@@ -200,6 +202,12 @@ public class OsmWindow  implements IRouteInformationListener {
 
 
 	public static final int MIN_ZOOM = 1;
+
+
+	private static final String MODE_WORLD_WRITEABLE = "mode_world_writeable";
+
+
+	private static final String VECTOR_INDEXES_CHECK = "vector_indexes_check";
 	private static OsmWindow sInstance = null;
 	private ResourceManager mResourceManager;
 	private OffRoadSettings settings = new OffRoadSettings(this);
@@ -618,9 +626,46 @@ public class OsmWindow  implements IRouteInformationListener {
 				}
 			});
 		}
+		mFrame.addComponentListener(new ComponentAdapter() {
+			public void componentShown(ComponentEvent e) {
+				mFrame.removeComponentListener(this);
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						checkMaps();
+					}
+				});
+			};
+		});
 		mFrame.setVisible(true);
 	}
 
+	public void checkMaps() {
+		MapRenderRepositories maps = getRenderer();
+		boolean check = "true".equals(getOffroadProperties().getProperty(VECTOR_INDEXES_CHECK, "true"));
+		if (check) {
+			if (!maps.basemapExists()) {
+				int result = JOptionPane.showConfirmDialog(mFrame, getString(R.string.basemap_missing),
+						getString(R.string.base_world_map), JOptionPane.YES_NO_CANCEL_OPTION,
+						JOptionPane.QUESTION_MESSAGE, null);
+				if (result == JOptionPane.CANCEL_OPTION) {
+					return;
+				}
+				if (result == JOptionPane.NO_OPTION) {
+					getOffroadProperties().setProperty(VECTOR_INDEXES_CHECK, "false");
+					return;
+				}
+				SwingUtilities.invokeLater(new Runnable() {
+
+					@Override
+					public void run() {
+						DownloadAction downloadAction = new DownloadAction(getInstance(), BinaryMapIndexReader.BASEMAP_NAME);
+						downloadAction.actionPerformed(null);
+					}
+				});
+			}
+		}
+	}
+	
 	private void adaptMenuMnemonics(Component[] components) {
 		for (int i = 0; i < components.length; i++) {
 			Component comp = components[i];

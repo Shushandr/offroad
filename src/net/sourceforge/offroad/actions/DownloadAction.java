@@ -228,9 +228,15 @@ public class DownloadAction extends OffRoadAction {
 	private TableRowSorter<DownloadTableModel> mSorter;
 	private JLabel mProgressStatus;
 	private JProgressBar mProgressBar;
+	private String mInitialFilter;
 
 	public DownloadAction(OsmWindow pContext) {
+		this(pContext, null);
+	}
+	
+	public DownloadAction(OsmWindow pContext, String pInitialFilter) {
 		super(pContext);
+		mInitialFilter = pInitialFilter;
 	}
 
 	public DownloadStatus getDownloadStatus(IndexItem pItem) {
@@ -351,6 +357,9 @@ public class DownloadAction extends OffRoadAction {
 					|| item.getType() == DownloadActivityType.WIKIPEDIA_FILE) {
 				mSourceModel.addRow(item);
 			}
+		}
+		if(mInitialFilter != null){
+			mTextField.setText(mInitialFilter);
 		}
 		mDialog.pack();
 		decorateDialog();

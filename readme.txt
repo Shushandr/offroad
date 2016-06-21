@@ -28,6 +28,10 @@ An offline map viewer based on OsmAnd.
 
 Version History:
 
+0_1-Beta3:
+============
+* If the worldmap is missing, a dialog is displayed.
+
 0_1-Beta2:
 ============
 * routing results are displayed in the search table, now
