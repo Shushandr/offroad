@@ -97,14 +97,17 @@ public class RoundButton extends JButton {
 			super.paint(g, c);
 			Graphics2D g2 = (Graphics2D) g.create();
 			initShape(c);
-			RoundButton b = (RoundButton) c;
 			Rectangle bounds = shape.getBounds();
+			int width = (int)bounds.getMaxX();
+			int height = (int)bounds.getMaxY();
+			g2.setColor(getBackground());
+			g2.fillOval(bounds.x, bounds.y, width, height);
 			if(mBackgroundImage!= null){
-				g2.drawImage(mBackgroundImage, bounds.x, bounds.y, (int)bounds.getMaxX(), (int)bounds.getMaxY(), 0, 0, mBackgroundImage.getWidth(), mBackgroundImage.getHeight(), null);
+				g2.drawImage(mBackgroundImage, bounds.x, bounds.y, width, height, 0, 0, mBackgroundImage.getWidth(), mBackgroundImage.getHeight(), null);
 			}
 			if(mForegroundImage!= null){
 				g2.rotate(Math.toRadians(mRotate), bounds.getCenterX(), bounds.getCenterY());
-				g2.drawImage(mForegroundImage, bounds.x, bounds.y, (int)bounds.getMaxX(), (int)bounds.getMaxY(), 0, 0, mForegroundImage.getWidth(), mForegroundImage.getHeight(), null);
+				g2.drawImage(mForegroundImage, bounds.x, bounds.y, width, height, 0, 0, mForegroundImage.getWidth(), mForegroundImage.getHeight(), null);
 			}
 		}
 

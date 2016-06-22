@@ -388,7 +388,7 @@ public class OsmWindow  implements IRouteInformationListener {
 		mToolBar.add(mComboBox, new GridBagConstraints(2, 0, 1, 1, 0, 0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 
 		mFrame = new JFrame(getOffRoadString("offroad.string4")); //$NON-NLS-1$
-		mFrame.setIconImage(readImage("offroad_icon.png"));
+		mFrame.setIconImage(readImage("offroad_icon"));
 		mFrame.getContentPane().setLayout(new BorderLayout());
 		mFrame.getContentPane().add(mToolBar, BorderLayout.NORTH);
 		mSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, mAmenityTable, mDrawPanel);

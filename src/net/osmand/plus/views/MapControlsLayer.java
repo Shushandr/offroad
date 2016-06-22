@@ -175,7 +175,7 @@ public class MapControlsLayer extends OsmandMapLayer implements DirectOffroadLay
 
 		JButton compass = mapActivity.findViewById(R.id.map_compass_button);
 		compassHud = createHudButton(compass, "map_compass").setIconColorId(R.color.color_black).
-				setBg("btn_inset_circle_trans", "btn_inset_circle_night");
+				setBg("map_bt_round_2_shadow", R.color.map_widget_light_trans, "btn_inset_circle_night", R.color.map_widget_dark);
 		compassHud.compass = true;
 		controls.add(compassHud);
 		NavigationRotationAction rotationAction = new NavigationRotationAction(app);
@@ -671,19 +671,23 @@ public class MapControlsLayer extends OsmandMapLayer implements DirectOffroadLay
 		boolean nightMode = false;
 		boolean f = true;
 		boolean compass;
+		private Color bgLightColor;
+		private Color bgDarkColor;
 
 		public MapHudButton setRoundTransparent() {
-			setBg("btn_circle_trans", "btn_circle_night");
+			setBg("map_bt_round_1_shadow", R.color.map_widget_light_trans, "map_bt_round_1_shadow", R.color.map_widget_dark);
 			return this;
 		}
 
 
-		public MapHudButton setBg(String dayBg, String nightBg) {
+		public MapHudButton setBg(String dayBg, Color pColorDay, String nightBg, Color pColorNight) {
 			if (nightBg.equals(bgDark) && bgLight.equals(dayBg)) {
 				return this;
 			}
 			bgDark = nightBg;
 			bgLight = dayBg;
+			bgLightColor = pColorDay;
+			bgDarkColor = pColorNight;
 			f = true;
 			return this;
 		}
@@ -769,7 +773,9 @@ public class MapControlsLayer extends OsmandMapLayer implements DirectOffroadLay
 //				} else {
 //					iv.setBackgroundDrawable(ctx.getResources().getDrawable(night ? bgDark : bgLight));
 			if (compass) {
-				((RoundButton) iv).setBackgroundIcon(readImage(night ? bgDark : bgLight, mapActivity));
+				RoundButton roundButton = (RoundButton) iv;
+				roundButton.setBackgroundIcon(readImage(night ? bgDark : bgLight, mapActivity));
+				roundButton.setBackground(night?bgDarkColor:bgLightColor);
 			} 
 
 //				}
@@ -786,7 +792,8 @@ public class MapControlsLayer extends OsmandMapLayer implements DirectOffroadLay
 			}
 
 			if (compass) {
-				((RoundButton) iv).setForegroundIcon(d);
+				RoundButton roundButton = (RoundButton) iv;
+				roundButton.setForegroundIcon(d);
 			} else {
 				((JButton) iv).setIcon(new ImageIcon(d));
 			}
