@@ -1,4 +1,6 @@
 package net.osmand.data;
+import java.awt.Point;
+
 import org.apache.commons.logging.Log;
 
 import net.osmand.PlatformUtil;
@@ -668,6 +670,10 @@ public class RotatedTileBox {
 	}
 	public float getPixYFromLatLon(LatLon pLatLon) {
 		return getPixYFromLatLon(pLatLon.getLatitude(), pLatLon.getLongitude());
+	}
+
+	public Point getPoint(LatLon pLocation) {
+		return new Point((int)getPixXFromLatLon(pLocation), (int)getPixYFromLatLon(pLocation));
 	}
 
 

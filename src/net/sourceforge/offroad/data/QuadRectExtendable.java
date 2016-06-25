@@ -57,4 +57,10 @@ public class QuadRectExtendable extends QuadRect {
 	public LatLon getCenter() {
 		return new LatLon((left+right)/2, (top+bottom)/2);
 	}
+	public LatLon getTopLeft() {
+		return new LatLon(left, top);
+	}
+	public LatLon getBottomRight() {
+		return new LatLon(right, bottom);
+	}
 }

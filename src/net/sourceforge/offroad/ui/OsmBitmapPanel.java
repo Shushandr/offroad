@@ -268,10 +268,6 @@ public class OsmBitmapPanel extends JPanel {
 	}
 
 	public void zoomChange(final int pWheelRotation, final Point pNewCenter) {
-		if(mZoomIsRunning){
-			log.info("Don't zoom as there is something running.");
-			return ;
-		}
 		final RotatedTileBox tileCopy = copyCurrentTileBox();
 		int delta = pWheelRotation;
 		int newZoom = tileCopy.getZoom() + delta;
@@ -303,6 +299,10 @@ public class OsmBitmapPanel extends JPanel {
 			genThread = new GenerationThread(this, destinationTileBox);
 		}
 		queue(genThread);
+	}
+
+	public boolean isZoomRunning() {
+		return mZoomIsRunning;
 	}
 
 	
@@ -354,7 +354,7 @@ public class OsmBitmapPanel extends JPanel {
 		return tb;
 	}
 
-	public void moveImageAnimated(float pDeltaX, float pDeltaY) {
+	public void moveImageAnimatedInPercentage(float pDeltaX, float pDeltaY) {
 		pDeltaX *= getWidth();
 		pDeltaY *= getHeight();
 		System.out.println("Moving by  "  +pDeltaX + ", " + pDeltaY);
@@ -362,6 +362,9 @@ public class OsmBitmapPanel extends JPanel {
 		QuadPoint center = tileBox.getCenterPixelPoint();
 		tileBox.setLatLonCenter(tileBox.getLatFromPixel(center.x + pDeltaX, center.y + pDeltaY),
 				tileBox.getLonFromPixel(center.x + pDeltaX, center.y + pDeltaY));
+		moveAnimated(pDeltaX, pDeltaY, tileBox);
+	}
+	public void moveAnimated(float pDeltaX, float pDeltaY, RotatedTileBox tileBox) {
 		MoveAnimationThread animationThread = new MoveAnimationThread(this, pDeltaX, pDeltaY);
 		queue(animationThread);
 		queue(new GenerationThread(this, tileBox));

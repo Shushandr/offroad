@@ -529,10 +529,10 @@ public class OsmWindow  implements IRouteInformationListener {
 		}
 		jNavigationMenu.add(lRoutingServiceMenu);
 		jNavigationMenu.add(new JSeparator());
-		addToMenu(jNavigationMenu, "offroad.up", item -> mDrawPanel.moveImageAnimated(0,-1f/3), "control UP");
-		addToMenu(jNavigationMenu, "offroad.down", item -> mDrawPanel.moveImageAnimated(0,1f/3), "control DOWN");
-		addToMenu(jNavigationMenu, "offroad.left", item -> mDrawPanel.moveImageAnimated(-1f/3,0), "control LEFT");
-		addToMenu(jNavigationMenu, "offroad.right", item -> mDrawPanel.moveImageAnimated(1f/3,0), "control RIGHT");
+		addToMenu(jNavigationMenu, "offroad.up", item -> mDrawPanel.moveImageAnimatedInPercentage(0,-1f/3), "control UP");
+		addToMenu(jNavigationMenu, "offroad.down", item -> mDrawPanel.moveImageAnimatedInPercentage(0,1f/3), "control DOWN");
+		addToMenu(jNavigationMenu, "offroad.left", item -> mDrawPanel.moveImageAnimatedInPercentage(-1f/3,0), "control LEFT");
+		addToMenu(jNavigationMenu, "offroad.right", item -> mDrawPanel.moveImageAnimatedInPercentage(1f/3,0), "control RIGHT");
 		jNavigationMenu.add(new JSeparator());
 		addToMenu(jNavigationMenu, "offroad.zoomin", item -> mAdapter.addWheelEvent(-1, mDrawPanel.copyCurrentTileBox()), "control PLUS");
 		addToMenu(jNavigationMenu, "offroad.zoomout", item -> mAdapter.addWheelEvent(1, mDrawPanel.copyCurrentTileBox()), "control MINUS");
@@ -1049,20 +1049,49 @@ public class OsmWindow  implements IRouteInformationListener {
 	}
 
 	public void move(LatLon pLocation, QuadRectExtendable pQuadRectExtendable) {
+		RotatedTileBox ctb = mDrawPanel.copyCurrentTileBox();
+		// camera movement, find intermediate zoom, such that current and destination points are in:
+		QuadRectExtendable joint = new QuadRectExtendable(ctb.getCenterLatLon());
+		if(pQuadRectExtendable != null){
+			joint.insert(pQuadRectExtendable.getTopLeft());
+			joint.insert(pQuadRectExtendable.getBottomRight());
+		}
+		RotatedTileBox cameraTileBox = getCommonTileBox(pLocation, joint);
+		RotatedTileBox tileBox = getCommonTileBox(pLocation, pQuadRectExtendable);
+		moveAnimated(cameraTileBox, ctb, ctb.getCenterLatLon());
+		moveAnimated(tileBox, cameraTileBox, pLocation);
+//		mDrawPanel.move(pLocation, tileBox.getZoom());
+		setCursorPosition(pLocation);
+	}
+
+	public void moveAnimated(RotatedTileBox pNextTileBox, RotatedTileBox pCurrentTileBox, LatLon pLocation){
+		if(pNextTileBox.getZoom() == pCurrentTileBox.getZoom()){
+			// no zoom change at all:
+			Point delta = pCurrentTileBox.getPoint(pNextTileBox.getLeftTopLatLon());
+			mDrawPanel.moveAnimated(delta.x, delta.y, pNextTileBox);
+		} else {
+			mDrawPanel.zoomChange(pNextTileBox.getZoom()-pCurrentTileBox.getZoom(), pCurrentTileBox.getPoint(pLocation));
+		}
+		
+	}
+	
+	protected RotatedTileBox getCommonTileBox(LatLon pLocation, QuadRectExtendable pQuadRectExtendable) {
 		// make sure that all points of the rect are in:
 		RotatedTileBox tileBox = mDrawPanel.copyCurrentTileBox();
+		tileBox.setZoom(MAX_ZOOM);
 		if (pQuadRectExtendable!= null) {
-			tileBox.setLatLonCenter(pLocation.getLatitude(), pLocation.getLongitude());
-			tileBox.setZoom(MAX_ZOOM);
-			while (!tileBox.containsLatLon(pQuadRectExtendable.left, pQuadRectExtendable.top)) {
-				tileBox.setZoom(tileBox.getZoom() - 1);
-			}
-			while (!tileBox.containsLatLon(pQuadRectExtendable.right, pQuadRectExtendable.bottom)) {
-				tileBox.setZoom(tileBox.getZoom() - 1);
-			} 
+//     		tileBox.setLatLonCenter(pLocation.getLatitude(), pLocation.getLongitude());
+			zoomOutUntilFits(tileBox, pQuadRectExtendable.getTopLeft());
+			zoomOutUntilFits(tileBox, pQuadRectExtendable.getBottomRight());
 		}
-		mDrawPanel.move(pLocation, tileBox.getZoom());
-		setCursorPosition(pLocation);
+		zoomOutUntilFits(tileBox, pLocation);
+		return tileBox;
+	}
+
+	public void zoomOutUntilFits(RotatedTileBox tileBox, LatLon latlon) {
+		while (!tileBox.containsLatLon(latlon)) {
+			tileBox.setZoom(tileBox.getZoom() - 1);
+		}
 	}
 
 	public void setWaitingCursor(boolean waiting) {

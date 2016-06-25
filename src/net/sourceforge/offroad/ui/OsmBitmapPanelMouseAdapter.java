@@ -33,7 +33,11 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 		}
 
 		public void actionPerformed(ActionEvent evt) {
-			drawPanel.zoomChange(-mCounter, mPoint);
+			if(drawPanel.isZoomRunning()){
+				log.info("Don't zoom as there is something running.");
+			} else {
+				drawPanel.zoomChange(-mCounter, mPoint);
+			}
 			mCounter = 0;
 		}
 	}
