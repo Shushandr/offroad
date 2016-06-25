@@ -1057,10 +1057,11 @@ public class OsmWindow  implements IRouteInformationListener {
 			joint.insert(pQuadRectExtendable.getBottomRight());
 		}
 		RotatedTileBox cameraTileBox = getCommonTileBox(pLocation, joint);
-		RotatedTileBox tileBox = getCommonTileBox(pLocation, pQuadRectExtendable);
+		RotatedTileBox tileBox = mDrawPanel.copyCurrentTileBox();
+		tileBox.setLatLonCenter(pLocation.getLatitude(), pLocation.getLongitude());
+		tileBox = getCommonTileBox(tileBox, pLocation, pQuadRectExtendable);
 		moveAnimated(cameraTileBox, ctb, ctb.getCenterLatLon());
 		moveAnimated(tileBox, cameraTileBox, pLocation);
-//		mDrawPanel.move(pLocation, tileBox.getZoom());
 		setCursorPosition(pLocation);
 	}
 
@@ -1079,13 +1080,16 @@ public class OsmWindow  implements IRouteInformationListener {
 		// make sure that all points of the rect are in:
 		RotatedTileBox tileBox = mDrawPanel.copyCurrentTileBox();
 		tileBox.setZoom(MAX_ZOOM);
+		return getCommonTileBox(tileBox, pLocation, pQuadRectExtendable);
+	}
+	protected RotatedTileBox getCommonTileBox(RotatedTileBox pTileBox, LatLon pLocation, QuadRectExtendable pQuadRectExtendable) {
 		if (pQuadRectExtendable!= null) {
 //     		tileBox.setLatLonCenter(pLocation.getLatitude(), pLocation.getLongitude());
-			zoomOutUntilFits(tileBox, pQuadRectExtendable.getTopLeft());
-			zoomOutUntilFits(tileBox, pQuadRectExtendable.getBottomRight());
+			zoomOutUntilFits(pTileBox, pQuadRectExtendable.getTopLeft());
+			zoomOutUntilFits(pTileBox, pQuadRectExtendable.getBottomRight());
 		}
-		zoomOutUntilFits(tileBox, pLocation);
-		return tileBox;
+		zoomOutUntilFits(pTileBox, pLocation);
+		return pTileBox;
 	}
 
 	public void zoomOutUntilFits(RotatedTileBox tileBox, LatLon latlon) {
