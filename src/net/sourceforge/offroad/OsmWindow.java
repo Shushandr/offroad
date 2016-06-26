@@ -790,7 +790,8 @@ public class OsmWindow  implements IRouteInformationListener {
 		mResourceManager = new ResourceManager(this);
 		mResourceManager.indexingMaps(IProgress.EMPTY_PROGRESS);
 		if(System.getProperty("HIDPI")!=null){ //$NON-NLS-1$
-			scaleAllFonts(1.3f);
+			log.info("Option HIDPI found");
+			scaleAllFonts(1.3f * density);
 		} else {
 			scaleAllFonts(density);
 		}
@@ -919,6 +920,7 @@ public class OsmWindow  implements IRouteInformationListener {
 	}
 
 	public static void scaleAllFonts(float pScale) {
+		log.info("Scaling fonts with scale " + pScale);
 		for (Iterator i = UIManager.getLookAndFeelDefaults().keySet()
 				.iterator(); i.hasNext();) {
 			Object next = i.next();
@@ -946,12 +948,15 @@ public class OsmWindow  implements IRouteInformationListener {
 	static public void printClassPath() {
 		ClassLoader cl = ClassLoader.getSystemClassLoader();
 
-		URL[] urls = ((URLClassLoader) cl).getURLs();
-		System.out.println("Classpath:"); //$NON-NLS-1$
-		for (URL url : urls) {
-			System.out.println(url.getFile());
+		if (cl instanceof URLClassLoader) {
+			URL[] urls = ((URLClassLoader) cl).getURLs();
+			System.out.println("Classpath:"); //$NON-NLS-1$
+			for (URL url : urls) {
+				System.out.println(url.getFile());
+			} 
+		} else {
+			System.out.println("Can' determine classpath for classloader " + cl);
 		}
-
 	}
 
 	public InputStream getResource(String pIndex){
