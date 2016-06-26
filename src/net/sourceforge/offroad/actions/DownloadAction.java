@@ -54,6 +54,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
@@ -77,6 +79,8 @@ import net.osmand.plus.resources.ResourceManager;
 import net.sourceforge.offroad.OsmWindow;
 
 public class DownloadAction extends OffRoadAction {
+
+	public static final int MAX_NUMBER_OF_FILES = 10;
 
 	public class TypeTableCellRenderer extends DefaultTableCellRenderer {
 		@Override
@@ -129,7 +133,7 @@ public class DownloadAction extends OffRoadAction {
 			super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 			if (value instanceof DownloadStatus) {
 				DownloadStatus d = (DownloadStatus) value;
-				setText((d == DownloadStatus.NOTPRESENT)?"":d.name());
+				setText((d == DownloadStatus.NOTPRESENT)?"":getResourceString("offroad.download_"+d.name()));
 			}
 			return this;
 		}
@@ -160,15 +164,15 @@ public class DownloadAction extends OffRoadAction {
 		private Vector<IndexItem> mRows = new Vector<>();
 
 		public DownloadTableModel() {
-			mColumns.addElement(new DownloadTableColumn("present", DownloadStatus.class, item -> getDownloadStatus(item),
+			mColumns.addElement(new DownloadTableColumn("offroad.download_present", DownloadStatus.class, item -> getDownloadStatus(item),
 					new DownloadedTableCellRenderer()));
-			mColumns.addElement(new DownloadTableColumn("name", String.class, item -> item.getBasename(),
+			mColumns.addElement(new DownloadTableColumn("offroad.download_name", String.class, item -> item.getBasename(),
 					new DefaultTableCellRenderer()));
-			mColumns.addElement(new DownloadTableColumn("type", DownloadActivityType.class, item -> item.getType(),
+			mColumns.addElement(new DownloadTableColumn("offroad.download_type", DownloadActivityType.class, item -> item.getType(),
 					new TypeTableCellRenderer()));
-			mColumns.addElement(new DownloadTableColumn("size", Double.class, item -> item.getArchiveSizeMB(),
+			mColumns.addElement(new DownloadTableColumn("offroad.download_size", Double.class, item -> item.getArchiveSizeMB(),
 					new ArchiveSizeTableCellRenderer()));
-			mColumns.addElement(new DownloadTableColumn("remotedate", Long.class, item -> item.getTimestamp(),
+			mColumns.addElement(new DownloadTableColumn("offroad.download_remotedate", Long.class, item -> item.getTimestamp(),
 					new RemoteDateTableCellRenderer()));
 			for (DownloadTableColumn column : mColumns) {
 				mTable.setDefaultRenderer(column.mClass, column.mRenderer);
@@ -260,12 +264,13 @@ public class DownloadAction extends OffRoadAction {
 	private Thread mDownloadThread;
 	private boolean mIsDownloadInterrupted;
 	private JButton mInterruptDownload;
+	private JButton mDownloadButton;
 
 	@Override
 	public void actionPerformed(ActionEvent pE) {
 		createDialog();
 		setWaitingCursor();
-		mDialog.setTitle(getResourceString("download"));
+		mDialog.setTitle(getResourceString("offroad.download"));
 		Container contentPane = mDialog.getContentPane();
 		GridBagLayout gbl = new GridBagLayout();
 		gbl.columnWeights = new double[] { 1.0f };
@@ -304,7 +309,7 @@ public class DownloadAction extends OffRoadAction {
 			public void keyReleased(KeyEvent pE) {
 				if (pE.getKeyCode() == KeyEvent.VK_ENTER) {
 					pE.consume();
-					download(mSourceModel.getSelectedRows());
+					doDownload();
 				}
 				if (pE.getKeyCode() == KeyEvent.VK_UP) {
 					if (mTable.getSelectedRowCount() == 0) {
@@ -321,7 +326,7 @@ public class DownloadAction extends OffRoadAction {
 				if (evt.getClickCount() >= 2) {
 					// Double-click detected
 					evt.consume();
-					download(mSourceModel.getSelectedRows());
+					doDownload();
 				}
 			}
 		};
@@ -337,7 +342,19 @@ public class DownloadAction extends OffRoadAction {
 		mProgressBar.setStringPainted(true);
 		contentPane.add(mProgressBar, new GridBagConstraints(1, y++, 1, 1, 1.0, 1.0, GridBagConstraints.WEST,
 				GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
-		mInterruptDownload = new JButton("Interrupt Download");
+		mDownloadButton = new JButton(getResourceString("offroad.downloadButton"));
+		mDownloadButton.addActionListener(e -> doDownload());
+		mDownloadButton.setEnabled(false);
+		mTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+			
+			@Override
+			public void valueChanged(ListSelectionEvent pE) {
+				mDownloadButton.setEnabled(mTable.getSelectedRowCount() > 0 && mTable.getSelectedRowCount() <= MAX_NUMBER_OF_FILES);
+			}
+		});
+		contentPane.add(mDownloadButton, new GridBagConstraints(0, y, 1, 1, 1.0, 1.0, GridBagConstraints.WEST,
+				GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+		mInterruptDownload = new JButton(getResourceString("offroad.interruptDownload"));
 		mInterruptDownload.addActionListener(new ActionListener() {
 			
 			@Override
@@ -371,11 +388,11 @@ public class DownloadAction extends OffRoadAction {
 	public void download(List<IndexItem> pList) {
 		//check download thread:
 		if(mDownloadThread != null && mDownloadThread.isAlive()){
-			JOptionPane.showMessageDialog(mDialog, "A download is currently running. Not started!", "Currently occupied", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(mDialog, getResourceString("offroad.downloadAlreadyStarted"), getResourceString("offroad.downloadAlreadyStartedTitle"), JOptionPane.ERROR_MESSAGE);
 			return;
 		}
-		if(pList.size() > 10){
-			JOptionPane.showMessageDialog(mDialog, "Not more than 10 downloads can be started at once. Not started!", "Too many files", JOptionPane.ERROR_MESSAGE);
+		if(pList.size() > MAX_NUMBER_OF_FILES){
+			JOptionPane.showMessageDialog(mDialog, getResourceString("offroad.downloadTooManyFiles"), getResourceString("offroad.downloadTooManyFilesTitle"), JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 		mIsDownloadInterrupted = false;
@@ -426,9 +443,9 @@ public class DownloadAction extends OffRoadAction {
 								public void run() {
 									mProgressBar.setValue(mProgressBar.getMaximum());
 									if (mIsDownloadInterrupted) {
-										mProgressStatus.setText("Interrupted.");
+										mProgressStatus.setText(getResourceString("offroad.downloadInterrupted"));
 									} else {
-										mProgressStatus.setText("Done.");
+										mProgressStatus.setText(getResourceString("offroad.downloadDone"));
 									}
 								}
 							});
@@ -514,6 +531,11 @@ public class DownloadAction extends OffRoadAction {
 	public void requestFocusToTextField() {
 		mTextField.selectAll();
 		mTextField.requestFocus();
+	}
+
+
+	public void doDownload() {
+		download(mSourceModel.getSelectedRows());
 	}
 
 

@@ -31,6 +31,8 @@ Version History:
 0_1-Beta3:
 ============
 * If the worldmap is missing, a dialog is displayed.
+* Download dialog has a download button, now.
+
 
 0_1-Beta2:
 ============
