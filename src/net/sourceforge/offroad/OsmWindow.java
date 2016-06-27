@@ -77,7 +77,6 @@ import net.osmand.Location;
 import net.osmand.PlatformUtil;
 import net.osmand.ResultMatcher;
 import net.osmand.ValueHolder;
-import net.osmand.binary.BinaryMapIndexReader;
 import net.osmand.data.Amenity;
 import net.osmand.data.FavouritePoint;
 import net.osmand.data.LatLon;
@@ -85,6 +84,7 @@ import net.osmand.data.MapObject;
 import net.osmand.data.PointDescription;
 import net.osmand.data.RotatedTileBox;
 import net.osmand.map.OsmandRegions;
+import net.osmand.map.WorldRegion;
 import net.osmand.osm.AbstractPoiType;
 import net.osmand.osm.MapPoiTypes;
 import net.osmand.osm.PoiType;
@@ -658,7 +658,7 @@ public class OsmWindow  implements IRouteInformationListener {
 
 					@Override
 					public void run() {
-						DownloadAction downloadAction = new DownloadAction(getInstance(), BinaryMapIndexReader.BASEMAP_NAME);
+						DownloadAction downloadAction = new DownloadAction(getInstance(), WorldRegion.WORLD_BASEMAP);
 						downloadAction.actionPerformed(null);
 					}
 				});

@@ -377,6 +377,14 @@ public class DownloadAction extends OffRoadAction {
 		}
 		if(mInitialFilter != null){
 			mTextField.setText(mInitialFilter);
+			// bad hack to select the first element after the filter has applied.
+			new Timer().schedule(new TimerTask() {
+				public void run() {
+					if (mTable.getRowCount() > 0) {
+						mTable.setRowSelectionInterval(0, 0);
+					}
+				}
+			}, FilterTextDocumentListener.TYPE_DELAY_TIME*2);
 		}
 		mDialog.pack();
 		decorateDialog();
@@ -523,7 +531,7 @@ public class DownloadAction extends OffRoadAction {
 
 	
 	public void selectFirstElementIfNecessary() {
-		if (mTable.getSelectedRowCount() == 0 && mTable.getModel().getRowCount() > 0) {
+		if (mTable.getSelectedRowCount() == 0 && mTable.getRowCount() > 0) {
 			mTable.setRowSelectionInterval(0, 0);
 		}
 	}
