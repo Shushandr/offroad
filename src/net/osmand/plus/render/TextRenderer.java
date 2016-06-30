@@ -4,6 +4,7 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
@@ -33,6 +34,7 @@ import net.sourceforge.offroad.TextStroke;
 import net.sourceforge.offroad.ui.ColorUtils;
 
 public class TextRenderer {
+	private static final int MINIMAL_DISTANCE_BETWEEN_SHIELDS_IN_PIXEL = 200;
 	private final static Log log = PlatformUtil.getLog(TextRenderer.class);
 
 
@@ -128,7 +130,7 @@ public class TextRenderer {
 			return QuadRect.intersects(tRect, sRect);
 		}
 		double dist = Math.sqrt(sqr(tRect.centerX() - sRect.centerX()) + sqr(tRect.centerY() - sRect.centerY()));
-		if (dist < 200) {
+		if (dist < MINIMAL_DISTANCE_BETWEEN_SHIELDS_IN_PIXEL) {
 			return true;
 		}
 
@@ -206,6 +208,7 @@ public class TextRenderer {
 
 	private void drawTextOnCanvas(Graphics2D pGraphics2d, String text, float centerX, float centerY, int shadowColor, float textShadow) {
 		Graphics2D newGraphics = (Graphics2D) pGraphics2d.create();
+		centerX -= newGraphics.getFontMetrics().stringWidth(text)/2;
 		if (textShadow > 0) {
 			Color c = newGraphics.getColor();
 //			paintText.setStyle(Style.STROKE);
@@ -300,6 +303,7 @@ public class TextRenderer {
 		if (sr != null) {
 			float coef = rc.getDensityValue(rc.screenDensityRatio * rc.textScale);
 			BufferedImage ico = RenderingIcons.getIcon(sr, true);
+			log.debug("Got shield icon " + sr + ":" + ico.getWidth()+"x" + ico.getHeight());
 			if (ico != null) {
 				float left = text.centerX - ico.getWidth() / 2 * coef - 0.5f;
 				float top = text.centerY - ico.getHeight() / 2 * coef - pGraphics2d.getFontMetrics().getDescent() - 0.5f;
@@ -384,10 +388,23 @@ public class TextRenderer {
 
 				}
 //				paintText.setTextSize(text.textSize);
-				FontMetrics metr = pGraphics2d.getFontMetrics();
+				Graphics2D newGraphics = (Graphics2D) pGraphics2d.create();
+				float textSize = text.textSize * rc.textScale;
+				int fontStyle = 0;
+				if(text.bold && text.italic) {
+					fontStyle = Font.BOLD | Font.ITALIC;
+				} else if(text.bold) {
+					fontStyle = Font.BOLD;
+				} else if(text.italic) {
+					fontStyle = Font.ITALIC;
+				} else {
+					fontStyle = Font.PLAIN;
+				}
+				Font textFont = newGraphics.getFont().deriveFont(fontStyle, textSize);
+				newGraphics.setFont(textFont);
+				FontMetrics metr = newGraphics.getFontMetrics();
 				int stringWidth = metr.stringWidth(name);
 				int stringHeight = metr.getHeight();
-//				paintText.getTextBounds(name, 0, name.length(), bs);
 				text.bounds = new QuadRect(0, 0, stringWidth, stringHeight);
 				text.bounds.inset(-rc.getDensityValue(3), -rc.getDensityValue(10));
 				boolean display = true;

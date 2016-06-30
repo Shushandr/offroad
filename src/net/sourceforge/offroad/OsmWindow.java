@@ -155,6 +155,7 @@ import net.sourceforge.offroad.res.Resources;
 import net.sourceforge.offroad.ui.AmenityTablePanel;
 import net.sourceforge.offroad.ui.AmenityTableUpdateThread;
 import net.sourceforge.offroad.ui.BlindIcon;
+import net.sourceforge.offroad.ui.ChangeIconSizeAction;
 import net.sourceforge.offroad.ui.IContextMenuProvider;
 import net.sourceforge.offroad.ui.OffRoadPopupMenuListener;
 import net.sourceforge.offroad.ui.OsmBitmapPanel;
@@ -187,7 +188,7 @@ public class OsmWindow  implements IRouteInformationListener {
 	
 	public static final int MAX_ZOOM = 22;
 	public static final String RENDERING_STYLES_DIR = "rendering_styles/"; //$NON-NLS-1$
-	public static final String OSMAND_ICONS_DIR = RENDERING_STYLES_DIR + "style-icons/drawable-xxhdpi/"; //$NON-NLS-1$
+	private static final String OSMAND_ICONS_DIR = RENDERING_STYLES_DIR + "style-icons/drawable-"; //$NON-NLS-1$
 	public static final String IMAGE_PATH = "drawable-xhdpi/"; //$NON-NLS-1$
 	public static final String PROXY_PORT = "proxy.port";
 	public static final String PROXY_HOST = "proxy.host";
@@ -196,18 +197,14 @@ public class OsmWindow  implements IRouteInformationListener {
 	public static final String PROXY_IS_AUTHENTICATED = "proxy.is_authenticated";
 	public static final String PROXY_USE_SETTINGS = "proxy.use_settings";
 	public static final String PROXY_EXCEPTION = "proxy.exception";
-
-
 	private static final String OFFROAD_PROPERTIES = "offroad";
-
-
 	public static final int MIN_ZOOM = 1;
-
-
 	private static final String MODE_WORLD_WRITEABLE = "mode_world_writeable";
-
-
 	private static final String VECTOR_INDEXES_CHECK = "vector_indexes_check";
+	public static final String OSMAND_ICONS_DIR_PREFIX = "osmand_icons_dir_prefix";
+	public static final String OSMAND_ICONS_DIR_DEFAULT_PREFIX = "hdpi";
+	private static final String[] sOsmandIconsPrefixes = new String[]{"mdpi", OSMAND_ICONS_DIR_DEFAULT_PREFIX, "xhdpi", "xxhdpi"};
+
 	private static OsmWindow sInstance = null;
 	private ResourceManager mResourceManager;
 	private OffRoadSettings settings = new OffRoadSettings(this);
@@ -495,6 +492,13 @@ public class OsmWindow  implements IRouteInformationListener {
 			}
 		}
 		jViewMenu.add(jRenderPropertiesMenu);
+		JMenu jIconSizePropertiesMenu = new JMenu(getOffRoadString("offroad.icons_size_menu"));
+		for (int i = 0; i < sOsmandIconsPrefixes.length; i++) {
+			String prefix = sOsmandIconsPrefixes[i];
+			JMenuItem item = new OffRoadMenuItem(new ChangeIconSizeAction(this, prefix), jIconSizePropertiesMenu);
+			jIconSizePropertiesMenu.add(item);
+		}
+		jViewMenu.add(jIconSizePropertiesMenu);
 		menubar.add(jViewMenu);
 		// Navigation
 		JMenu jNavigationMenu = new JMenu(getOffRoadString("offroad.navigation")); //$NON-NLS-1$
@@ -1672,6 +1676,9 @@ public class OsmWindow  implements IRouteInformationListener {
 	}
 
 
+	public String getOsmandIconsDir(){
+		return OSMAND_ICONS_DIR + getOffroadProperties().getProperty(OSMAND_ICONS_DIR_PREFIX, OSMAND_ICONS_DIR_DEFAULT_PREFIX) + "/";
+	}
 
 }
 

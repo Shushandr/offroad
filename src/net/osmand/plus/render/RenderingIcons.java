@@ -135,10 +135,13 @@ public class RenderingIcons {
 	static URL sJarResource; 
 	
 	public static void initIcons() {
+		iconsBmp.clear();
 		try {
 			Enumeration<URL> en;
-			en = OsmWindow.getInstance().getClass().getClassLoader()
-					.getResources(OsmWindow.OSMAND_ICONS_DIR);
+			OsmWindow context = OsmWindow.getInstance();
+			String osmandIconsDir = context.getOsmandIconsDir();
+			en = context.getClass().getClassLoader()
+					.getResources(osmandIconsDir);
 			System.out.println("icon resources present: " + en.hasMoreElements());
 			while (en.hasMoreElements()) {
 				URL resource = en.nextElement();
@@ -151,11 +154,11 @@ public class RenderingIcons {
 						while (entries.hasMoreElements()) {
 							JarEntry jarEntry = entries.nextElement();
 							String entry = jarEntry.getName();
-							if (!entry.startsWith(OsmWindow.OSMAND_ICONS_DIR)) {
+							if (!entry.startsWith(osmandIconsDir)) {
 								continue;
 							}
 							sJarResource = resource;
-							String f = entry.toString().substring(OsmWindow.OSMAND_ICONS_DIR.length())
+							String f = entry.toString().substring(osmandIconsDir.length())
 									.replaceFirst("\\.png", "");
 							if (f.startsWith("h_")) {
 								shaderIcons.put(f.substring(2), jarEntry);

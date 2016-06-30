@@ -180,17 +180,10 @@ public class RouteLayer extends OsmandMapLayer {
 			updatePaints(canvas, settings, tileBox);
 			if(coloredArrowUp == null) {
 				BufferedImage originalArrowUp;
-				try {
-					InputStream is = view.getContext().getResource(OsmWindow.OSMAND_ICONS_DIR + "h_arrow.png");
-					if (is != null) {
-						originalArrowUp = ImageIO.read(is);
-						coloredArrowUp = originalArrowUp;
-						//				coloredArrowUp = BufferedImage.createScaledBitmap(originalArrowUp, originalArrowUp.getWidth() * 3 / 4,	
-						//						originalArrowUp.getHeight() * 3 / 4, true);
-					}
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				originalArrowUp = view.getContext().readImage("arrow");
+				coloredArrowUp = originalArrowUp;
+				//				coloredArrowUp = BufferedImage.createScaledBitmap(originalArrowUp, originalArrowUp.getWidth() * 3 / 4,	
+				//						originalArrowUp.getHeight() * 3 / 4, true);
 			}
 			int w = tileBox.getPixWidth();
 			int h = tileBox.getPixHeight();

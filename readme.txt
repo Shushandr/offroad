@@ -32,6 +32,7 @@ Version History:
 ============
 * If the worldmap is missing, a dialog is displayed.
 * Download dialog has a download button, now.
+* Icon size is changeable now.
 
 
 0_1-Beta2:
