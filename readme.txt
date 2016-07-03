@@ -33,7 +33,7 @@ Version History:
 * If the worldmap is missing, a dialog is displayed.
 * Download dialog has a download button, now.
 * Icon size is changeable now.
-
+* Camera move for jumps to locations added
 
 0_1-Beta2:
 ============

@@ -24,6 +24,7 @@ import net.osmand.data.QuadRect;
 import net.osmand.data.RotatedTileBox;
 import net.osmand.plus.render.OsmandRenderer;
 import net.osmand.plus.render.OsmandRenderer.RenderingContext;
+import net.osmand.plus.render.RenderingIcons;
 import net.osmand.plus.routing.RouteDirectionInfo;
 import net.osmand.plus.routing.RoutingHelper;
 import net.osmand.render.RenderingRuleSearchRequest;
@@ -180,7 +181,7 @@ public class RouteLayer extends OsmandMapLayer {
 			updatePaints(canvas, settings, tileBox);
 			if(coloredArrowUp == null) {
 				BufferedImage originalArrowUp;
-				originalArrowUp = view.getContext().readImage("arrow");
+				originalArrowUp = RenderingIcons.getIcon("arrow", true);
 				coloredArrowUp = originalArrowUp;
 				//				coloredArrowUp = BufferedImage.createScaledBitmap(originalArrowUp, originalArrowUp.getWidth() * 3 / 4,	
 				//						originalArrowUp.getHeight() * 3 / 4, true);
