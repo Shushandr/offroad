@@ -28,6 +28,9 @@ An offline map viewer based on OsmAnd.
 
 Version History:
 
+0_1-Beta4:
+============
+
 0_1-Beta3:
 ============
 * If the worldmap is missing, a dialog is displayed.

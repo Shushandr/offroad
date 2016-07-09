@@ -108,6 +108,7 @@ import net.osmand.plus.inapp.util.Base64DecoderException;
 import net.osmand.plus.poi.PoiFiltersHelper;
 import net.osmand.plus.poi.PoiUIFilter;
 import net.osmand.plus.render.MapRenderRepositories;
+import net.osmand.plus.render.OsmandRenderer.RenderingResult;
 import net.osmand.plus.render.RendererRegistry;
 import net.osmand.plus.render.RenderingIcons;
 import net.osmand.plus.resources.ResourceManager;
@@ -129,6 +130,7 @@ import net.sourceforge.offroad.actions.ChooseRendererAction;
 import net.sourceforge.offroad.actions.ChooseRouteServiceAction;
 import net.sourceforge.offroad.actions.ClearRouteAction;
 import net.sourceforge.offroad.actions.CopyLocationToClipboardAction;
+import net.sourceforge.offroad.actions.DirectSearchAction;
 import net.sourceforge.offroad.actions.DownloadAction;
 import net.sourceforge.offroad.actions.GpxImportAction;
 import net.sourceforge.offroad.actions.NavigationBackAction;
@@ -287,9 +289,17 @@ public class OsmWindow  implements IRouteInformationListener {
 	private JMenuItem mSelectTrack;
 
 
-	private HashMap<String, BufferedImage> mBufferedImageCache = new HashMap<>(); 
+	private HashMap<String, BufferedImage> mBufferedImageCache = new HashMap<>();
+
+
+	private JTextField mDirectSearchTextField;
+
+
+	public DirectSearchAction mDirectSearchAction; 
 	
 	public void createAndShowUI() {
+		mDirectSearchTextField = new JTextField("Direct Search Text");
+		mDirectSearchAction = new DirectSearchAction(this, mDirectSearchTextField);
 		mDrawPanel = new OsmBitmapPanel(this);
 		mAdapter = new OsmBitmapPanelMouseAdapter(mDrawPanel);
 		mDrawPanel.addMouseListener(mAdapter);
@@ -305,9 +315,11 @@ public class OsmWindow  implements IRouteInformationListener {
 		mRouteProgressStatus = new JLabel("!");
 		mStatusBar=new JPanel();
 		mStatusBar.setLayout(new GridBagLayout());
-		mStatusBar.add(mStatusLabel, new GridBagConstraints(0, 0, 1, 1, 3, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
-		mStatusBar.add(mRouteProgressStatus, new GridBagConstraints(1, 0, 1, 1, 0, 1, GridBagConstraints.EAST, GridBagConstraints.VERTICAL, new Insets(0, 0, 0, 0), 0, 0));
-		mStatusBar.add(mRouteProgressBar, new GridBagConstraints(2, 0, 1, 1, 1, 1, GridBagConstraints.EAST, GridBagConstraints.VERTICAL, new Insets(0, 0, 0, 0), 0, 0));
+		int x = 0;
+		mStatusBar.add(mStatusLabel, new GridBagConstraints(x++, 0, 1, 1, 1, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+		mStatusBar.add(mDirectSearchTextField, new GridBagConstraints(x++, 0, 1, 1, 1, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+		mStatusBar.add(mRouteProgressStatus, new GridBagConstraints(x++, 0, 1, 1, 0, 1, GridBagConstraints.EAST, GridBagConstraints.VERTICAL, new Insets(0, 0, 0, 0), 0, 0));
+		mStatusBar.add(mRouteProgressBar, new GridBagConstraints(x++, 0, 1, 1, 1, 1, GridBagConstraints.EAST, GridBagConstraints.VERTICAL, new Insets(0, 0, 0, 0), 0, 0));
 		
 
 		mMouseMoveTimer = new Timer(500, new StatusLabelAction() );
@@ -941,8 +953,8 @@ public class OsmWindow  implements IRouteInformationListener {
 	}
 
 
-	public void loadMGap(Graphics2D pG2, RotatedTileBox pTileRect) {
-		getRenderer().loadMGap(pG2, pTileRect, getRenderingRulesStorage());
+	public RenderingResult loadMGap(Graphics2D pG2, RotatedTileBox pTileRect) {
+		return getRenderer().loadMGap(pG2, pTileRect, getRenderingRulesStorage());
 	}
 
 	public MapRenderRepositories getRenderer() {

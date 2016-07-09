@@ -39,20 +39,21 @@ import net.osmand.data.QuadPoint;
 import net.osmand.data.RotatedTileBox;
 import net.osmand.data.RotatedTileBox.RotatedTileBoxBuilder;
 import net.osmand.plus.OsmandSettings;
+import net.osmand.plus.render.OsmandRenderer.RenderingResult;
 import net.osmand.plus.views.FavoritesLayer;
 import net.osmand.plus.views.GPXLayer;
 import net.osmand.plus.views.MapControlsLayer;
 import net.osmand.plus.views.MapInfoLayer;
 import net.osmand.plus.views.MapTextLayer;
 import net.osmand.plus.views.OsmandMapLayer;
+import net.osmand.plus.views.OsmandMapLayer.DrawSettings;
 import net.osmand.plus.views.POIMapLayer;
 import net.osmand.plus.views.PointNavigationLayer;
 import net.osmand.plus.views.RouteLayer;
-import net.osmand.plus.views.OsmandMapLayer.DrawSettings;
 import net.sourceforge.offroad.OsmWindow;
-import net.sourceforge.offroad.data.Pair;
 import net.sourceforge.offroad.res.OffRoadResources;
 import net.sourceforge.offroad.ui.OffRoadUIThread.OffRoadUIThreadListener;
+import net.sourceforge.offroad.ui.OsmBitmapPanel.CalculateUnzoomedPicturesAction.ImageStorage;
 
 @SuppressWarnings("serial")
 public class OsmBitmapPanel extends JPanel {
@@ -75,6 +76,7 @@ public class OsmBitmapPanel extends JPanel {
 	private InactivityListener mInactivityListener;
 	private CalculateUnzoomedPicturesAction mUnzoomedPicturesAction;
 	private RoundButton mCompassButton;
+	private List<ImageStorage> mEffectivelyDrawnImages = new ArrayList<>();
 
 	private int mZoomCounter;
 
@@ -114,6 +116,10 @@ public class OsmBitmapPanel extends JPanel {
 		addLayer(new MapInfoLayer(this, routeLayer), 8);
 		mCompassButton = new RoundButton();
 		addLayer(new MapControlsLayer(this), 9);
+		DirectSearchLayer directSearchLayer = new DirectSearchLayer();
+		// combine the action with the layer
+		mContext.mDirectSearchAction.registerDirectSearchReceiver(directSearchLayer);
+		addLayer(directSearchLayer, 10);
 		
 		for (OsmandMapLayer layer : layers) {
 			layer.initLayer(this);
@@ -137,6 +143,19 @@ public class OsmBitmapPanel extends JPanel {
 		mInactivityListener.start();
 	}
 
+	
+	public List<ImageStorage> getEffectivelyDrawnImages(){
+		synchronized (mEffectivelyDrawnImages) {
+			return new ArrayList<ImageStorage>(mEffectivelyDrawnImages);
+		}
+	}
+	
+	public void setEffectivelyDrawnImages(List<ImageStorage> pList){
+		synchronized (mEffectivelyDrawnImages) {
+			mEffectivelyDrawnImages.clear();
+			mEffectivelyDrawnImages.addAll(pList);
+		}
+	}
 
 	public float getScaleCoefficient() {
 		float scaleCoefficient = getDensity();
@@ -164,6 +183,7 @@ public class OsmBitmapPanel extends JPanel {
 	@Override
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
+		ArrayList<ImageStorage> effectivelyDrawn = new ArrayList<>();
 		Graphics2D gd2 = (Graphics2D) g;
 		Graphics2D g2 = createGraphics(gd2);
 		// check for cached picture of bigger size to lay under:
@@ -173,10 +193,10 @@ public class OsmBitmapPanel extends JPanel {
 		int upperBound = ctb.getZoom();
 		boolean imageFound=false;
 		for(int biggerZoom = OsmWindow.MIN_ZOOM; biggerZoom <= OsmWindow.MAX_ZOOM; ++biggerZoom){
-			List<Entry<RotatedTileBox,BufferedImage>> tblist = mUnzoomedPicturesAction.getTileBoxesForZoom(biggerZoom);
+			List<ImageStorage> tblist = mUnzoomedPicturesAction.getTileBoxesForZoom(biggerZoom);
 			// check for each, if the current image is contained
-			for (Entry<RotatedTileBox, BufferedImage> tblistEntry : tblist) {
-				RotatedTileBox rtb = tblistEntry.getKey();
+			for (ImageStorage tblistEntry : tblist) {
+				RotatedTileBox rtb = tblistEntry.mTileBox;
 				if ((rtb.intersects(screenLT, screenRB))) {
 					// draw this under it:
 					LatLon rtbLT = rtb.getLeftTopLatLon();
@@ -191,8 +211,9 @@ public class OsmBitmapPanel extends JPanel {
 					double y1 = ctb.getPixYFromLatLon(rtbLT.getLatitude(), rtbLT.getLongitude());
 					double x2 = ctb.getPixXFromLatLon(rtbRB.getLatitude(), rtbRB.getLongitude());
 					double y2=  ctb.getPixYFromLatLon(rtbRB.getLatitude(), rtbRB.getLongitude());
-					BufferedImage image = tblistEntry.getValue();
+					BufferedImage image = tblistEntry.mImage;
 					if(image != null){
+						effectivelyDrawn.add(tblistEntry);
 						double thetaR = Math.toRadians(theta);
 						g2.rotate(thetaR, xc, yc);
 						g2.drawImage(image, (int)x1, (int)y1, (int)x2, (int)y2, 0,0, image.getWidth(), image.getHeight(), null);
@@ -207,6 +228,7 @@ public class OsmBitmapPanel extends JPanel {
 				break;
 			}
 		}
+		setEffectivelyDrawnImages(effectivelyDrawn);
 //		if(mLayerImage != null && mLayerImageTileBox.equals(ctb)){
 //			g2.drawImage(mLayerImage, 0, 0, null);
 //		}
@@ -243,20 +265,21 @@ public class OsmBitmapPanel extends JPanel {
 		return bigger.containsLatLon(smaller.getLeftTopLatLon()) && bigger.containsLatLon(smaller.getRightBottomLatLon());
 	}
 
-	void setImage(BufferedImage pImage, RotatedTileBox pGenerationTileBox) {
+	void setImage(BufferedImage pImage, RotatedTileBox pGenerationTileBox, RenderingResult pResult) {
 		if(pImage != null){
-			mUnzoomedPicturesAction.addToCache(pGenerationTileBox, pImage);
+			mUnzoomedPicturesAction.addToCache(pGenerationTileBox, pImage, pResult);
 			repaint();
 		}
 	}
 
-	private void drawImage(BufferedImage pImage, RotatedTileBox pTileBox) {
+	RenderingResult drawImage(BufferedImage pImage, RotatedTileBox pTileBox) {
 		clear(pImage);
 		Graphics2D graphics = pImage.createGraphics();
 		Graphics2D g2 = createGraphics(graphics);
-		mContext.loadMGap(g2, pTileBox);
+		RenderingResult result = mContext.loadMGap(g2, pTileBox);
 		g2.dispose();
 		graphics.dispose();
+		return result;
 	}
 
 	public Graphics2D createGraphics(Graphics2D graphics) {
@@ -368,12 +391,6 @@ public class OsmBitmapPanel extends JPanel {
 		MoveAnimationThread animationThread = new MoveAnimationThread(this, pDeltaX, pDeltaY);
 		queue(animationThread);
 		queue(new GenerationThread(this, tileBox));
-	}
-
-	public BufferedImage newBitmap(RotatedTileBox pTileBox) {
-		BufferedImage image = createImage();
-		drawImage(image, pTileBox);
-		return image;
 	}
 
 	public BufferedImage createImage() {
@@ -570,10 +587,23 @@ public class OsmBitmapPanel extends JPanel {
 	}
 
 	public class CalculateUnzoomedPicturesAction extends AbstractAction {
+		
+		public class ImageStorage {
+			public BufferedImage mImage;
+			public RotatedTileBox mTileBox;
+			public RenderingResult mResult;
+			public ImageStorage(BufferedImage pImage, RotatedTileBox pTileBox, RenderingResult pResult) {
+				super();
+				mImage = pImage;
+				mTileBox = pTileBox;
+				mResult = pResult;
+			}
+		}
 
 		private RotatedTileBoxCalculationOrder mTileOrder;
-		private LinkedHashMap<RotatedTileBox, BufferedImage> mImageStore = new LinkedHashMap<RotatedTileBox, BufferedImage>(){
-			protected boolean removeEldestEntry(Map.Entry eldest) {
+		private LinkedHashMap<RotatedTileBox, ImageStorage> mImageStore = new LinkedHashMap<RotatedTileBox, ImageStorage>(){
+			@Override
+			protected boolean removeEldestEntry(Map.Entry<RotatedTileBox, ImageStorage> eldest) {
 		        return size() > 2 * mTileOrder.getSize();
 		     }
 		};
@@ -582,22 +612,16 @@ public class OsmBitmapPanel extends JPanel {
 			mTileOrder = new RotatedTileBoxCalculationOrder();
 		}
 
-		public BufferedImage getImage(RotatedTileBox pRtb) {
+		public List<ImageStorage> getTileBoxesForZoom(int pZoom) {
 			synchronized (mImageStore) {
-				return mImageStore.get(pRtb);
-			}
-		}
-
-		public List<Entry<RotatedTileBox, BufferedImage>> getTileBoxesForZoom(int pZoom) {
-			synchronized (mImageStore) {
-				ArrayList<Entry<RotatedTileBox, BufferedImage>> ret = new ArrayList<>();
-				for (Entry<RotatedTileBox, BufferedImage> rtb : mImageStore.entrySet()) {
+				ArrayList<ImageStorage> ret = new ArrayList<>();
+				for (Entry<RotatedTileBox, ImageStorage> rtb : mImageStore.entrySet()) {
 					if (rtb.getKey().getZoom() == pZoom) {
-						ret.add(rtb);
+						ret.add(rtb.getValue());
 					}
 				}
 				if(mLayerImageTileBox!= null && pZoom == mLayerImageTileBox.getZoom()){
-					ret.add(new Pair<RotatedTileBox, BufferedImage>(mLayerImageTileBox, mLayerImage));
+					ret.add(new ImageStorage(mLayerImage, mLayerImageTileBox, new RenderingResult()));
 				}
 				return ret;
 			}
@@ -621,16 +645,16 @@ public class OsmBitmapPanel extends JPanel {
 					@Override
 					public void runAfterThreadsBeforeHaveFinished() {
 						// instead of setting this, we store it:
-						addToCache(mTileCopy, mNewBitmap);
+						addToCache(mTileCopy, mNewBitmap, mResult);
 					}
 				});
 			}
 		}
 		
-		public void addToCache(RotatedTileBox pTileBox, BufferedImage pBitmap){
+		public void addToCache(RotatedTileBox pTileBox, BufferedImage pBitmap, RenderingResult pResult){
 			synchronized (mImageStore) {
 				log.debug("Adding  " + pTileBox + " to the cache.");
-				mImageStore.put(pTileBox, pBitmap);
+				mImageStore.put(pTileBox, new ImageStorage(pBitmap, pTileBox, pResult));
 			}
 			
 		}

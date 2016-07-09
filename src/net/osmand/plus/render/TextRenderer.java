@@ -4,7 +4,6 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
@@ -13,7 +12,6 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -26,6 +24,7 @@ import net.osmand.binary.BinaryMapIndexReader.TagValuePair;
 import net.osmand.data.QuadRect;
 import net.osmand.data.QuadTree;
 import net.osmand.plus.render.OsmandRenderer.RenderingContext;
+import net.osmand.plus.render.OsmandRenderer.TextInfo;
 import net.osmand.render.RenderingRuleSearchRequest;
 import net.osmand.render.RenderingRulesStorage;
 import net.osmand.util.Algorithms;
@@ -416,11 +415,15 @@ public class TextRenderer {
 				if(text.drawOnPath == null) {
 					text.bounds.offset(text.centerX, text.centerY);
 					// shift to match alignment
-					text.bounds.offset(-text.bounds.width()/2, 0);
+					text.bounds.offset(-text.bounds.width()/2, - text.bounds.height()/2);
 				} else {
 					text.bounds.offset(text.centerX - text.bounds.width()/2, text.centerY - text.bounds.height()/2);
 				}
 				if(display) {
+					TextInfo info = new TextInfo();
+					info.mText = text.text;
+					info.path = (text.drawOnPath!=null)?new Path2D.Double(text.drawOnPath):text.bounds.toPath2D();
+					rc.result.effectiveTextObjects.add(info);
 					rc.textToDraw.add(text);
 				}
 			}

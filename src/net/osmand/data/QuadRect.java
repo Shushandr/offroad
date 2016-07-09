@@ -1,5 +1,8 @@
 package net.osmand.data;
 
+import java.awt.geom.Path2D;
+import java.awt.geom.Path2D.Double;
+
 public class QuadRect {
 	public double left;
 	public double right;
@@ -67,6 +70,16 @@ public class QuadRect {
 	@Override
 	public String toString() {
 		return "QuadRect [left=" + left + ", right=" + right + ", top=" + top + ", bottom=" + bottom + "]";
+	}
+	
+	public Path2D toPath2D(){
+		Double ret = new Path2D.Double();
+		ret.moveTo(left, top);
+		ret.lineTo(left, bottom);
+		ret.lineTo(right, bottom);
+		ret.lineTo(right, top);
+		ret.lineTo(left, top);
+		return ret;
 	}
 
 }

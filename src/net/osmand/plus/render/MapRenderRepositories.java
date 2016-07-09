@@ -41,6 +41,7 @@ import net.osmand.data.RotatedTileBox;
 import net.osmand.plus.OsmandSettings;
 import net.osmand.plus.OsmandSettings.CommonPreference;
 import net.osmand.plus.render.OsmandRenderer.RenderingContext;
+import net.osmand.plus.render.OsmandRenderer.RenderingResult;
 import net.osmand.render.RenderingRuleProperty;
 import net.osmand.render.RenderingRuleSearchRequest;
 import net.osmand.render.RenderingRuleStorageProperties;
@@ -535,9 +536,10 @@ public class MapRenderRepositories {
 
 	
 
-	public synchronized void loadMGap(Graphics2D pGraphics2d, RotatedTileBox tileRect, RenderingRulesStorage storage) {
+	public synchronized RenderingResult loadMGap(Graphics2D pGraphics2d, RotatedTileBox tileRect, RenderingRulesStorage storage) {
 		boolean prevInterrupted = interrupted;
 		interrupted = false;
+		RenderingResult result = null;
 		// prevent editing
 		requestedBox = new RotatedTileBox(tileRect);
 		log.debug("RENDER MAP: new request " + tileRect ); 
@@ -613,7 +615,7 @@ public class MapRenderRepositories {
 				loaded = loadVectorData(dataBox, requestedBox.getZoom(), renderingReq);
 					
 				if (!loaded || checkWhetherInterrupted()) {
-					return;
+					return null;
 				}
 			}
 			final long searchTime = System.currentTimeMillis() - now;
@@ -665,7 +667,7 @@ public class MapRenderRepositories {
 			// init rendering context
 			currentRenderingContext.tileDivisor = tileDivisor;
 			if (checkWhetherInterrupted()) {
-				return;
+				return null;
 			}
 
 			now = System.currentTimeMillis();
@@ -684,6 +686,7 @@ public class MapRenderRepositories {
 				log.debug("Debug :" + renderingReq != null);				
 			}
 			String renderingDebugInfo = currentRenderingContext.renderingDebugInfo;
+			result = currentRenderingContext.result;
 			currentRenderingContext.ended = true;
 			if (checkWhetherInterrupted()) {
 				// revert if it was interrupted 
@@ -693,7 +696,7 @@ public class MapRenderRepositories {
 					this.prevBmpLocation = null;
 				}
 				currentRenderingContext = null;
-				return;
+				return null;
 			} else {
 				this.checkedRenderedState = renderedState;
 				this.checkedBox = this.bmpLocation;
@@ -715,7 +718,7 @@ public class MapRenderRepositories {
 				currentRenderingContext.ended = true;
 			}
 		}
-
+		return result;
 	}
 
 	public synchronized void clearCache() {

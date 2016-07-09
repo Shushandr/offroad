@@ -163,6 +163,7 @@ hash=${hash}
 		</echo>
 		<exec command="scp">
 			<arg value="-r" />
+			<arg value="-v" />
 			<arg value="${post}/${ver}" />
 			<arg value="christianfoltin,offroadosm@frs.sourceforge.net:/home/frs/project/o/of/offroadosm/OffRoad_Unstable/." />
 		</exec>

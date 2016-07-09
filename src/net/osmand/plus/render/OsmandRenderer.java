@@ -77,13 +77,20 @@ public class OsmandRenderer {
 		float iconSize;
 	}
 	
+	public static class TextInfo {
+		public String mText;
+		public Path2D path;
+	}
 	
-	
+	public static class RenderingResult {
+		public List<TextInfo> effectiveTextObjects = new ArrayList<TextInfo>();
+	}
 
 	/* package */
 	public static class RenderingContext extends net.osmand.RenderingContext {
 		List<TextDrawInfo> textToDraw = new ArrayList<TextDrawInfo>();
 		List<IconDrawInfo> iconsToDraw = new ArrayList<IconDrawInfo>();
+		RenderingResult result = new RenderingResult();
 		Stroke[] oneWay ;
 		Stroke[] reverseOneWay ;
 
