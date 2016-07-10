@@ -60,6 +60,7 @@ hash=${hash}
 				<include name="kxml2-2.3.0.jar"/>
 				<include name="bzip2.jar"/>
 				<include name="sqlite-jdbc-3.8.11.2.jar"/>
+				<include name="commons-lang3-3.4.jar"/>
 			</fileset>
 		</copy>
 		<tempfile prefix="manifest" property="temp.manifest.file"/>
@@ -80,7 +81,7 @@ hash=${hash}
 			<attribute name="Built-Number" value="${ver}" />
 			<attribute name="Created-By" value="OsmAnd team and Christian Foltin" />
 			<attribute name="Main-Class" value="${start.class}" />
-			<!--			<attribute name="Class-Path" value="OffRoad.jar . lib/commons-logging-1.1.1.jar lib/gnu-trove-osmand.jar lib/junidecode-0.1.jar lib/kxml2-2.3.0.jar lib/Resources.jar"/> -->
+			<!--			<attribute name="Class-Path" value="OffRoad.jar . lib/commons-logging-1.1.1.jar lib/gnu-trove-osmand.jar lib/junidecode-0.1.jar lib/kxml2-2.3.0.jar lib/Resources.jar lib/commons-lang3-3.4.jar"/> -->
 			<attribute name="Class-Path" value="${lib.list}"/>
 		</manifest>
 		<exec command="cat">

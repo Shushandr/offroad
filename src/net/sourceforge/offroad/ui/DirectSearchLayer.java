@@ -27,6 +27,7 @@ import java.awt.geom.Path2D;
 import java.util.HashMap;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 
 import net.osmand.PlatformUtil;
@@ -94,14 +95,6 @@ public class DirectSearchLayer extends OsmandMapLayer implements DirectSearchRec
 				continue;
 			Graphics2D g2 = mView.createGraphics(pCanvas);
 			highlightYellow.updateGraphics(g2);
-			// g2.fill(info.path);
-			// g2.setColor(Color.black);
-			// g2.draw(info.path);
-			// Rectangle b = info.path.getBounds();
-			// log.info("Drawing in rect " + b + " in tile box " + ctb);
-			//// g2.setColor(Color.blue);
-			//// g2.fillRect(b.x, b.y, b.width, b.height);
-			// g2.dispose();
 			LatLon rtbLT = rtb.getLeftTopLatLon();
 			LatLon rtbRB = rtb.getRightBottomLatLon();
 			LatLon clalo = rtb.getCenterLatLon();
@@ -119,15 +112,11 @@ public class DirectSearchLayer extends OsmandMapLayer implements DirectSearchRec
 			AffineTransform t = new AffineTransform();
 			double sx = (x2 - x1) / imageStorage.mImage.getWidth();
 			double sy = (y2 - y1) / imageStorage.mImage.getHeight();
-//					log.info("Rotate: " + theta + " around " + xc + ", " + yc + ", Translate: -" + x1 + ",-" + y1
-//							+ ", scaling: " + sx + "," + sy + " belonging to zoom " + rtb.getZoom() + ", currently "
-//							+ ctb.getZoom());
 			t.translate(x1, y1);
 			t.scale(sx, sy);
 			g2.transform(t);
 			for (TextInfo to : imageStorage.mResult.effectiveTextObjects) {
-				if (to.mText != null && to.mText.toLowerCase().contains(mToSearch)) {
-//					log.info("Found search text " + mToSearch + " here: " + to.mText);
+				if (to.mText != null && findText(to)) {
 					index++;
 					if (index > 10000) {
 						log.warn("Too many search results found. Rest skipped");
@@ -141,6 +130,11 @@ public class DirectSearchLayer extends OsmandMapLayer implements DirectSearchRec
 			g2.dispose();
 			ctb.setRotate(ctbRotate);
 		}
+	}
+
+	public boolean findText(TextInfo to) {
+		String orig = to.mText.toLowerCase();
+		return StringUtils.getLevenshteinDistance(orig, mToSearch, 3) >= 0 ;
 	}
 
 	/*

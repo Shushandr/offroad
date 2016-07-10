@@ -86,6 +86,7 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 		super(pContext);
 		mTextField = pTextField;
 		mTextField.getDocument().addDocumentListener(this);
+		// FIXME: Jump to the best hit!
 		mTextField.addActionListener(new ActionListener(){
 
 			@Override
