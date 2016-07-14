@@ -25,6 +25,7 @@ import java.awt.event.ActionListener;
 import java.awt.geom.PathIterator;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map.Entry;
 
 import javax.swing.JTextField;
@@ -32,6 +33,7 @@ import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 
 import net.osmand.PlatformUtil;
@@ -47,7 +49,71 @@ import net.sourceforge.offroad.ui.OsmBitmapPanel.CalculateUnzoomedPicturesAction
 public class DirectSearchAction extends OffRoadAction implements DocumentListener {
 
 	public interface DirectSearchReceiver {
-		void getResult(String pToSearch);
+		void getSearchProvider(SearchProvider pProvider);
+	}
+	
+	public interface SearchProvider {
+		String getSearchString();
+		boolean matches(String pCandidate);
+		/**
+		 * @return true, if a search can be performed with this input.
+		 */
+		boolean isValid();
+	}
+
+	
+	public class DefaultSearchProvider implements SearchProvider {
+
+		protected String mSearchString;
+
+		public DefaultSearchProvider() {
+			mSearchString = mTextField.getText();
+		}
+
+		@Override
+		public String getSearchString() {
+			return mSearchString;
+		}
+
+		@Override
+		public boolean matches(String pCandidate) {
+			return pCandidate.contains(getSearchString());
+		}
+
+		@Override
+		public boolean isValid() {
+			return mSearchString != null && mSearchString.length()>=3;
+		}
+		
+	}
+	
+	public class CaseInsensitiveSearchProvider extends DefaultSearchProvider {
+		
+
+		public CaseInsensitiveSearchProvider() {
+			mSearchString = mTextField.getText().toLowerCase();
+		}
+
+		@Override
+		public boolean matches(String pCandidate) {
+			return pCandidate.toLowerCase().contains(getSearchString());
+		}
+		
+	}
+	
+	public class FuzzySearchProvider extends DefaultSearchProvider {
+
+
+		public FuzzySearchProvider() {
+			super();
+		}
+
+		@Override
+		public boolean matches(String pCandidate) {
+			double dist = StringUtils.getJaroWinklerDistance(pCandidate.toLowerCase(), getSearchString().toLowerCase());
+			return dist >= 0.7f;
+		}
+		
 	}
 	
 	private List<DirectSearchReceiver> mDirectSearchReceiverList = new ArrayList<>();
@@ -70,6 +136,9 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 
 	private JTextField mTextField;
 
+
+	private FuzzySearchProvider mProvider;
+
 	private synchronized void change(DocumentEvent event) {
 		// stop old timer, if present:
 		if (mTypeDelayTimer != null) {
@@ -85,6 +154,7 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 	public DirectSearchAction(OsmWindow pContext, JTextField pTextField) {
 		super(pContext);
 		mTextField = pTextField;
+		mProvider = new FuzzySearchProvider();
 		mTextField.getDocument().addDocumentListener(this);
 		// FIXME: Jump to the best hit!
 		mTextField.addActionListener(new ActionListener(){
@@ -105,12 +175,11 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 	}
 
 	Entry<ImageStorage, TextInfo> getFirstHit(){
-		String toSearch = getToSearch();
-		if(toSearch.length()>=3){
+		if(mProvider.isValid()){
 			List<ImageStorage> list = mContext.getDrawPanel().getEffectivelyDrawnImages();
 			for (ImageStorage imageStorage : list) {
 				for (TextInfo to : imageStorage.mResult.effectiveTextObjects) {
-					if(to.mText != null && to.mText.toLowerCase().contains(toSearch)){
+					if(to.mText != null && mProvider.matches(to.mText)){
 						return new Pair<ImageStorage, TextInfo>(imageStorage, to);
 					}
 				}
@@ -119,23 +188,20 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 		return null;
 	}
 
-	public String getToSearch() {
-		return mTextField.getText().toLowerCase();
-	}
-	
 	/* (non-Javadoc)
 	 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
 	 */
 	@Override
 	public void actionPerformed(ActionEvent pE) {
-		if(getFirstHit() != null) {
+		mProvider = new FuzzySearchProvider();
+		if(!mProvider.isValid() || getFirstHit() != null) {
 			mTextField.setBackground(null);
 		} else {
 			mTextField.setBackground(Color.red);
 		}
 		// publish result to layer.
 		for (DirectSearchReceiver directSearchReceiver : mDirectSearchReceiverList) {
-			directSearchReceiver.getResult(getToSearch());
+			directSearchReceiver.getSearchProvider(mProvider);
 		}
 		mContext.getDrawPanel().drawLater();
 	}

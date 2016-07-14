@@ -19,15 +19,10 @@
 
 package net.sourceforge.offroad.ui;
 
-import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Path2D;
-import java.util.HashMap;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 
 import net.osmand.PlatformUtil;
@@ -37,6 +32,7 @@ import net.osmand.plus.render.OsmandRenderer.TextInfo;
 import net.osmand.plus.views.OsmandMapLayer;
 import net.sourceforge.offroad.R;
 import net.sourceforge.offroad.actions.DirectSearchAction.DirectSearchReceiver;
+import net.sourceforge.offroad.actions.DirectSearchAction.SearchProvider;
 import net.sourceforge.offroad.ui.OsmBitmapPanel.CalculateUnzoomedPicturesAction.ImageStorage;
 import net.sourceforge.offroad.ui.Paint.Style;
 
@@ -48,7 +44,7 @@ public class DirectSearchLayer extends OsmandMapLayer implements DirectSearchRec
 
 	private OsmBitmapPanel mView;
 	private Paint highlightYellow;
-	private String mToSearch;
+	private SearchProvider mProvider;
 	private final static Log log = PlatformUtil.getLog(DirectSearchLayer.class);
 
 	/**
@@ -84,7 +80,7 @@ public class DirectSearchLayer extends OsmandMapLayer implements DirectSearchRec
 	 */
 	@Override
 	public void onDraw(Graphics2D pCanvas, RotatedTileBox pTileBox, DrawSettings pSettings) {
-		if (mToSearch == null || mToSearch.length()<3)
+		if(mProvider == null || !mProvider.isValid())
 			return;
 		List<ImageStorage> list = mView.getEffectivelyDrawnImages();
 		int index = 0;
@@ -116,7 +112,7 @@ public class DirectSearchLayer extends OsmandMapLayer implements DirectSearchRec
 			t.scale(sx, sy);
 			g2.transform(t);
 			for (TextInfo to : imageStorage.mResult.effectiveTextObjects) {
-				if (to.mText != null && findText(to)) {
+				if (to.mText != null && mProvider.matches(to.mText)) {
 					index++;
 					if (index > 10000) {
 						log.warn("Too many search results found. Rest skipped");
@@ -130,11 +126,6 @@ public class DirectSearchLayer extends OsmandMapLayer implements DirectSearchRec
 			g2.dispose();
 			ctb.setRotate(ctbRotate);
 		}
-	}
-
-	public boolean findText(TextInfo to) {
-		String orig = to.mText.toLowerCase();
-		return StringUtils.getLevenshteinDistance(orig, mToSearch, 3) >= 0 ;
 	}
 
 	/*
@@ -157,8 +148,8 @@ public class DirectSearchLayer extends OsmandMapLayer implements DirectSearchRec
 	}
 
 	@Override
-	public void getResult(String pToSearch) {
-		mToSearch = pToSearch;
+	public void getSearchProvider(SearchProvider pProvider) {
+		mProvider = pProvider;
 	}
 
 }
