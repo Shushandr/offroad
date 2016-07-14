@@ -43,6 +43,8 @@ import javax.swing.AbstractButton;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -295,11 +297,19 @@ public class OsmWindow  implements IRouteInformationListener {
 	private JTextField mDirectSearchTextField;
 
 
-	public DirectSearchAction mDirectSearchAction; 
+	public DirectSearchAction mDirectSearchAction;
+
+
+	private JPanel mDirectSearchPanel;
+
+
+	private JCheckBox mDirectSearchFuzzy; 
 	
 	public void createAndShowUI() {
 		mDirectSearchTextField = new JTextField("Direct Search Text");
-		mDirectSearchAction = new DirectSearchAction(this, mDirectSearchTextField);
+		mDirectSearchFuzzy = new JCheckBox(getOffRoadString("offroad.fuzzy_search"));
+		mDirectSearchFuzzy.setFocusable(false);
+		mDirectSearchAction = new DirectSearchAction(this, mDirectSearchTextField, mDirectSearchFuzzy);
 		mDrawPanel = new OsmBitmapPanel(this);
 		mAdapter = new OsmBitmapPanelMouseAdapter(mDrawPanel);
 		mDrawPanel.addMouseListener(mAdapter);
@@ -313,11 +323,17 @@ public class OsmWindow  implements IRouteInformationListener {
 		mRouteProgressBar.setStringPainted(true);
 		mRouteProgressBar.setVisible(false);
 		mRouteProgressStatus = new JLabel("!");
+		mDirectSearchPanel = new JPanel();
+		mDirectSearchPanel.setLayout(new GridBagLayout());
+		int x = 0;
+		mDirectSearchPanel.add(mDirectSearchTextField, new GridBagConstraints(x++, 0, 1, 1, 1, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+		mDirectSearchPanel.add(mDirectSearchFuzzy, new GridBagConstraints(x++, 0, 1, 1, 0, 1, GridBagConstraints.WEST, GridBagConstraints.VERTICAL, new Insets(0, 0, 0, 0), 0, 0));
+		adaptMenuMnemonics(mDirectSearchPanel.getComponents());
 		mStatusBar=new JPanel();
 		mStatusBar.setLayout(new GridBagLayout());
-		int x = 0;
+		x = 0;
 		mStatusBar.add(mStatusLabel, new GridBagConstraints(x++, 0, 1, 1, 1, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
-		mStatusBar.add(mDirectSearchTextField, new GridBagConstraints(x++, 0, 1, 1, 1, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+		mStatusBar.add(mDirectSearchPanel, new GridBagConstraints(x++, 0, 1, 1, 1, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 		mStatusBar.add(mRouteProgressStatus, new GridBagConstraints(x++, 0, 1, 1, 0, 1, GridBagConstraints.EAST, GridBagConstraints.VERTICAL, new Insets(0, 0, 0, 0), 0, 0));
 		mStatusBar.add(mRouteProgressBar, new GridBagConstraints(x++, 0, 1, 1, 1, 1, GridBagConstraints.EAST, GridBagConstraints.VERTICAL, new Insets(0, 0, 0, 0), 0, 0));
 		

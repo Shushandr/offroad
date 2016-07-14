@@ -32,7 +32,7 @@ import net.osmand.plus.render.OsmandRenderer.TextInfo;
 import net.osmand.plus.views.OsmandMapLayer;
 import net.sourceforge.offroad.R;
 import net.sourceforge.offroad.actions.DirectSearchAction.DirectSearchReceiver;
-import net.sourceforge.offroad.actions.DirectSearchAction.SearchProvider;
+import net.sourceforge.offroad.actions.DirectSearchAction.ISearchProvider;
 import net.sourceforge.offroad.ui.OsmBitmapPanel.CalculateUnzoomedPicturesAction.ImageStorage;
 import net.sourceforge.offroad.ui.Paint.Style;
 
@@ -44,7 +44,7 @@ public class DirectSearchLayer extends OsmandMapLayer implements DirectSearchRec
 
 	private OsmBitmapPanel mView;
 	private Paint highlightYellow;
-	private SearchProvider mProvider;
+	private ISearchProvider mProvider;
 	private final static Log log = PlatformUtil.getLog(DirectSearchLayer.class);
 
 	/**
@@ -148,7 +148,7 @@ public class DirectSearchLayer extends OsmandMapLayer implements DirectSearchRec
 	}
 
 	@Override
-	public void getSearchProvider(SearchProvider pProvider) {
+	public void getSearchProvider(ISearchProvider pProvider) {
 		mProvider = pProvider;
 	}
 

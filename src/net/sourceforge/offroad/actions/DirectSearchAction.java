@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map.Entry;
 
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JTextField;
 import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
@@ -49,10 +51,10 @@ import net.sourceforge.offroad.ui.OsmBitmapPanel.CalculateUnzoomedPicturesAction
 public class DirectSearchAction extends OffRoadAction implements DocumentListener {
 
 	public interface DirectSearchReceiver {
-		void getSearchProvider(SearchProvider pProvider);
+		void getSearchProvider(ISearchProvider pProvider);
 	}
 	
-	public interface SearchProvider {
+	public interface ISearchProvider {
 		String getSearchString();
 		boolean matches(String pCandidate);
 		/**
@@ -62,7 +64,7 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 	}
 
 	
-	public class DefaultSearchProvider implements SearchProvider {
+	public class DefaultSearchProvider implements ISearchProvider {
 
 		protected String mSearchString;
 
@@ -137,7 +139,10 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 	private JTextField mTextField;
 
 
-	private FuzzySearchProvider mProvider;
+	private ISearchProvider mProvider;
+
+
+	private JCheckBox mDirectSearchFuzzy;
 
 	private synchronized void change(DocumentEvent event) {
 		// stop old timer, if present:
@@ -151,9 +156,11 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 	}
 
 
-	public DirectSearchAction(OsmWindow pContext, JTextField pTextField) {
+	public DirectSearchAction(OsmWindow pContext, JTextField pTextField, JCheckBox pDirectSearchFuzzy) {
 		super(pContext);
 		mTextField = pTextField;
+		mDirectSearchFuzzy = pDirectSearchFuzzy;
+		mDirectSearchFuzzy.addActionListener(this);
 		mProvider = new FuzzySearchProvider();
 		mTextField.getDocument().addDocumentListener(this);
 		// FIXME: Jump to the best hit!
@@ -193,7 +200,11 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 	 */
 	@Override
 	public void actionPerformed(ActionEvent pE) {
-		mProvider = new FuzzySearchProvider();
+		if(mDirectSearchFuzzy.isSelected()){
+			mProvider = new FuzzySearchProvider();
+		} else {
+			mProvider = new CaseInsensitiveSearchProvider();
+		}
 		if(!mProvider.isValid() || getFirstHit() != null) {
 			mTextField.setBackground(null);
 		} else {
@@ -204,6 +215,7 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 			directSearchReceiver.getSearchProvider(mProvider);
 		}
 		mContext.getDrawPanel().drawLater();
+		mTextField.requestFocusInWindow();
 	}
 
 	@Override
