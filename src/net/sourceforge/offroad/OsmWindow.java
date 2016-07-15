@@ -193,7 +193,7 @@ public class OsmWindow  implements IRouteInformationListener {
 	public static final int MAX_ZOOM = 22;
 	public static final String RENDERING_STYLES_DIR = "rendering_styles/"; //$NON-NLS-1$
 	private static final String OSMAND_ICONS_DIR = RENDERING_STYLES_DIR + "style-icons/drawable-"; //$NON-NLS-1$
-	public static final String IMAGE_PATH = "drawable-xhdpi/"; //$NON-NLS-1$
+	public static final String IMAGE_PATH = "drawable-"; //$NON-NLS-1$
 	public static final String PROXY_PORT = "proxy.port";
 	public static final String PROXY_HOST = "proxy.host";
 	public static final String PROXY_PASSWORD = "proxy.password";
@@ -303,13 +303,26 @@ public class OsmWindow  implements IRouteInformationListener {
 	private JPanel mDirectSearchPanel;
 
 
-	private JCheckBox mDirectSearchFuzzy; 
+	private JCheckBox mDirectSearchFuzzy;
+
+
+	private JButton mDirectSearchBackward;
+
+
+	private JButton mDirectSearchForward;
+
+
+	private JButton mDirectSearchClose; 
 	
 	public void createAndShowUI() {
 		mDirectSearchTextField = new JTextField("Direct Search Text");
 		mDirectSearchFuzzy = new JCheckBox(getOffRoadString("offroad.fuzzy_search"));
 		mDirectSearchFuzzy.setFocusable(false);
-		mDirectSearchAction = new DirectSearchAction(this, mDirectSearchTextField, mDirectSearchFuzzy);
+		mDirectSearchClose = new JButton(new ImageIcon(readImage("headline_close_button_pressed")));
+		mDirectSearchBackward = new JButton(new ImageIcon(readImage("ic_action_arrow_drop_up")));
+		mDirectSearchForward = new JButton(new ImageIcon(readImage("ic_action_arrow_drop_down")));
+		mDirectSearchAction = new DirectSearchAction(this, mDirectSearchTextField, mDirectSearchFuzzy,
+				mDirectSearchBackward, mDirectSearchForward);
 		mDrawPanel = new OsmBitmapPanel(this);
 		mAdapter = new OsmBitmapPanelMouseAdapter(mDrawPanel);
 		mDrawPanel.addMouseListener(mAdapter);
@@ -326,7 +339,10 @@ public class OsmWindow  implements IRouteInformationListener {
 		mDirectSearchPanel = new JPanel();
 		mDirectSearchPanel.setLayout(new GridBagLayout());
 		int x = 0;
+		mDirectSearchPanel.add(mDirectSearchClose, new GridBagConstraints(x++, 0, 1, 1, 0, 1, GridBagConstraints.WEST, GridBagConstraints.VERTICAL, new Insets(0, 0, 0, 0), 0, 0));
 		mDirectSearchPanel.add(mDirectSearchTextField, new GridBagConstraints(x++, 0, 1, 1, 1, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+		mDirectSearchPanel.add(mDirectSearchBackward, new GridBagConstraints(x++, 0, 1, 1, 0, 1, GridBagConstraints.WEST, GridBagConstraints.VERTICAL, new Insets(0, 0, 0, 0), 0, 0));
+		mDirectSearchPanel.add(mDirectSearchForward, new GridBagConstraints(x++, 0, 1, 1, 0, 1, GridBagConstraints.WEST, GridBagConstraints.VERTICAL, new Insets(0, 0, 0, 0), 0, 0));
 		mDirectSearchPanel.add(mDirectSearchFuzzy, new GridBagConstraints(x++, 0, 1, 1, 0, 1, GridBagConstraints.WEST, GridBagConstraints.VERTICAL, new Insets(0, 0, 0, 0), 0, 0));
 		adaptMenuMnemonics(mDirectSearchPanel.getComponents());
 		mStatusBar=new JPanel();
@@ -1557,7 +1573,7 @@ public class OsmWindow  implements IRouteInformationListener {
 			return mBufferedImageCache .get(image);
 		}
 		try {
-			InputStream resource = getResource(IMAGE_PATH + image + ".png");
+			InputStream resource = getResource(IMAGE_PATH + getIconSize() + "/" + image + ".png");
 			if (resource == null) {
 				log.error("Resource " + image + " not found!");
 				return null;
@@ -1705,7 +1721,11 @@ public class OsmWindow  implements IRouteInformationListener {
 
 
 	public String getOsmandIconsDir(){
-		return OSMAND_ICONS_DIR + getOffroadProperties().getProperty(OSMAND_ICONS_DIR_PREFIX, OSMAND_ICONS_DIR_DEFAULT_PREFIX) + "/";
+		return OSMAND_ICONS_DIR + getIconSize() + "/";
+	}
+
+	public String getIconSize() {
+		return getOffroadProperties().getProperty(OSMAND_ICONS_DIR_PREFIX, OSMAND_ICONS_DIR_DEFAULT_PREFIX);
 	}
 
 }

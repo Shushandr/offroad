@@ -21,12 +21,12 @@ package net.sourceforge.offroad.actions;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.geom.PathIterator;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -61,6 +61,7 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 		 * @return true, if a search can be performed with this input.
 		 */
 		boolean isValid();
+		int compare(String pO1, String pO2);
 	}
 
 	
@@ -86,7 +87,11 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 		public boolean isValid() {
 			return mSearchString != null && mSearchString.length()>=3;
 		}
-		
+
+		public int compare(String pO1, String pO2) {
+			// FIXME: Make objects different in any case!
+			return pO1.compareTo(pO2);
+		}
 	}
 	
 	public class CaseInsensitiveSearchProvider extends DefaultSearchProvider {
@@ -144,6 +149,14 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 
 	private JCheckBox mDirectSearchFuzzy;
 
+
+	private JButton mDirectSearchForward;
+
+
+	private JButton mDirectSearchBackward;
+	
+	private int mSearchIndex = -1;
+
 	private synchronized void change(DocumentEvent event) {
 		// stop old timer, if present:
 		if (mTypeDelayTimer != null) {
@@ -156,29 +169,18 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 	}
 
 
-	public DirectSearchAction(OsmWindow pContext, JTextField pTextField, JCheckBox pDirectSearchFuzzy) {
+	public DirectSearchAction(OsmWindow pContext, JTextField pTextField, JCheckBox pDirectSearchFuzzy, JButton pDirectSearchBackward, JButton pDirectSearchForward) {
 		super(pContext);
 		mTextField = pTextField;
 		mDirectSearchFuzzy = pDirectSearchFuzzy;
+		mDirectSearchBackward = pDirectSearchBackward;
+		mDirectSearchForward = pDirectSearchForward;
 		mDirectSearchFuzzy.addActionListener(this);
 		mProvider = new FuzzySearchProvider();
 		mTextField.getDocument().addDocumentListener(this);
-		// FIXME: Jump to the best hit!
-		mTextField.addActionListener(new ActionListener(){
-
-			@Override
-			public void actionPerformed(ActionEvent pE) {
-				// on enter jump to the first location:
-				Entry<ImageStorage, TextInfo> hit = getFirstHit();
-				if(hit != null){
-					PathIterator it = hit.getValue().path.getPathIterator(null);
-					if(!it.isDone()){
-						float[] coords = new float[2];
-						it.currentSegment(coords);
-						mContext.move(hit.getKey().mTileBox.getLatLonFromPixel(coords[0], coords[1]), null);
-					}
-				}
-			}});
+		mTextField.addActionListener(event -> moveToNextHit());
+		mDirectSearchForward.addActionListener(event -> moveToNextHit());
+		mDirectSearchBackward.addActionListener(event -> moveToPreviousHit());
 	}
 
 	Entry<ImageStorage, TextInfo> getFirstHit(){
@@ -195,6 +197,26 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 		return null;
 	}
 
+	TreeMap<TextInfo,ImageStorage> getHits(){
+		TreeMap<TextInfo, ImageStorage> res = new TreeMap<>(new Comparator<TextInfo>() {
+			@Override
+			public int compare(TextInfo pO1, TextInfo pO2) {
+				return mProvider.compare(pO1.mText, pO2.mText);
+			}
+		});
+		if(mProvider.isValid()){
+			List<ImageStorage> list = mContext.getDrawPanel().getEffectivelyDrawnImages();
+			for (ImageStorage imageStorage : list) {
+				for (TextInfo to : imageStorage.mResult.effectiveTextObjects) {
+					if(to.mText != null && mProvider.matches(to.mText)){
+						res.put(to, imageStorage);
+					}
+				}
+			}
+		}
+		return res;
+	}
+	
 	/* (non-Javadoc)
 	 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
 	 */
@@ -231,6 +253,41 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 	@Override
 	public void changedUpdate(DocumentEvent pE) {
 		change(pE);
+	}
+
+	public void moveToNextHit() {
+		TreeMap<TextInfo,ImageStorage> hits = getHits();
+		if(mSearchIndex+1 < hits.size()){
+			mSearchIndex++;
+		}
+		jumpToHit(hits);
+	}
+
+	public void moveToPreviousHit() {
+		TreeMap<TextInfo,ImageStorage> hits = getHits();
+		if(mSearchIndex-1  >= 0){
+			mSearchIndex--;
+		}
+		jumpToHit(hits);
+	}
+	
+	public void jumpToHit(TreeMap<TextInfo, ImageStorage> hits) {
+		if(mSearchIndex < 0 || mSearchIndex >= hits.size()){
+			mSearchIndex = 0;
+		}
+		int index = 0;
+		for (TextInfo hit : hits.keySet()) {
+			if(index == mSearchIndex){
+				PathIterator it = hit.path.getPathIterator(null);
+				if(!it.isDone()){
+					float[] coords = new float[2];
+					it.currentSegment(coords);
+					mContext.move(hits.get(hit).mTileBox.getLatLonFromPixel(coords[0], coords[1]), null);
+				}
+				return;
+			}
+			index++;
+		}
 	}
 
 }
