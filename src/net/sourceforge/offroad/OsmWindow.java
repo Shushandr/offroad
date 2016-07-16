@@ -312,17 +312,29 @@ public class OsmWindow  implements IRouteInformationListener {
 	private JButton mDirectSearchForward;
 
 
-	private JButton mDirectSearchClose; 
+	private JButton mDirectSearchClose;
+
+
+	private boolean mDirectSearchVisible; 
 	
 	public void createAndShowUI() {
-		mDirectSearchTextField = new JTextField("Direct Search Text");
+		mDirectSearchTextField = new JTextField(getOffRoadString("offroad.DirectSearchText"));
 		mDirectSearchFuzzy = new JCheckBox(getOffRoadString("offroad.fuzzy_search"));
 		mDirectSearchFuzzy.setFocusable(false);
 		mDirectSearchClose = new JButton(new ImageIcon(readImage("headline_close_button_pressed")));
 		mDirectSearchBackward = new JButton(new ImageIcon(readImage("ic_action_arrow_drop_up")));
 		mDirectSearchForward = new JButton(new ImageIcon(readImage("ic_action_arrow_drop_down")));
 		mDirectSearchAction = new DirectSearchAction(this, mDirectSearchTextField, mDirectSearchFuzzy,
-				mDirectSearchBackward, mDirectSearchForward);
+				mDirectSearchBackward, mDirectSearchForward, mDirectSearchClose);
+		mDirectSearchClose.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent pE) {
+				mStatusBar.remove(mDirectSearchPanel);
+				mDirectSearchVisible = false;
+				mFrame.revalidate();
+			}
+		});
 		mDrawPanel = new OsmBitmapPanel(this);
 		mAdapter = new OsmBitmapPanelMouseAdapter(mDrawPanel);
 		mDrawPanel.addMouseListener(mAdapter);
@@ -349,7 +361,9 @@ public class OsmWindow  implements IRouteInformationListener {
 		mStatusBar.setLayout(new GridBagLayout());
 		x = 0;
 		mStatusBar.add(mStatusLabel, new GridBagConstraints(x++, 0, 1, 1, 1, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
-		mStatusBar.add(mDirectSearchPanel, new GridBagConstraints(x++, 0, 1, 1, 1, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+//		mStatusBar.add(mDirectSearchPanel, new GridBagConstraints(x++, 0, 1, 1, 1, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+		mDirectSearchVisible = false;
+		x++;
 		mStatusBar.add(mRouteProgressStatus, new GridBagConstraints(x++, 0, 1, 1, 0, 1, GridBagConstraints.EAST, GridBagConstraints.VERTICAL, new Insets(0, 0, 0, 0), 0, 0));
 		mStatusBar.add(mRouteProgressBar, new GridBagConstraints(x++, 0, 1, 1, 1, 1, GridBagConstraints.EAST, GridBagConstraints.VERTICAL, new Insets(0, 0, 0, 0), 0, 0));
 		
@@ -429,7 +443,7 @@ public class OsmWindow  implements IRouteInformationListener {
 		mToolBar.add(mComboBox, new GridBagConstraints(2, 0, 1, 1, 0, 0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 
 		mFrame = new JFrame(getOffRoadString("offroad.string4")); //$NON-NLS-1$
-		mFrame.setIconImage(readImage("offroad_icon"));
+		mFrame.setIconImage(readImageInternally("offroad_icon.png"));
 		mFrame.getContentPane().setLayout(new BorderLayout());
 		mFrame.getContentPane().add(mToolBar, BorderLayout.NORTH);
 		mSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, mAmenityTable, mDrawPanel);
@@ -472,6 +486,7 @@ public class OsmWindow  implements IRouteInformationListener {
 		findItem.addActionListener(new SearchAddressAction(this));
 		findItem.setAccelerator(KeyStroke.getKeyStroke("control F")); //$NON-NLS-1$
 		jSearchMenu.add(findItem);
+		
 		JMenuItem gotoSearchFieldItem = new JMenuItem(getOffRoadString("offroad.gotoSearchField")); //$NON-NLS-1$
 		gotoSearchFieldItem.addActionListener(new ActionListener() {
 			
@@ -483,6 +498,7 @@ public class OsmWindow  implements IRouteInformationListener {
 		});
 		gotoSearchFieldItem.setAccelerator(KeyStroke.getKeyStroke("control K")); //$NON-NLS-1$
 		jSearchMenu.add(gotoSearchFieldItem);
+		addToMenu(jSearchMenu, null, mDirectSearchAction, "control shift F");
 		menubar.add(jSearchMenu);
 		// Download
 		JMenu jDownloadMenu = new JMenu(getOffRoadString("offroad.download")); //$NON-NLS-1$
@@ -685,6 +701,15 @@ public class OsmWindow  implements IRouteInformationListener {
 			};
 		});
 		mFrame.setVisible(true);
+	}
+
+	public void showDirectSearch() {
+		if(!mDirectSearchVisible){
+			mStatusBar.add(mDirectSearchPanel, new GridBagConstraints(1, 0, 1, 1, 1, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+			mFrame.revalidate();
+			mDirectSearchVisible = true;
+		}
+		mDirectSearchTextField.selectAll();
 	}
 
 	public void checkMaps() {
@@ -1572,19 +1597,25 @@ public class OsmWindow  implements IRouteInformationListener {
 		if(mBufferedImageCache.containsKey(image)){
 			return mBufferedImageCache .get(image);
 		}
+		String path = IMAGE_PATH + getIconSize() + "/" + image + ".png";
+		BufferedImage res = readImageInternally(path);
+		mBufferedImageCache.put(image, res);
+		return res;
+	}
+
+	protected BufferedImage readImageInternally(String path) {
+		BufferedImage res = null;
 		try {
-			InputStream resource = getResource(IMAGE_PATH + getIconSize() + "/" + image + ".png");
+			InputStream resource = getResource(path);
 			if (resource == null) {
-				log.error("Resource " + image + " not found!");
+				log.error("Resource " + path + " not found!");
 				return null;
 			}
-			BufferedImage res = ImageIO.read(resource);
-			mBufferedImageCache.put(image, res);
-			return res;
+			res = ImageIO.read(resource);
 		} catch (IOException e) {
 			e.printStackTrace();
-			return null;
 		}
+		return res;
 	}
 
 	public void setRouteCalculated() {

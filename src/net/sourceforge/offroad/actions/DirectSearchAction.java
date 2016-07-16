@@ -50,6 +50,30 @@ import net.sourceforge.offroad.ui.OsmBitmapPanel.CalculateUnzoomedPicturesAction
  */
 public class DirectSearchAction extends OffRoadAction implements DocumentListener {
 
+	public class NullProvider implements ISearchProvider {
+
+		@Override
+		public String getSearchString() {
+			return "";
+		}
+
+		@Override
+		public boolean matches(String pCandidate) {
+			return false;
+		}
+
+		@Override
+		public boolean isValid() {
+			return false;
+		}
+
+		@Override
+		public int compare(String pO1, String pO2) {
+			return 0;
+		}
+
+	}
+
 	public interface DirectSearchReceiver {
 		void getSearchProvider(ISearchProvider pProvider);
 	}
@@ -157,6 +181,9 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 	
 	private int mSearchIndex = -1;
 
+
+	private JButton mDirectSearchClose;
+
 	private synchronized void change(DocumentEvent event) {
 		// stop old timer, if present:
 		if (mTypeDelayTimer != null) {
@@ -169,18 +196,20 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 	}
 
 
-	public DirectSearchAction(OsmWindow pContext, JTextField pTextField, JCheckBox pDirectSearchFuzzy, JButton pDirectSearchBackward, JButton pDirectSearchForward) {
-		super(pContext);
+	public DirectSearchAction(OsmWindow pContext, JTextField pTextField, JCheckBox pDirectSearchFuzzy, JButton pDirectSearchBackward, JButton pDirectSearchForward, JButton pDirectSearchClose) {
+		super(pContext, pContext.getOffRoadString("offroad.show_direct_search"), null);
 		mTextField = pTextField;
 		mDirectSearchFuzzy = pDirectSearchFuzzy;
 		mDirectSearchBackward = pDirectSearchBackward;
 		mDirectSearchForward = pDirectSearchForward;
+		mDirectSearchClose = pDirectSearchClose;
 		mDirectSearchFuzzy.addActionListener(this);
 		mProvider = new FuzzySearchProvider();
 		mTextField.getDocument().addDocumentListener(this);
 		mTextField.addActionListener(event -> moveToNextHit());
 		mDirectSearchForward.addActionListener(event -> moveToNextHit());
 		mDirectSearchBackward.addActionListener(event -> moveToPreviousHit());
+		mDirectSearchClose.addActionListener(event->setEnabled(false));
 	}
 
 	Entry<ImageStorage, TextInfo> getFirstHit(){
@@ -222,16 +251,26 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 	 */
 	@Override
 	public void actionPerformed(ActionEvent pE) {
-		if(mDirectSearchFuzzy.isSelected()){
-			mProvider = new FuzzySearchProvider();
-		} else {
-			mProvider = new CaseInsensitiveSearchProvider();
-		}
-		if(!mProvider.isValid() || getFirstHit() != null) {
+		mContext.showDirectSearch();
+		if(mContext.getOffRoadString("offroad.DirectSearchText").equals(mTextField.getText())){
+			mProvider = new NullProvider();
 			mTextField.setBackground(null);
 		} else {
-			mTextField.setBackground(Color.red);
+			if(mDirectSearchFuzzy.isSelected()){
+				mProvider = new FuzzySearchProvider();
+			} else {
+				mProvider = new CaseInsensitiveSearchProvider();
+			}
+			if(!mProvider.isValid() || getFirstHit() != null) {
+				mTextField.setBackground(null);
+			} else {
+				mTextField.setBackground(Color.red);
+			}
 		}
+		publishProvider();
+	}
+
+	protected void publishProvider() {
 		// publish result to layer.
 		for (DirectSearchReceiver directSearchReceiver : mDirectSearchReceiverList) {
 			directSearchReceiver.getSearchProvider(mProvider);
@@ -287,6 +326,15 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 				return;
 			}
 			index++;
+		}
+	}
+	
+	public void setEnabled(boolean pEnabled){
+		if(!pEnabled){
+			mProvider = new NullProvider();
+			publishProvider();
+		} else {
+			actionPerformed(null);
 		}
 	}
 
