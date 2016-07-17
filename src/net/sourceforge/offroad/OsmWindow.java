@@ -321,9 +321,9 @@ public class OsmWindow  implements IRouteInformationListener {
 		mDirectSearchTextField = new JTextField(getOffRoadString("offroad.DirectSearchText"));
 		mDirectSearchFuzzy = new JCheckBox(getOffRoadString("offroad.fuzzy_search"));
 		mDirectSearchFuzzy.setFocusable(false);
-		mDirectSearchClose = new JButton(new ImageIcon(readImage("headline_close_button_pressed")));
-		mDirectSearchBackward = new JButton(new ImageIcon(readImage("ic_action_arrow_drop_up")));
-		mDirectSearchForward = new JButton(new ImageIcon(readImage("ic_action_arrow_drop_down")));
+		mDirectSearchClose = new JButton(new ImageIcon(readImageInternally("button_cancel.png")));
+		mDirectSearchBackward = new JButton(new ImageIcon(readImageInternally("up.png")));
+		mDirectSearchForward = new JButton(new ImageIcon(readImageInternally("down.png")));
 		mDirectSearchAction = new DirectSearchAction(this, mDirectSearchTextField, mDirectSearchFuzzy,
 				mDirectSearchBackward, mDirectSearchForward, mDirectSearchClose);
 		mDirectSearchClose.addActionListener(new ActionListener() {
@@ -708,8 +708,8 @@ public class OsmWindow  implements IRouteInformationListener {
 			mStatusBar.add(mDirectSearchPanel, new GridBagConstraints(1, 0, 1, 1, 1, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 			mFrame.revalidate();
 			mDirectSearchVisible = true;
+			mDirectSearchTextField.selectAll();
 		}
-		mDirectSearchTextField.selectAll();
 	}
 
 	public void checkMaps() {

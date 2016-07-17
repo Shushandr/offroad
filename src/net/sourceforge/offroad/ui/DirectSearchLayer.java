@@ -67,7 +67,7 @@ public class DirectSearchLayer extends OsmandMapLayer implements DirectSearchRec
 		highlightYellow.setColor(mView.getResources().getColor(R.color.poi_background));
 //		highlightYellow.setColor(new Color(0x3f000000, true));
 		highlightYellow.setStyle(Style.STROKE);
-		highlightYellow.setStrokeWidth(15);
+		highlightYellow.setStrokeWidth(7);
 		highlightYellow.setAntiAlias(true);
 	}
 
