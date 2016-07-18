@@ -35,6 +35,7 @@
 			debug="true"
     	   source="${java_source_version}"
 	       target="${java_target_version}"
+			encoding="utf-8"
 			 >
 			<classpath refid="build-classpath">
 			</classpath>
