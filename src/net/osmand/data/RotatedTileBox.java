@@ -676,6 +676,10 @@ public class RotatedTileBox {
 		return new Point((int)getPixXFromLatLon(pLocation), (int)getPixYFromLatLon(pLocation));
 	}
 
+	public void setLatLonCenter(LatLon pDestination) {
+		setLatLonCenter(pDestination.getLatitude(), pDestination.getLongitude());
+	}
+
 
 	
 	

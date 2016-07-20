@@ -42,10 +42,10 @@ import net.sourceforge.offroad.ui.Paint.Style;
  */
 public class DirectSearchLayer extends OsmandMapLayer implements DirectSearchReceiver {
 
-	private OsmBitmapPanel mView;
-	private Paint highlightYellow;
-	private ISearchProvider mProvider;
-	private final static Log log = PlatformUtil.getLog(DirectSearchLayer.class);
+	protected OsmBitmapPanel mView;
+	protected Paint highlightYellow;
+	protected ISearchProvider mProvider;
+	protected final static Log log = PlatformUtil.getLog(DirectSearchLayer.class);
 
 	/**
 	 * 
@@ -64,8 +64,7 @@ public class DirectSearchLayer extends OsmandMapLayer implements DirectSearchRec
 	public void initLayer(OsmBitmapPanel pView) {
 		mView = pView;
 		highlightYellow = new Paint();
-		highlightYellow.setColor(mView.getResources().getColor(R.color.poi_background));
-//		highlightYellow.setColor(new Color(0x3f000000, true));
+		highlightYellow.setColor(R.color.poi_background);
 		highlightYellow.setStyle(Style.STROKE);
 		highlightYellow.setStrokeWidth(7);
 		highlightYellow.setAntiAlias(true);
@@ -148,7 +147,7 @@ public class DirectSearchLayer extends OsmandMapLayer implements DirectSearchRec
 	}
 
 	@Override
-	public void getSearchProvider(ISearchProvider pProvider) {
+	public void setSearchProvider(ISearchProvider pProvider) {
 		mProvider = pProvider;
 	}
 

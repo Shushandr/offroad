@@ -120,6 +120,9 @@ public class OsmBitmapPanel extends JPanel {
 		// combine the action with the layer
 		mContext.mDirectSearchAction.registerDirectSearchReceiver(directSearchLayer);
 		addLayer(directSearchLayer, 10);
+		DirectSearchSelectionLayer directSelectionLayer = new DirectSearchSelectionLayer();
+		directSelectionLayer.setSearchProvider(mContext.mDirectSearchAction.getSelectionProvider());
+		addLayer(directSelectionLayer, 11);
 		
 		for (OsmandMapLayer layer : layers) {
 			layer.initLayer(this);

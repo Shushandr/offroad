@@ -27,6 +27,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -39,6 +40,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 
 import net.osmand.PlatformUtil;
+import net.osmand.data.LatLon;
+import net.osmand.data.RotatedTileBox;
 import net.osmand.plus.render.OsmandRenderer.TextInfo;
 import net.sourceforge.offroad.OsmWindow;
 import net.sourceforge.offroad.data.Pair;
@@ -49,6 +52,31 @@ import net.sourceforge.offroad.ui.OsmBitmapPanel.CalculateUnzoomedPicturesAction
  * @date 06.07.2016
  */
 public class DirectSearchAction extends OffRoadAction implements DocumentListener {
+
+	private class TextLocationComparator implements Comparator<Pair<TextInfo, ImageStorage>> {
+		private RotatedTileBox mTileBox;
+
+		public TextLocationComparator(RotatedTileBox pTileBox) {
+			mTileBox = pTileBox;
+		}
+
+		@Override
+		public int compare(Pair<TextInfo, ImageStorage> pO1, Pair<TextInfo, ImageStorage> pO2) {
+			// compare both locations given that they should be at least some pixels apart.
+			LatLon l1 = getLocation(pO1);
+			LatLon l2 = getLocation(pO2);
+			int diffX = (int) (mTileBox.getPixXFromLatLon(l1) - mTileBox.getPixXFromLatLon(l2));
+			if(Math.abs(diffX)<2){
+				int diffY = (int) (mTileBox.getPixYFromLatLon(l1) - mTileBox.getPixYFromLatLon(l2));
+					if(Math.abs(diffX)<2){
+						// TODO: Here, take the tilebox, that is closer to the current center.
+						return 0;
+					}	
+					return diffY;
+			}
+			return diffX;
+		}
+	}
 
 	public class NullProvider implements ISearchProvider {
 
@@ -66,16 +94,10 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 		public boolean isValid() {
 			return false;
 		}
-
-		@Override
-		public int compare(String pO1, String pO2) {
-			return 0;
-		}
-
 	}
 
 	public interface DirectSearchReceiver {
-		void getSearchProvider(ISearchProvider pProvider);
+		void setSearchProvider(ISearchProvider pProvider);
 	}
 	
 	public interface ISearchProvider {
@@ -85,7 +107,6 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 		 * @return true, if a search can be performed with this input.
 		 */
 		boolean isValid();
-		int compare(String pO1, String pO2);
 	}
 
 	
@@ -110,11 +131,6 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 		@Override
 		public boolean isValid() {
 			return mSearchString != null && mSearchString.length()>=3;
-		}
-
-		public int compare(String pO1, String pO2) {
-			// FIXME: Make objects different in any case!
-			return pO1.compareTo(pO2);
 		}
 	}
 	
@@ -145,6 +161,32 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 			return dist >= 0.7f;
 		}
 		
+	}
+	
+	public class SelectionSearchProvider implements ISearchProvider {
+
+
+		public SelectionSearchProvider() {
+		}
+		
+		@Override
+		public String getSearchString() {
+			return (isValid())?getText():null;
+		}
+
+		@Override
+		public boolean matches(String pCandidate) {
+			return getText().equals(pCandidate);
+		}
+
+		public String getText() {
+			return mSearchHit.getKey().mText;
+		}
+
+		@Override
+		public boolean isValid() {
+			return mSearchHit != null;
+		}
 	}
 	
 	private List<DirectSearchReceiver> mDirectSearchReceiverList = new ArrayList<>();
@@ -180,6 +222,7 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 	private JButton mDirectSearchBackward;
 	
 	private int mSearchIndex = -1;
+	private Pair<TextInfo,ImageStorage> mSearchHit;
 
 
 	private JButton mDirectSearchClose;
@@ -226,19 +269,14 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 		return null;
 	}
 
-	TreeMap<TextInfo,ImageStorage> getHits(){
-		TreeMap<TextInfo, ImageStorage> res = new TreeMap<>(new Comparator<TextInfo>() {
-			@Override
-			public int compare(TextInfo pO1, TextInfo pO2) {
-				return mProvider.compare(pO1.mText, pO2.mText);
-			}
-		});
+	TreeSet<Pair<TextInfo,ImageStorage>> getHits(){
+		TreeSet<Pair<TextInfo, ImageStorage>> res = new TreeSet<>(new TextLocationComparator(mContext.getDrawPanel().copyCurrentTileBox()));
 		if(mProvider.isValid()){
 			List<ImageStorage> list = mContext.getDrawPanel().getEffectivelyDrawnImages();
 			for (ImageStorage imageStorage : list) {
 				for (TextInfo to : imageStorage.mResult.effectiveTextObjects) {
 					if(to.mText != null && mProvider.matches(to.mText)){
-						res.put(to, imageStorage);
+						res.add(new Pair<TextInfo, ImageStorage>(to, imageStorage));
 					}
 				}
 			}
@@ -273,10 +311,14 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 	protected void publishProvider() {
 		// publish result to layer.
 		for (DirectSearchReceiver directSearchReceiver : mDirectSearchReceiverList) {
-			directSearchReceiver.getSearchProvider(mProvider);
+			directSearchReceiver.setSearchProvider(mProvider);
 		}
 		mContext.getDrawPanel().drawLater();
 		mTextField.requestFocusInWindow();
+	}
+	
+	public ISearchProvider getSelectionProvider(){
+		return new SelectionSearchProvider();
 	}
 
 	@Override
@@ -295,7 +337,7 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 	}
 
 	public void moveToNextHit() {
-		TreeMap<TextInfo,ImageStorage> hits = getHits();
+		TreeSet<Pair<TextInfo,ImageStorage>> hits = getHits();
 		if(mSearchIndex+1 < hits.size()){
 			mSearchIndex++;
 		}
@@ -303,30 +345,54 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 	}
 
 	public void moveToPreviousHit() {
-		TreeMap<TextInfo,ImageStorage> hits = getHits();
+		TreeSet<Pair<TextInfo,ImageStorage>> hits = getHits();
 		if(mSearchIndex-1  >= 0){
 			mSearchIndex--;
 		}
 		jumpToHit(hits);
 	}
 	
-	public void jumpToHit(TreeMap<TextInfo, ImageStorage> hits) {
-		if(mSearchIndex < 0 || mSearchIndex >= hits.size()){
+	public Pair<TextInfo,ImageStorage> getHit(TreeSet<Pair<TextInfo,ImageStorage>> pHits) {
+		if(mSearchIndex < 0 || mSearchIndex >= pHits.size()){
 			mSearchIndex = 0;
 		}
 		int index = 0;
-		for (TextInfo hit : hits.keySet()) {
+		for (Pair<TextInfo, ImageStorage> hit : pHits) {
 			if(index == mSearchIndex){
-				PathIterator it = hit.path.getPathIterator(null);
-				if(!it.isDone()){
-					float[] coords = new float[2];
-					it.currentSegment(coords);
-					mContext.move(hits.get(hit).mTileBox.getLatLonFromPixel(coords[0], coords[1]), null);
-				}
-				return;
+				return hit;
 			}
 			index++;
 		}
+		return null;
+	}
+	
+
+	public LatLon getLocation(Pair<TextInfo, ImageStorage> hit) {
+		PathIterator it = hit.getKey().path.getPathIterator(null);
+		if(!it.isDone()){
+			float[] coords = new float[2];
+			it.currentSegment(coords);
+			ImageStorage storage = hit.getValue();
+			return storage.mTileBox.getLatLonFromPixel(coords[0], coords[1]);
+		}
+		return null;
+	}
+	
+	public void jumpToHit(TreeSet<Pair<TextInfo,ImageStorage>> pHits) {
+		Pair<TextInfo, ImageStorage> hit = getHit(pHits);
+		mSearchHit = hit;
+		if(hit == null){
+			return;
+		}
+		LatLon destination = getLocation(hit);
+		if(destination != null){
+			RotatedTileBox ctb = mContext.getDrawPanel().copyCurrentTileBox();
+			RotatedTileBox dest = ctb.copy();
+			dest.setLatLonCenter(destination);
+			mContext.moveAnimated(dest, ctb, destination);
+			mContext.setCursorPosition(destination);
+		}
+		return;
 	}
 	
 	public void setEnabled(boolean pEnabled){

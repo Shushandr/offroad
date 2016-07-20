@@ -409,8 +409,8 @@ public class TextRenderer {
 				boolean display = true;
 				if(pPath != null) {
 					text.drawOnPath = pPath;
-					display = calculatePathToRotate(rc, text, points, 
-					render.getIntPropertyValue(render.ALL.R_TEXT_ON_PATH, 0) != 0);
+					display = calculatePathToRotate(rc, text, points,
+							render.getIntPropertyValue(render.ALL.R_TEXT_ON_PATH, 0) != 0);
 				}
 				if(text.drawOnPath == null) {
 					text.bounds.offset(text.centerX, text.centerY);
