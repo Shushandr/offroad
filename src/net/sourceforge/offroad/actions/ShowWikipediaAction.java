@@ -22,7 +22,6 @@ package net.sourceforge.offroad.actions;
 import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.Desktop;
-import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -38,6 +37,7 @@ import javax.swing.JButton;
 import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
+import javax.swing.JTextPane;
 
 import net.sourceforge.offroad.OsmWindow;
 
@@ -71,7 +71,14 @@ public class ShowWikipediaAction extends OffRoadAction {
 		gbl.rowWeights = new double[] { 1.0f };
 		contentPane.setLayout(gbl);
 		int y = 0;
-		JLabel articleLabel = new JLabel("<html><body><a href=''>" + mArticle + "</a></body></html>");
+		String htmlContent = "<html><body><a href=''>" + mArticle + "</a></body></html>";
+		JTextPane contentDisplay = new JTextPane();
+		contentDisplay.setContentType("text/html"); // let the text pane know this is what you want
+		contentDisplay.setText(mContent); // showing off
+		contentDisplay.setEditable(false); // as before
+		contentDisplay.setBackground(null); // this is the same as a JLabel
+		contentDisplay.setBorder(null); // remove the border
+		JLabel articleLabel = new JLabel(htmlContent);
 		articleLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
 		articleLabel.setToolTipText(mArticle);
 		articleLabel.addMouseListener(new MouseAdapter() {
@@ -84,10 +91,7 @@ public class ShowWikipediaAction extends OffRoadAction {
                 }
             }
         });
-		JEditorPane ed1=new JEditorPane("text/html", mContent);
-		ed1.setEditable(false);
-		ed1.setFocusable(false);
-		contentPane.add(new JScrollPane(ed1), new GridBagConstraints(0, y++, 4, 1, 4.0, 10.0, GridBagConstraints.WEST,
+		contentPane.add(new JScrollPane(contentDisplay), new GridBagConstraints(0, y++, 4, 1, 4.0, 10.0, GridBagConstraints.WEST,
 				GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 		contentPane.add(articleLabel, new GridBagConstraints(0, y++, 4, 1, 1.0, 0.0,
 				GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
