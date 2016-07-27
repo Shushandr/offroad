@@ -30,6 +30,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.text.MessageFormat;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Vector;
@@ -50,8 +51,8 @@ import net.osmand.PlatformUtil;
 import net.osmand.data.Amenity;
 import net.osmand.data.LatLon;
 import net.osmand.data.MapObject;
+import net.osmand.osm.PoiType;
 import net.osmand.plus.poi.PoiUIFilter;
-import net.osmand.util.MapUtils;
 import net.sourceforge.offroad.OsmWindow;
 import net.sourceforge.offroad.R;
 
@@ -75,6 +76,13 @@ public class AmenityTablePanel extends JPanel {
 			if (item instanceof Amenity) {
 				Amenity amenity = (Amenity) item;
 				return amenity.getType().getTranslation();
+			}
+			return null;
+		}
+		String getPoiIconKeyName(){
+			if (item instanceof Amenity) {
+				Amenity amenity = (Amenity) item;
+				return amenity.getType().getPoiTypeByKeyName(amenity.getSubType()).getIconKeyName();
 			}
 			return null;
 		}
@@ -106,6 +114,7 @@ public class AmenityTablePanel extends JPanel {
 	}
 
 	public static final MessageFormat formatDistance = new MessageFormat("{0, number,##.#} km", Locale.US);
+	private static final int ICON_COLUMN_INDEX = 0;
 
 	public class DistanceTableCellRenderer extends DefaultTableCellRenderer {
 		@Override
@@ -225,6 +234,7 @@ public class AmenityTablePanel extends JPanel {
 			}
 			return -1;
 		}
+		
 	}
 
 	private OsmWindow mContext;
@@ -249,6 +259,19 @@ public class AmenityTablePanel extends JPanel {
 		mTable.setModel(mSourceModel);
 		mTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		mSorter = new TableRowSorter<AmenityTableModel>(mSourceModel);
+		// FIXME: The knowledge of the index is not preferable:
+		mSorter.setComparator(ICON_COLUMN_INDEX, new Comparator<ImageHolder>(){
+
+			@Override
+			public int compare(ImageHolder pO1, ImageHolder pO2) {
+				try {
+					return pO1.getPoiIconKeyName().compareTo(pO2.getPoiIconKeyName());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				return 0;
+			}});
+
 		mTable.setRowSorter(mSorter);
 
 		mKeyListener = new KeyAdapter() {
