@@ -17,16 +17,14 @@
    Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 */
 
-package net.sourceforge.offroad;
+package net.sourceforge.offroad.actions;
 
 import java.awt.event.ActionEvent;
 import java.io.File;
 
-import javax.swing.JFileChooser;
-
 import net.osmand.plus.GPXUtilities;
 import net.osmand.plus.GPXUtilities.GPXFile;
-import net.sourceforge.offroad.actions.OffRoadAction;
+import net.sourceforge.offroad.OsmWindow;
 
 /**
  * @author foltin
@@ -43,14 +41,11 @@ public class ExportRouteAction extends OffRoadAction {
 	 */
 	@Override
 	public void actionPerformed(ActionEvent pE) {
-		JFileChooser chooser = new JFileChooser();
-		int showSaveDialog = chooser.showSaveDialog(mContext.getWindow());
-		if(showSaveDialog == JFileChooser.APPROVE_OPTION){
-			File selectedFile = chooser.getSelectedFile();
+		File selectedFile = getSaveFile();
+		if(selectedFile!=null){
 			GPXFile gpxFile = mContext.getRoutingHelper().generateGPXFileWithRoute();
 			GPXUtilities.writeGpxFile(selectedFile, gpxFile, mContext);
 		}
-
 	}
 
 }

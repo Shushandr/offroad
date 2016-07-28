@@ -17,34 +17,37 @@
    Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 */
 
-package net.sourceforge.offroad;
+package net.sourceforge.offroad.actions;
 
 import java.awt.event.ActionEvent;
 
-import javax.swing.Icon;
+import javax.swing.JOptionPane;
 
-import net.osmand.data.FavouritePoint;
-import net.sourceforge.offroad.actions.OffRoadAction;
+import net.sourceforge.offroad.OsmWindow;
+import net.sourceforge.offroad.OsmWindow.VersionInfo;
 
 /**
  * @author foltin
- * @date 17.06.2016
+ * @date 01.06.2016
  */
-public class DeleteFavoriteAction extends OffRoadAction {
+public class AboutDialogAction extends OffRoadAction {
 
-	private FavouritePoint mPoint;
-
-	public DeleteFavoriteAction(OsmWindow pContext, String pName, Icon pIcon, FavouritePoint pPoint) {
-		super(pContext, pName, pIcon);
-		mPoint = pPoint;
+	public AboutDialogAction(OsmWindow pContext) {
+		super(pContext);
 	}
 
-	/* (non-Javadoc)
-	 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
 	 */
 	@Override
 	public void actionPerformed(ActionEvent pE) {
-		mContext.getFavorites().deleteFavourite(mPoint);
+		VersionInfo ver = mContext.getVersion();
+		JOptionPane.showMessageDialog(mContext.getWindow(),
+				mContext.getOffRoadString("offroad.about_content", new String[]{ver.version, ver.hash}),
+				mContext.getOffRoadString("offroad.about_title"), JOptionPane.PLAIN_MESSAGE);
 	}
 
 }

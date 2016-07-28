@@ -3,6 +3,7 @@ package net.sourceforge.offroad;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Cursor;
+import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Frame;
@@ -25,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Authenticator;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.text.MessageFormat;
@@ -126,14 +128,18 @@ import net.osmand.router.GeneralRouter;
 import net.osmand.router.RoutingConfiguration;
 import net.osmand.router.RoutingConfiguration.Builder;
 import net.osmand.util.MapUtils;
+import net.sourceforge.offroad.actions.AboutDialogAction;
 import net.sourceforge.offroad.actions.AddFavoriteAction;
 import net.sourceforge.offroad.actions.ChooseApplicationModeAction;
 import net.sourceforge.offroad.actions.ChooseRendererAction;
 import net.sourceforge.offroad.actions.ChooseRouteServiceAction;
 import net.sourceforge.offroad.actions.ClearRouteAction;
 import net.sourceforge.offroad.actions.CopyLocationToClipboardAction;
+import net.sourceforge.offroad.actions.DeleteFavoriteAction;
 import net.sourceforge.offroad.actions.DirectSearchAction;
 import net.sourceforge.offroad.actions.DownloadAction;
+import net.sourceforge.offroad.actions.ExportRouteAction;
+import net.sourceforge.offroad.actions.ExportTracksAction;
 import net.sourceforge.offroad.actions.GpxImportAction;
 import net.sourceforge.offroad.actions.NavigationBackAction;
 import net.sourceforge.offroad.actions.NavigationForwardAction;
@@ -144,6 +150,7 @@ import net.sourceforge.offroad.actions.PointNavigationAction;
 import net.sourceforge.offroad.actions.PointNavigationAction.HelperAction;
 import net.sourceforge.offroad.actions.RouteAction;
 import net.sourceforge.offroad.actions.SearchAddressAction;
+import net.sourceforge.offroad.actions.SelectTrackAction;
 import net.sourceforge.offroad.actions.SetRenderingRule;
 import net.sourceforge.offroad.actions.ShowFavoriteAction;
 import net.sourceforge.offroad.actions.ShowTargetPointAction;
@@ -478,6 +485,7 @@ public class OsmWindow  implements IRouteInformationListener {
 		importGpxItem.addActionListener(new GpxImportAction(this));
 		jFileMenu.add(importGpxItem);
 		addToMenu(jFileMenu, "offroad.export_route", new ExportRouteAction(this), null);
+		addToMenu(jFileMenu, "offroad.export_tracks", new ExportTracksAction(this), null);
 		addToMenu(jFileMenu, "offroad.copy_location", new CopyLocationToClipboardAction(this), "control C");
 		addToMenu(jFileMenu, "offroad.exit", item -> closeWindow(), "control Q");
 		menubar.add(jFileMenu);
@@ -961,8 +969,8 @@ public class OsmWindow  implements IRouteInformationListener {
 	}
 
 	public static class VersionInfo {
-		String version;
-		String hash;
+		public String version;
+		public String hash;
 		public VersionInfo(String pVersion, String pHash) {
 			super();
 			version = pVersion;
@@ -1759,5 +1767,20 @@ public class OsmWindow  implements IRouteInformationListener {
 		return getOffroadProperties().getProperty(OSMAND_ICONS_DIR_PREFIX, OSMAND_ICONS_DIR_DEFAULT_PREFIX);
 	}
 
+	public void openDocument(URL url) throws Exception {
+		Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
+		if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
+			try {
+				// fix for https://sourceforge.net/p/freemind/discussion/22102/thread/cf032151/?limit=25#c631
+				URI uri = new URI(url.toString().replaceAll("^file:////", "file://"));
+				desktop.browse(uri);
+			} catch (Exception e) {
+				log.fatal("Caught: " + e, e);
+			}
+		}
+	}
+
+
+	
 }
 

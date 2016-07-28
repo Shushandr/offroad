@@ -17,7 +17,7 @@
    Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 */
 
-package net.sourceforge.offroad;
+package net.sourceforge.offroad.actions;
 
 import java.awt.Component;
 import java.awt.Container;
@@ -67,7 +67,7 @@ import net.osmand.plus.GPXUtilities.GPXFile;
 import net.osmand.plus.GPXUtilities.WptPt;
 import net.osmand.plus.GpxSelectionHelper.SelectedGpxFile;
 import net.osmand.plus.helpers.GpxUiHelper;
-import net.sourceforge.offroad.actions.OffRoadAction;
+import net.sourceforge.offroad.OsmWindow;
 
 /**
  * @author foltin

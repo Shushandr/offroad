@@ -30,6 +30,7 @@ Version History:
 
 0_1-Beta4:
 ============
+* export tracks as webpage added.
 
 0_1-Beta3:
 ============

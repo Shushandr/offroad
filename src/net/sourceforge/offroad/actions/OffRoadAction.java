@@ -23,6 +23,8 @@ import java.awt.Cursor;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
+import java.text.MessageFormat;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -30,7 +32,9 @@ import javax.swing.Icon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
 import javax.swing.JMenu;
+import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
 import javax.swing.WindowConstants;
 import javax.swing.event.MenuEvent;
@@ -39,6 +43,8 @@ import javax.swing.event.MenuListener;
 import org.apache.commons.logging.Log;
 
 import net.osmand.PlatformUtil;
+import net.osmand.plus.GPXUtilities;
+import net.osmand.plus.GPXUtilities.GPXFile;
 import net.sourceforge.offroad.OsmWindow;
 import net.sourceforge.offroad.data.persistence.ComponentLocationStorage;
 import net.sourceforge.offroad.ui.StayOpenCheckBoxMenuItem;
@@ -96,8 +102,8 @@ public abstract class OffRoadAction extends AbstractAction {
 		mDialog.dispose();
 	}
 
-	public void save(){
-		if (mDialog!= null) {
+	public void save() {
+		if (mDialog != null) {
 			ComponentLocationStorage.storeDialogPositions(mContext, mDialog, createComponentLocationStorage(),
 					getComponentLocationStorageProperty());
 		}
@@ -110,7 +116,7 @@ public abstract class OffRoadAction extends AbstractAction {
 	protected String getComponentLocationStorageProperty() {
 		return this.getClass().getName();
 	}
-	
+
 	protected String getResourceString(String pWindowTitle) {
 		return mContext.getOffRoadString(pWindowTitle);
 	}
@@ -145,16 +151,16 @@ public abstract class OffRoadAction extends AbstractAction {
 			super(pPoiFilterAction);
 			mMenu = pMenu;
 			mMenu.addMenuListener(new MenuListener() {
-				
+
 				@Override
 				public void menuSelected(MenuEvent pE) {
 					OffRoadMenuItem.this.setSelected(OffRoadMenuItem.this.isSelected());
 				}
-				
+
 				@Override
 				public void menuDeselected(MenuEvent pE) {
 				}
-				
+
 				@Override
 				public void menuCanceled(MenuEvent pE) {
 				}
@@ -170,6 +176,27 @@ public abstract class OffRoadAction extends AbstractAction {
 			}
 			return super.isSelected();
 		}
+	}
+
+	protected File getSaveFile() {
+		JFileChooser chooser = new JFileChooser();
+		int showSaveDialog = chooser.showSaveDialog(mContext.getWindow());
+		if (showSaveDialog == JFileChooser.APPROVE_OPTION) {
+			File selectedFile = chooser.getSelectedFile();
+			if (selectedFile.exists()) {
+				// ask question:
+				String overwriteText = MessageFormat.format(mContext.getOffRoadString("file_already_exists"),
+						new Object[] { selectedFile.toString() });
+				int overwriteMap = JOptionPane.showConfirmDialog(mContext.getWindow(), overwriteText, overwriteText,
+						JOptionPane.YES_NO_OPTION);
+				if (overwriteMap != JOptionPane.YES_OPTION) {
+					return null;
+				}
+			}
+			return selectedFile;
+		}
+		return null;
+
 	}
 
 }
