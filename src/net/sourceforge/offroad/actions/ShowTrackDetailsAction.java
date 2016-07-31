@@ -34,6 +34,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.DateFormat;
 import java.text.MessageFormat;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -41,9 +44,12 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 
 import net.osmand.plus.GPXUtilities.GPXTrackAnalysis;
+import net.osmand.plus.GPXUtilities.TrkSegment;
+import net.osmand.plus.GPXUtilities.WptPt;
 import net.osmand.plus.GpxSelectionHelper.SelectedGpxFile;
 import net.sourceforge.offroad.OsmWindow;
 import net.sourceforge.offroad.R;
+import net.sourceforge.offroad.ui.GraphPanel;
 
 /**
  * @author foltin
@@ -119,7 +125,17 @@ public class ShowTrackDetailsAction extends OffRoadAction {
                 }
             }
         });
-		contentPane.add(new JScrollPane(contentDisplay), new GridBagConstraints(0, y++, 4, 1, 4.0, 10.0, GridBagConstraints.WEST,
+		contentPane.add(new JScrollPane(contentDisplay), new GridBagConstraints(0, y++, 4, 1, 4.0, 1.0, GridBagConstraints.WEST,
+				GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+		Map<Long, Double> elevation = new TreeMap<>();
+		List<TrkSegment> pts = mSelectedGpxFile.getPointsToDisplay();
+		for (TrkSegment n : pts) {
+			for (WptPt pt : n.points) {
+				elevation.put(pt.time, pt.ele);
+			}
+		}
+		GraphPanel panel = new GraphPanel(elevation );
+		contentPane.add(panel, new GridBagConstraints(0, y++, 4, 1, 4.0, 10.0, GridBagConstraints.WEST,
 				GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 		contentPane.add(articleLabel, new GridBagConstraints(0, y++, 4, 1, 1.0, 0.0,
 				GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
@@ -144,7 +160,7 @@ public class ShowTrackDetailsAction extends OffRoadAction {
 	}
 
 	private String toDist(double pValue) {
-		return MessageFormat.format("{0,number,#.##} m", pValue);
+		return MessageFormat.format("{0,number,#} m", pValue);
 	}
 
 	private String toString(long pStartTime) {
