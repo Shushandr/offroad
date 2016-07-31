@@ -36,6 +36,7 @@ import org.xmlpull.v1.XmlSerializer;
 
 import net.osmand.Location;
 import net.osmand.PlatformUtil;
+import net.osmand.data.LatLon;
 import net.osmand.data.LocationPoint;
 import net.osmand.data.PointDescription;
 import net.osmand.util.Algorithms;
@@ -165,6 +166,10 @@ public class GPXUtilities {
 					&& Algorithms.objectEquals(other.lat, lat)
 					&& Algorithms.objectEquals(other.lon, lon)
 					&& Algorithms.objectEquals(other.desc, desc);
+		}
+
+		public LatLon getLatLon() {
+			return new LatLon(lat, lon);
 		}
 	}
 
@@ -353,6 +358,7 @@ public class GPXUtilities {
 								diffElevationDown += channelBase - channelBottom;
 							}
 						}
+//						System.out.println("ele: " + point.ele + ", elev up " + diffElevationUp + ", elev down " + diffElevationDown + ", channelTop " + channelTop + ", channelBottom " + channelBottom + ", climb " + climb);
 					}
 
 					if (j > 0) {
@@ -593,6 +599,20 @@ public class GPXUtilities {
 			return "cloudmade".equalsIgnoreCase(author);
 		}
 		
+		/**
+		 * @return the last segment of the path.
+		 */
+		public String getName(){
+			if(path == null){
+				return "";
+			}
+			try {
+				return new File(path).getName();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return path.replaceAll("^.*"+File.separatorChar, "");
+		}
 		
 		public GPXTrackAnalysis getAnalysis(long fileTimestamp) {
 			GPXTrackAnalysis g = new GPXTrackAnalysis();

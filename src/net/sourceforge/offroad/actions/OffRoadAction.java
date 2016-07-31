@@ -185,8 +185,7 @@ public abstract class OffRoadAction extends AbstractAction {
 			File selectedFile = chooser.getSelectedFile();
 			if (selectedFile.exists()) {
 				// ask question:
-				String overwriteText = MessageFormat.format(mContext.getOffRoadString("file_already_exists"),
-						new Object[] { selectedFile.toString() });
+				String overwriteText = mContext.getOffRoadString("file_already_exists", selectedFile.toString());
 				int overwriteMap = JOptionPane.showConfirmDialog(mContext.getWindow(), overwriteText, overwriteText,
 						JOptionPane.YES_NO_OPTION);
 				if (overwriteMap != JOptionPane.YES_OPTION) {

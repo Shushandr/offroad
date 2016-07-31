@@ -113,6 +113,13 @@ public class SelectTrackAction extends OffRoadAction  {
 			}
 			return "";
 		}
+		
+		public String getTotalDistance(){
+			if(isSelected()){
+				return ""+mGpxFile.getAnalysis(0).totalDistance;
+			}
+			return "";
+		}
 	}
 
 	public SelectTrackAction(OsmWindow pContext, 	String pTitle) {
@@ -178,6 +185,8 @@ public class SelectTrackAction extends OffRoadAction  {
 					new DefaultTableCellRenderer()));
 			mColumns.addElement(new TrackTableColumn("date", Date.class, item -> item.getDate(),
 					new GpxDateTableCellRenderer()));
+			mColumns.addElement(new TrackTableColumn("distance", String.class, item -> item.getTotalDistance(),
+					new DefaultTableCellRenderer()));
 			for (TrackTableColumn column : mColumns) {
 				mTable.setDefaultRenderer(column.mClass, column.mRenderer);
 			}
@@ -330,6 +339,7 @@ public class SelectTrackAction extends OffRoadAction  {
 		mDialog.pack();
 		decorateDialog();
 		removeWaitingCursor();
+		decorateDialog();
 		mDialog.setVisible(true);
 
 	}

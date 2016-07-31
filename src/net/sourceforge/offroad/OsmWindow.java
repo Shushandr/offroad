@@ -154,6 +154,7 @@ import net.sourceforge.offroad.actions.SelectTrackAction;
 import net.sourceforge.offroad.actions.SetRenderingRule;
 import net.sourceforge.offroad.actions.ShowFavoriteAction;
 import net.sourceforge.offroad.actions.ShowTargetPointAction;
+import net.sourceforge.offroad.actions.ShowTrackDetailsAction;
 import net.sourceforge.offroad.actions.ShowWikipediaAction;
 import net.sourceforge.offroad.data.LocationAsMapObject;
 import net.sourceforge.offroad.data.QuadRectExtendable;
@@ -486,7 +487,7 @@ public class OsmWindow  implements IRouteInformationListener {
 		jFileMenu.add(importGpxItem);
 		addToMenu(jFileMenu, "offroad.export_route", new ExportRouteAction(this), null);
 		addToMenu(jFileMenu, "offroad.export_tracks", new ExportTracksAction(this), null);
-		addToMenu(jFileMenu, "offroad.copy_location", new CopyLocationToClipboardAction(this), "control C");
+		addToMenu(jFileMenu, "offroad.copy_location", new CopyLocationToClipboardAction(this), "alt C");
 		addToMenu(jFileMenu, "offroad.exit", item -> closeWindow(), "control Q");
 		menubar.add(jFileMenu);
 		JMenu jSearchMenu = new JMenu(getOffRoadString("offroad.string7")); //$NON-NLS-1$
@@ -1264,6 +1265,10 @@ public class OsmWindow  implements IRouteInformationListener {
 		return MessageFormat.format(getString(pKey), pObj);
 	}
 
+	public String getOffRoadString(String pKey, Object... pObj) {
+		return MessageFormat.format(getOffRoadString(pKey), pObj);
+	}
+	
 	public TargetPointsHelper getTargetPointsHelper() {
 		return mTargetPointsHelper;
 	}
@@ -1511,11 +1516,11 @@ public class OsmWindow  implements IRouteInformationListener {
 		return result;
 	}
 
-	public String getOffRoadString(String pString, Object[] pObjects) {
-		MessageFormat formatter = new MessageFormat(
-				getOffRoadString(pString)); //$NON-NLS-1$
-		return formatter.format(pObjects);
-	}
+//	public String getOffRoadString(String pString, Object[] pObjects) {
+//		MessageFormat formatter = new MessageFormat(
+//				getOffRoadString(pString)); //$NON-NLS-1$
+//		return formatter.format(pObjects);
+//	}
 
 	public JTextField getSearchTextField() {
 		return mSearchTextField;
@@ -1713,7 +1718,7 @@ public class OsmWindow  implements IRouteInformationListener {
 		} 
 		if (pAm instanceof FavouritePoint) {
 			FavouritePoint point = (FavouritePoint) pAm;
-			String editString = getOffRoadString("offroad.editFavourite", new String[]{point.getName(), point.getCategory()});
+			String editString = getOffRoadString("offroad.editFavourite", point.getName(), point.getCategory());
 			JMenuItem item = new JMenuItem(new AddFavoriteAction(this, editString, null, point){
 				@Override
 				protected String getWindowTitle() {
@@ -1721,7 +1726,7 @@ public class OsmWindow  implements IRouteInformationListener {
 				}
 			});
 			result.add(item);
-			item = new JMenuItem(new DeleteFavoriteAction(this, getOffRoadString("offroad.deleteFavourite", new String[]{point.getName(), point.getCategory()}), null, point));
+			item = new JMenuItem(new DeleteFavoriteAction(this, getOffRoadString("offroad.deleteFavourite", point.getName(), point.getCategory()), null, point));
 			result.add(item);
 			
 		}
@@ -1747,13 +1752,14 @@ public class OsmWindow  implements IRouteInformationListener {
 			result.add(item);
 			
 		}
-		HashSet<SelectedGpxFile> files = new HashSet<>();
 		if (pAm instanceof WptPt) {
 			WptPt waypt = (WptPt) pAm;
-			files.add(getSelectedGpxHelper().getSelectedGPXFile(waypt));
+			// TODO: What to do here?
 		}
-		for (SelectedGpxFile selectedGpxFile : files) {
-			result.add(new JMenuItem(selectedGpxFile.getGpxFile().path));
+		if (pAm instanceof SelectedGpxFile) {
+			SelectedGpxFile sgf = (SelectedGpxFile) pAm;
+			JMenuItem trackInfoItem = new JMenuItem(new ShowTrackDetailsAction(this, sgf));
+			result.add(trackInfoItem);
 		}
 		return result;
 	}

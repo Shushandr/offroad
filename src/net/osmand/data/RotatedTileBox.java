@@ -164,6 +164,10 @@ public class RotatedTileBox {
 		return new LatLon(getLatFromPixel(x, y), getLonFromPixel(x, y));
 	}
 
+	public LatLon getLatLonFromPixel(double x, double y) {
+		return getLatLonFromPixel((float)x, (float)y);
+	}
+	
 	public LatLon getCenterLatLon() {
 		return new LatLon(lat, lon);
 	}
@@ -678,6 +682,17 @@ public class RotatedTileBox {
 
 	public void setLatLonCenter(LatLon pDestination) {
 		setLatLonCenter(pDestination.getLatitude(), pDestination.getLongitude());
+	}
+
+	/**
+	 * @return the minimal distance of two pixels in meters
+	 */
+	public double getPixelDistanceInMeters() {
+		double dx = MapUtils.getDistance(getCenterLatLon(), getLatFromPixel(getCenterPixelX()+1, getCenterPixelY()),
+				getLonFromPixel(getCenterPixelX()+1, getCenterPixelY()));
+		double dy = MapUtils.getDistance(getCenterLatLon(), getLatFromPixel(getCenterPixelX(), getCenterPixelY()+1),
+				getLonFromPixel(getCenterPixelX(), getCenterPixelY()+1));
+		return Math.min(Math.abs(dx), Math.abs(dy));
 	}
 
 

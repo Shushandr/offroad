@@ -31,6 +31,7 @@ Version History:
 0_1-Beta4:
 ============
 * export tracks as webpage added.
+* Track information window as context menu entry for tracks added
 
 0_1-Beta3:
 ============

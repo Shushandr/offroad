@@ -32,61 +32,76 @@ import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.DateFormat;
 
 import javax.swing.JButton;
-import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 
+import net.osmand.plus.GPXUtilities.GPXTrackAnalysis;
+import net.osmand.plus.GpxSelectionHelper.SelectedGpxFile;
 import net.sourceforge.offroad.OsmWindow;
 import net.sourceforge.offroad.R;
 
 /**
  * @author foltin
- * @date 22.04.2016
+ * @date 31.07.2016
  */
-public class ShowWikipediaAction extends OffRoadAction {
+public class ShowTrackDetailsAction extends OffRoadAction {
 
-	private String mContent;
-	private String mTitle;
-	private String mArticle;
+	private SelectedGpxFile mSelectedGpxFile;
 
-	public ShowWikipediaAction(OsmWindow pContext, String pContent, String pTitle, String pArticle) {
-		super(pContext);
-		mContent = pContent;
-		mTitle = pTitle;
-		mArticle = pArticle;
+	public ShowTrackDetailsAction(OsmWindow pContext, SelectedGpxFile pSelectedGpxFile) {
+		super(pContext, pContext.getOffRoadString("offroad.track_details", pSelectedGpxFile.getGpxFile().getName()), null);
+		mSelectedGpxFile = pSelectedGpxFile;
 	}
 
-	/* (non-Javadoc)
-	 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-	 */
 	@Override
 	public void actionPerformed(ActionEvent pE) {
 		createDialog();
-		mDialog.setTitle(mTitle);
+		String title = (String) this.getValue(NAME);
+		mDialog.setTitle(title);
 		Container contentPane = mDialog.getContentPane();
 		GridBagLayout gbl = new GridBagLayout();
 		gbl.columnWeights = new double[] { 1.0f };
 		gbl.rowWeights = new double[] { 1.0f };
 		contentPane.setLayout(gbl);
 		int y = 0;
-		String htmlContent = "<html><body><a href=''>" + mArticle + "</a></body></html>";
+		String path = "file://" + mSelectedGpxFile.getGpxFile().path;
+		String htmlContent = "<html><body><a href=''>" + path + "</a></body></html>";
 		JTextPane contentDisplay = new JTextPane();
 		contentDisplay.setContentType("text/html"); // let the text pane know this is what you want
-		contentDisplay.setText(mContent); // showing off
+		String content = "<table border='2'><thead><th>Key</th><th>Value</th></thead><tbody>";
+		GPXTrackAnalysis analysis = mSelectedGpxFile.getGpxFile().getAnalysis(System.currentTimeMillis());
+		content += "<tr><td>" + mContext.getOffRoadString("startTime") + "</td><td>" + toString(analysis.startTime) + "</td></tr>";
+		content += "<tr><td>" + mContext.getOffRoadString("endTime") + "</td><td>" + toString(analysis.endTime) + "</td></tr>";
+		content += "<tr><td>" + mContext.getOffRoadString("timeSpan") + "</td><td>" + DateFormat.getTimeInstance().format(analysis.timeSpan) + "</td></tr>";
+		content += "<tr><td>" + mContext.getOffRoadString("timeMoving") + "</td><td>" + analysis.timeMoving + "</td></tr>";
+		content += "<tr><td>" + mContext.getOffRoadString("totalDistance") + "</td><td>" + analysis.totalDistance + "</td></tr>";
+		content += "<tr><td>" + mContext.getOffRoadString("totalDistanceMoving") + "</td><td>" + analysis.totalDistanceMoving + "</td></tr>";
+		content += "<tr><td>" + mContext.getOffRoadString("points") + "</td><td>" + analysis.points + "</td></tr>";
+		content += "<tr><td>" + mContext.getOffRoadString("avgSpeed") + "</td><td>" + analysis.avgSpeed + "</td></tr>";
+		content += "<tr><td>" + mContext.getOffRoadString("maxSpeed") + "</td><td>" + analysis.maxSpeed + "</td></tr>";
+		content += "<tr><td>" + mContext.getOffRoadString("avgElevation") + "</td><td>" + analysis.avgElevation + "</td></tr>";
+		content += "<tr><td>" + mContext.getOffRoadString("minElevation") + "</td><td>" + analysis.minElevation + "</td></tr>";
+		content += "<tr><td>" + mContext.getOffRoadString("maxElevation") + "</td><td>" + analysis.maxElevation + "</td></tr>";
+		content += "<tr><td>" + mContext.getOffRoadString("diffElevation") + "</td><td>" + (analysis.maxElevation-analysis.minElevation) + "</td></tr>";
+		content += "<tr><td>" + mContext.getOffRoadString("diffElevationUp") + "</td><td>" + analysis.diffElevationUp + "</td></tr>";
+		content += "<tr><td>" + mContext.getOffRoadString("diffElevationDown") + "</td><td>" + analysis.diffElevationDown + "</td></tr>";
+		content += "</tbody></table";
+		contentDisplay.setText(content ); // showing off
 		contentDisplay.setEditable(false); // as before
 		contentDisplay.setBackground(null); // this is the same as a JLabel
 		contentDisplay.setBorder(null); // remove the border
 		JLabel articleLabel = new JLabel(htmlContent);
 		articleLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
-		articleLabel.setToolTipText(mArticle);
+		articleLabel.setToolTipText(title);
 		articleLabel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 try {
-                    Desktop.getDesktop().browse(new URI(mArticle));
+                    Desktop.getDesktop().browse(new URI(path));
                 } catch (URISyntaxException | IOException ex) {
                 	ex.printStackTrace();
                 }
@@ -107,14 +122,13 @@ public class ShowWikipediaAction extends OffRoadAction {
 		mDialog.getRootPane().setDefaultButton(okButton);
 		// select region:
 		mDialog.pack();
+		decorateDialog();
 		mDialog.setVisible(true);
+		
 	}
 
-	/* (non-Javadoc)
-	 * @see net.sourceforge.offroad.actions.OffRoadAction#save()
-	 */
-	@Override
-	public void save() {
+	private String toString(long pStartTime) {
+		return DateFormat.getDateTimeInstance().format(pStartTime);
 	}
 
 }

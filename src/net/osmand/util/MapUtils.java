@@ -51,6 +51,13 @@ public class MapUtils {
 		return getDistance(getProjection(lat, lon, fromLat, fromLon, toLat, toLon), lat, lon);
 	}
 	
+	public static double getOrthogonalDistance(LatLon latLon, LatLon fromLatLon, LatLon toLatLon){
+		return getDistance(
+				getProjection(latLon.getLatitude(), latLon.getLongitude(), fromLatLon.getLatitude(),
+						fromLatLon.getLongitude(), toLatLon.getLatitude(), toLatLon.getLongitude()),
+				latLon.getLatitude(), latLon.getLongitude());
+	}
+	
 	public static LatLon getProjection(double lat, double lon, double fromLat, double fromLon, double toLat, double toLon) {
 		// not very accurate computation on sphere but for distances < 1000m it is ok
 		double mDist = (fromLat - toLat) * (fromLat - toLat) + (fromLon - toLon) * (fromLon - toLon);

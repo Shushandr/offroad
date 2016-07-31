@@ -32,6 +32,7 @@ import net.osmand.plus.views.MapTextLayer.MapTextProvider;
 import net.osmand.render.RenderingRuleProperty;
 import net.osmand.render.RenderingRuleSearchRequest;
 import net.osmand.render.RenderingRulesStorage;
+import net.osmand.util.MapUtils;
 import net.sourceforge.offroad.R;
 import net.sourceforge.offroad.ui.IContextMenuProvider;
 import net.sourceforge.offroad.ui.OsmBitmapPanel;
@@ -437,7 +438,7 @@ public class GPXLayer extends OsmandMapLayer implements IContextMenuProvider,
 		int ey = (int) point.getY();
 		for (SelectedGpxFile g : selectedGpxHelper.getSelectedGPXFiles()) {
 			List<WptPt> pts = getListStarPoints(g);
-			System.out.println("Sel " + g + " and points " + pts);
+//			System.out.println("Sel " + g + " and points " + pts);
 			// int fcolor = g.getColor() == 0 ? clr : g.getColor();
 			for (WptPt n : pts) {
 				int x = (int) tb.getPixXFromLatLon(n.lat, n.lon);
@@ -449,10 +450,35 @@ public class GPXLayer extends OsmandMapLayer implements IContextMenuProvider,
 		}
 	}
 
+	public void getSelectedGpxFileFromPoint(RotatedTileBox tb, Point2D point, List<? super SelectedGpxFile> res) {
+		double r = 15 * tb.getPixelDistanceInMeters();
+		LatLon latLon = tb.getLatLonFromPixel(point.getX(), point.getY());
+		L1: for (SelectedGpxFile g : selectedGpxHelper.getSelectedGPXFiles()) {
+			List<TrkSegment> pts = g.getPointsToDisplay();
+			for (TrkSegment n : pts) {
+				LatLon last = null;
+				for (WptPt pt : n.points) {
+					if(last != null){
+						double distance = MapUtils.getOrthogonalDistance(latLon, last, pt.getLatLon());
+//						System.out.println("Sel " + g + " and pt " + pt.getLatLon() + " and distance " + distance + " and boundary " + r);
+						if(Math.abs(distance)<r){
+							res.add(g);
+							continue L1;
+						}
+					}
+					last = pt.getLatLon();
+				}
+			}
+		}
+	}
+	
 	@Override
 	public String getObjectDescription(Object o) {
 		if(o instanceof WptPt){
 			return view.getContext().getString(R.string.gpx_wpt) + " : " + ((WptPt)o).name; //$NON-NLS-1$
+		}
+		if(o instanceof SelectedGpxFile){
+			return view.getContext().getString(R.string.gpx_file_name) + " : " + ((SelectedGpxFile)o).getGpxFile().author; 
 		}
 		return null;
 	}
@@ -461,6 +487,10 @@ public class GPXLayer extends OsmandMapLayer implements IContextMenuProvider,
 	public PointDescription getObjectName(Object o) {
 		if(o instanceof WptPt){
 			return new PointDescription(PointDescription.POINT_TYPE_WPT, ((WptPt)o).name); //$NON-NLS-1$
+		}
+		if (o instanceof SelectedGpxFile) {
+			SelectedGpxFile sgf = (SelectedGpxFile) o;
+			return new PointDescription(PointDescription.POINT_TYPE_WPT, sgf.getGpxFile().path);
 		}
 		return null;
 	}
@@ -477,12 +507,13 @@ public class GPXLayer extends OsmandMapLayer implements IContextMenuProvider,
 
 	@Override
 	public boolean isObjectClickable(Object o) {
-		return o instanceof WptPt;
+		return (o instanceof WptPt) || (o instanceof SelectedGpxFile);
 	}
 
 	@Override
 	public void collectObjectsFromPoint(Point2D point, RotatedTileBox tileBox, List<Object> res) {
 		getWptFromPoint(tileBox, point, res);
+		getSelectedGpxFileFromPoint(tileBox, point, res);
 	}
 
 	@Override
@@ -490,6 +521,7 @@ public class GPXLayer extends OsmandMapLayer implements IContextMenuProvider,
 		if(o instanceof WptPt){
 			return new LatLon(((WptPt)o).lat, ((WptPt)o).lon);
 		}
+		// FIXME: Add SelectedGpxFile
 		return null;
 	}
 	
