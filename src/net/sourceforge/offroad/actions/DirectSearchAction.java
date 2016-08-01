@@ -398,6 +398,7 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 	public void setEnabled(boolean pEnabled){
 		if(!pEnabled){
 			mProvider = new NullProvider();
+			mSearchHit = null;
 			publishProvider();
 		} else {
 			actionPerformed(null);

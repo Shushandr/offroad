@@ -153,6 +153,10 @@ public class Paint {
 		return mColor.getRGB() + mColor.getAlpha()<<24;
 	}
 
+	public Color getColorAsColor() {
+		return mColor;
+	}
+	
 	public void setFilterBufferedImage(boolean pFilterBufferedImage) {
 		// TODO: what to do with that?
 		mFilterBufferedImage = pFilterBufferedImage;

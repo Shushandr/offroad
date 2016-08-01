@@ -20,6 +20,11 @@
 package net.sourceforge.offroad.ui;
 
 import java.awt.Graphics2D;
+import java.awt.event.ActionEvent;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.Timer;
 
 import net.osmand.data.RotatedTileBox;
 import net.sourceforge.offroad.R;
@@ -30,12 +35,29 @@ import net.sourceforge.offroad.R;
  */
 public class DirectSearchSelectionLayer extends DirectSearchLayer implements DirectOffroadLayer {
 
+	private static final int INACTIVITY_TIME_IN_MILLISECONDS = 2000;
+
 	private float mStrokeWidth;
+
+	protected boolean mSelectedColor;
 
 	/**
 	 * 
 	 */
 	public DirectSearchSelectionLayer() {
+		Action updatePaintAction = new AbstractAction() {
+			public void actionPerformed(ActionEvent e) {
+				mSelectedColor = !mSelectedColor;
+				if(mSelectedColor){
+					highlightYellow.setColor(R.color.region_selected);
+				} else {
+					highlightYellow.setColor(R.color.poi_background);
+				}
+				mView.repaint();
+			}
+		};
+		new Timer(INACTIVITY_TIME_IN_MILLISECONDS, updatePaintAction).start();
+
 	}
 
 	
