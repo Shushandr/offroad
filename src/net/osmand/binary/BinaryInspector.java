@@ -81,7 +81,8 @@ public class BinaryInspector {
 //				"/Users/victorshcherb/osmand/maps/Netherlands_europe_2.road.obf"
 //				"/Users/victorshcherb/osmand/maps/C_11_03_06.obf"
 //				"/home/foltin/.OffRoad/World_basemap.obf"
-				"/home/foltin/.OffRoad/Germany_bremen_europe.obf"
+//				"/home/foltin/.OffRoad/Germany_bremen_europe.obf"
+					"/home/foltin/.OffRoad/srtm/Austria_europe.srtm.obf"
 					});
 		} else {
 			in.inspector(args);

@@ -436,10 +436,17 @@ public class TextRenderer {
 		if (map != null) {
 			// find preferred language key (first the given language, then english, then the rest)
 			Integer langTagL = obj.getMapIndex().getRule("name:" + rc.preferredLocale, null);
-			boolean langContainedL = map.containsKey(langTagL);
+			boolean langContainedL = langTagL != null && map.containsKey(langTagL);
 			if(!langContainedL){
 				langTagL = obj.getMapIndex().getRule("name:en", null);
-				langContainedL = map.containsKey(langTagL);
+				langContainedL = langTagL != null && map.containsKey(langTagL);
+			}
+			if(!langContainedL){
+				langTagL = obj.getMapIndex().getRule("elevation", null);
+				langContainedL = langTagL != null && map.containsKey(langTagL);
+			}
+			if(langTagL == null){
+				return;
 			}
 			// assign final variables:
 			boolean langContained = langContainedL;

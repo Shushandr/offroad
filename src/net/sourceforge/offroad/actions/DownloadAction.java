@@ -371,7 +371,7 @@ public class DownloadAction extends OffRoadAction {
 		mDownloadResources.updateLoadedFiles();
 		for (IndexItem item : indexesList.getIndexFiles()) {
 			if (item.getType() == DownloadActivityType.NORMAL_FILE || item.getType() == DownloadActivityType.ROADS_FILE
-					|| item.getType() == DownloadActivityType.WIKIPEDIA_FILE) {
+					|| item.getType() == DownloadActivityType.WIKIPEDIA_FILE || item.getType() == DownloadActivityType.SRTM_COUNTRY_FILE) {
 				mSourceModel.addRow(item);
 			}
 		}

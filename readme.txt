@@ -33,6 +33,7 @@ Version History:
 * export tracks as webpage added.
 * Track information window as context menu entry for tracks added
 * Elevation is shown in the track information window as a curve.
+* Enabled relief curves in the offline maps.
 
 0_1-Beta3:
 ============
