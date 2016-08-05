@@ -9,32 +9,35 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.imageio.ImageIO;
-
 import gnu.trove.list.array.TIntArrayList;
 import net.osmand.Location;
+import net.osmand.data.LatLon;
+import net.osmand.data.PointDescription;
 import net.osmand.data.QuadRect;
 import net.osmand.data.RotatedTileBox;
+import net.osmand.plus.GPXUtilities.TrkSegment;
+import net.osmand.plus.GPXUtilities.WptPt;
+import net.osmand.plus.GpxSelectionHelper.SelectedGpxFile;
 import net.osmand.plus.render.OsmandRenderer;
 import net.osmand.plus.render.OsmandRenderer.RenderingContext;
 import net.osmand.plus.render.RenderingIcons;
+import net.osmand.plus.routing.RouteCalculationResult;
 import net.osmand.plus.routing.RouteDirectionInfo;
 import net.osmand.plus.routing.RoutingHelper;
 import net.osmand.render.RenderingRuleSearchRequest;
 import net.osmand.render.RenderingRulesStorage;
-import net.sourceforge.offroad.OsmWindow;
+import net.osmand.util.MapUtils;
 import net.sourceforge.offroad.ui.ColorUtils;
+import net.sourceforge.offroad.ui.IContextMenuProvider;
 import net.sourceforge.offroad.ui.OsmBitmapPanel;
 import net.sourceforge.offroad.ui.PorterDuffMultiplyFilter;
 
-public class RouteLayer extends OsmandMapLayer {
+public class RouteLayer extends OsmandMapLayer implements IContextMenuProvider {
 	
 	private OsmBitmapPanel view;
 	
@@ -177,7 +180,7 @@ public class RouteLayer extends OsmandMapLayer {
 	@Override
 	public void onPrepareBufferImage(Graphics2D canvas, RotatedTileBox tileBox, DrawSettings settings) {
 		path.reset();
-		if (helper.getFinalLocation() != null && helper.getRoute().isCalculated()) {
+		if (isRouteReady()) {
 			updatePaints(canvas, settings, tileBox);
 			if(coloredArrowUp == null) {
 				BufferedImage originalArrowUp;
@@ -216,6 +219,11 @@ public class RouteLayer extends OsmandMapLayer {
 
 		}
 	
+	}
+
+
+	public boolean isRouteReady() {
+		return helper.getFinalLocation() != null && helper.getRoute().isCalculated();
 	}
 	
 	@Override
@@ -547,9 +555,76 @@ public class RouteLayer extends OsmandMapLayer {
 	}
 
 
+	@Override
+	public String getObjectDescription(Object pO) {
+		if (pO instanceof RouteCalculationResult) {
+			RouteCalculationResult res = (RouteCalculationResult) pO;
+			return res.getErrorMessage();
+		}
+		return null;
+	}
+
+
+	@Override
+	public PointDescription getObjectName(Object pO) {
+		if (pO instanceof RouteCalculationResult) {
+			RouteCalculationResult res = (RouteCalculationResult) pO;
+			return new PointDescription(PointDescription.POINT_TYPE_WPT, res.getErrorMessage());
+		}
+		return null;
+	}
+
+
+	@Override
+	public boolean disableSingleTap() {
+		return false;
+	}
+
+
+	@Override
+	public boolean disableLongPressOnMap() {
+		return false;
+	}
+
+
+	@Override
+	public boolean isObjectClickable(Object pO) {
+		return (pO instanceof RouteCalculationResult);
+	}
+
+
+	public void getRouteFromPoint(RotatedTileBox tb, Point2D point, List<? super RouteCalculationResult> res) {
+		if(!isRouteReady()){
+			return;
+		}
+		double r = 15 * tb.getPixelDistanceInMeters();
+		LatLon latLon = tb.getLatLonFromPixel(point.getX(), point.getY());
+		RouteCalculationResult routeCalculationResult = helper.getRoute();
+		List<Location> routeNodes = routeCalculationResult.getRouteLocations();
+		LatLon last = null;
+		for (Location l : routeNodes) {
+			if(last != null){
+				double distance = MapUtils.getOrthogonalDistance(latLon, last, l.getLatLon());
+				if(Math.abs(distance)<r){
+					res.add(routeCalculationResult);
+					return;
+				}
+			}
+			last = l.getLatLon();
+		}
+	}
 	
 
+	
+	@Override
+	public void collectObjectsFromPoint(Point2D pPoint, RotatedTileBox pTileBox, List<Object> pRes) {
+		getRouteFromPoint(pTileBox, pPoint, pRes);
+	}
 
 
+	@Override
+	public LatLon getObjectLocation(Object pO) {
+		return null;
+	}
 
 }

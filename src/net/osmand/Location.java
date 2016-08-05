@@ -15,6 +15,7 @@ package net.osmand;
  * limitations under the License.
  */
 
+import net.osmand.data.LatLon;
 
 /**
  * A class representing a geographic location sensed at a particular
@@ -508,6 +509,10 @@ public class Location {
             ",mHasAccuracy=" + mHasAccuracy +
             ",mAccuracy=" + mAccuracy;
     }
+
+	public LatLon getLatLon() {
+		return new LatLon(getLatitude(), getLongitude());
+	}
 
     
 

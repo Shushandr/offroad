@@ -31,7 +31,6 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.text.MessageFormat;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -153,6 +152,7 @@ import net.sourceforge.offroad.actions.SearchAddressAction;
 import net.sourceforge.offroad.actions.SelectTrackAction;
 import net.sourceforge.offroad.actions.SetRenderingRule;
 import net.sourceforge.offroad.actions.ShowFavoriteAction;
+import net.sourceforge.offroad.actions.ShowRouteDetailsAction;
 import net.sourceforge.offroad.actions.ShowTargetPointAction;
 import net.sourceforge.offroad.actions.ShowTrackDetailsAction;
 import net.sourceforge.offroad.actions.ShowWikipediaAction;
@@ -1760,6 +1760,11 @@ public class OsmWindow  implements IRouteInformationListener {
 			SelectedGpxFile sgf = (SelectedGpxFile) pAm;
 			JMenuItem trackInfoItem = new JMenuItem(new ShowTrackDetailsAction(this, sgf));
 			result.add(trackInfoItem);
+		}
+		if (pAm instanceof RouteCalculationResult) {
+			RouteCalculationResult rcr = (RouteCalculationResult) pAm;
+			JMenuItem routeInfoItem = new JMenuItem(new ShowRouteDetailsAction(this, rcr));
+			result.add(routeInfoItem);
 		}
 		return result;
 	}

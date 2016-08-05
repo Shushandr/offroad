@@ -2,6 +2,7 @@ package net.osmand.router;
 
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -183,9 +184,19 @@ public class RouteSegmentResult {
 		this.description = description;
 	}
 
+
 	@Override
 	public String toString() {
-		return object.toString() + " : " + startPointIndex + "-" + endPointIndex;
+		return "RouteSegmentResult [object=" + object + ", startPointIndex=" + startPointIndex + ", endPointIndex="
+				+ endPointIndex + ", attachedRoutes=" + Arrays.toString(attachedRoutes) + ", preAttachedRoutes="
+				+ Arrays.toString(preAttachedRoutes) + ", segmentTime=" + segmentTime + ", routingTime=" + routingTime
+				+ ", speed=" + speed + ", distance=" + distance + ", description=" + description + ", turnType="
+				+ turnType + "]";
 	}
+
+//	@Override
+//	public String toString() {
+//		return object.toString() + " : " + startPointIndex + "-" + endPointIndex;
+//	}
 	
 }
