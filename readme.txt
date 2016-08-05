@@ -28,6 +28,10 @@ An offline map viewer based on OsmAnd.
 
 Version History:
 
+0_1-Beta5:
+============
+* First version of elevation correction for GPX files.
+
 0_1-Beta4:
 ============
 * Fast Search (Ctrl+Shift+F) added. It searches in the visible map for words. Fuzzy support.

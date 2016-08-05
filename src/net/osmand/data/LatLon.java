@@ -2,6 +2,8 @@ package net.osmand.data;
 
 import java.io.Serializable;
 
+import net.osmand.util.MapUtils;
+
 public class LatLon implements Serializable {
 	private final double longitude;
 	private final double latitude;
@@ -48,6 +50,13 @@ public class LatLon implements Serializable {
 
 	public double getLongitude() {
 		return longitude;
+	}
+
+	public int get31TileNumberX() {
+		return MapUtils.get31TileNumberX(longitude);
+	}
+	public int get31TileNumberY() {
+		return MapUtils.get31TileNumberY(latitude);
 	}
 
 }

@@ -798,7 +798,7 @@ public class BinaryMapIndexReader {
 	
 	
 	
-	public List<BinaryMapDataObject> searchMapIndex(SearchRequest<BinaryMapDataObject> req) throws IOException {
+	public synchronized List<BinaryMapDataObject> searchMapIndex(SearchRequest<BinaryMapDataObject> req) throws IOException {
 		req.numberOfVisitedObjects = 0;
 		req.numberOfAcceptedObjects = 0;
 		req.numberOfAcceptedSubtrees = 0;
