@@ -45,10 +45,10 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 
 import net.osmand.data.LatLon;
+import net.osmand.plus.GPXUtilities.GPXFile;
 import net.osmand.plus.GPXUtilities.GPXTrackAnalysis;
 import net.osmand.plus.GPXUtilities.TrkSegment;
 import net.osmand.plus.GPXUtilities.WptPt;
-import net.osmand.plus.GpxSelectionHelper.SelectedGpxFile;
 import net.sourceforge.offroad.OsmWindow;
 import net.sourceforge.offroad.R;
 import net.sourceforge.offroad.data.ElevationHelper;
@@ -62,15 +62,15 @@ import net.sourceforge.offroad.ui.GraphPanel;
  */
 public class ShowTrackDetailsAction extends OffRoadAction implements LatLonGeneralization {
 
-	private SelectedGpxFile mSelectedGpxFile;
+	private GPXFile mGpxFile;
 	private GraphPanel mGraphPanel;
 	private JTextPane mContentDisplay;
 	private boolean mAdjustmentCancelled;
 	private ElevationHelper mElevationHelper;
 
-	public ShowTrackDetailsAction(OsmWindow pContext, SelectedGpxFile pSelectedGpxFile) {
-		super(pContext, pContext.getOffRoadString("offroad.track_details", pSelectedGpxFile.getGpxFile().getName()), null);
-		mSelectedGpxFile = pSelectedGpxFile;
+	public ShowTrackDetailsAction(OsmWindow pContext, GPXFile pGpxFile) {
+		super(pContext, pContext.getOffRoadString("offroad.track_details", pGpxFile.getName()), null);
+		mGpxFile = pGpxFile;
 		mElevationHelper = new ElevationHelper();
 	}
 
@@ -85,7 +85,7 @@ public class ShowTrackDetailsAction extends OffRoadAction implements LatLonGener
 		gbl.rowWeights = new double[] { 1.0f };
 		contentPane.setLayout(gbl);
 		int y = 0;
-		String path = "file://" + mSelectedGpxFile.getGpxFile().path;
+		String path = "file://" + mGpxFile.path;
 		String htmlContent = "<html><body><a href=''>" + path + "</a></body></html>";
 		mContentDisplay = new JTextPane();
 		mContentDisplay.setContentType("text/html"); // let the text pane know this is what you want
@@ -162,7 +162,7 @@ public class ShowTrackDetailsAction extends OffRoadAction implements LatLonGener
 
 	public void updateAnalysis() {
 		String content = "<table border='2'><thead><th>Key</th><th>Value</th></thead><tbody>";
-		GPXTrackAnalysis analysis = mSelectedGpxFile.getGpxFile().getAnalysis(System.currentTimeMillis());
+		GPXTrackAnalysis analysis = mGpxFile.getAnalysis(System.currentTimeMillis());
 		String inBrk = "</td><td align='right'>";
 		if(analysis.isTimeSpecified()){
 			content += "<tr><td>" + mContext.getOffRoadString("startTime") + inBrk + toString(analysis.startTime) + "</td></tr>";
@@ -196,7 +196,7 @@ public class ShowTrackDetailsAction extends OffRoadAction implements LatLonGener
 	@Override
 	public void updateGraphPanel() {
 		Map<Long, Double> elevation = new TreeMap<>();
-		List<TrkSegment> pts = mSelectedGpxFile.getPointsToDisplay();
+		List<TrkSegment> pts = mGpxFile.proccessPoints();
 		for (TrkSegment n : pts) {
 			for (WptPt pt : n.points) {
 				elevation.put(pt.time, pt.ele);
@@ -258,7 +258,7 @@ public class ShowTrackDetailsAction extends OffRoadAction implements LatLonGener
 	@Override
 	public List<LatLonHolder> getPoints() {
 		ArrayList<LatLonHolder> res = new ArrayList<>();
-		List<TrkSegment> pts = mSelectedGpxFile.getPointsToDisplay();
+		List<TrkSegment> pts = mGpxFile.proccessPoints();
 		for (TrkSegment n : pts) {
 			for (WptPt pt : n.points) {
 				res.add(new WptHolder(pt));

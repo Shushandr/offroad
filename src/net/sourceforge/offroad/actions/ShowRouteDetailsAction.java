@@ -66,9 +66,17 @@ public class ShowRouteDetailsAction extends OffRoadAction implements LatLonGener
 		mElevationHelper = new ElevationHelper();
 		List<RouteSegmentResult> pts = mRouteCalculationResult.getOriginalRoute();
 		mRouteHolderList = new ArrayList<RouteHolder>();
-		for (RouteSegmentResult routeSegmentResult : pts) {
-			log.info("Adding segment result " + routeSegmentResult);
-			mRouteHolderList.add(new RouteHolder(routeSegmentResult));
+		for (RouteSegmentResult rsr : pts) {
+			for (int i = rsr.getStartPointIndex(); i != rsr.getEndPointIndex(); ) {
+				RouteHolder holder = new RouteHolder(rsr, i);
+				mRouteHolderList.add(holder);
+				log.debug("Adding segment result " + rsr + " and index " + i + " and time " + holder.getTime());
+				if(rsr.isForwardDirection()){
+					i++;
+				} else {
+					i--;
+				}
+			}
 		}
 	}
 
@@ -145,7 +153,7 @@ public class ShowRouteDetailsAction extends OffRoadAction implements LatLonGener
 		String content = "<table border='2'><thead><th>Key</th><th>Value</th></thead><tbody>";
 		String inBrk = "</td><td align='right'>";
 		content += "<tr><td>" + mContext.getOffRoadString("totalDistance") + inBrk + toDist(mRouteCalculationResult.getWholeDistance()) + "</td></tr>";
-		content += "<tr><td>" + mContext.getOffRoadString("totalTime") + inBrk + toTimeString((long) (mRouteCalculationResult.getRoutingTime()*1000)) + "</td></tr>";
+		content += "<tr><td>" + mContext.getOffRoadString("totalTime") + inBrk + toTimeString((long) (mRouteCalculationResult.getRoutingTime()*1000f)) + "</td></tr>";
 		content += "</tbody></table";
 		mContentDisplay.setText(content ); // showing off
 	}
@@ -155,8 +163,8 @@ public class ShowRouteDetailsAction extends OffRoadAction implements LatLonGener
 		Map<Long, Double> elevation = new TreeMap<>();
 		long totalTime = now;
 		for (RouteHolder routeHolder : mRouteHolderList) {
-			elevation.put(totalTime, routeHolder.getElevation());
-			totalTime += routeHolder.getTime();
+			elevation.put(new Long(totalTime), routeHolder.getElevation());
+			totalTime += (long) routeHolder.getTime();
 		}
 		mGraphPanel.setScores(elevation);
 	}
@@ -172,31 +180,36 @@ public class ShowRouteDetailsAction extends OffRoadAction implements LatLonGener
 
 
 	private static class RouteHolder implements LatLonHolder {
-		public RouteHolder(RouteSegmentResult pPt) {
+		private int mIndex;
+		public RouteSegmentResult mRsr;
+		public double ele;
+		private LatLon mLatLon;
+
+		public RouteHolder(RouteSegmentResult pRsr, int pIndex) {
 			super();
-			mPt = pPt;
+			mRsr = pRsr;
+			mIndex = pIndex;
+			mLatLon = mRsr.getPoint(mIndex);
 		}
 
 		public float getTime() {
-			return mPt.getRoutingTime()*1000;
+			return mRsr.getSegmentTime()*1000f/Math.abs(mRsr.getStartPointIndex()-mRsr.getEndPointIndex());
 		}
 
-		public RouteSegmentResult mPt;
-		public double ele;
 		
 		@Override
 		public LatLon getLatLon() {
-			return mPt.getStartPoint();
+			return mLatLon;
 		}
 
 		@Override
 		public double getLatitude() {
-			return mPt.getStartPoint().getLatitude();
+			return getLatLon().getLatitude();
 		}
 
 		@Override
 		public double getLongitude() {
-			return mPt.getStartPoint().getLongitude();
+			return getLatLon().getLongitude();
 		}
 
 		@Override

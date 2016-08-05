@@ -68,14 +68,16 @@ public class GraphPanel extends JPanel {
 		super.paintComponent(g);
 		Graphics2D g2 = (Graphics2D) g;
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		long ydist = getMaxTime()-getMinTime();
+		Long minTime = getMinTime();
+		double maxScore = getMaxScore() + padding;
+		long ydist = getMaxTime()-minTime;
 		double xScale = ((double) getWidth() - (2 * padding) - labelPadding) / (ydist);
-		double yScale = ((double) getHeight() - 2 * padding - labelPadding) / (getMaxScore() - getMinScore());
+		double yScale = ((double) getHeight() - 2 * padding - labelPadding) / (maxScore - getMinScore());
 
 		List<Point> graphPoints = new ArrayList<>();
 		for (Long ypoint : scores.keySet()) {
-			int x1 = (int) ( (ypoint - getMinTime()+0d) * xScale + padding + labelPadding);
-			int y1 = (int) ((getMaxScore() - scores.get(ypoint)) * yScale + padding);
+			int x1 = (int) ( (ypoint - minTime+0d) * xScale + padding + labelPadding);
+			int y1 = (int) ((maxScore - scores.get(ypoint)) * yScale + padding);
 			graphPoints.add(new Point(x1, y1));
 		}
 
@@ -97,7 +99,7 @@ public class GraphPanel extends JPanel {
 				g2.drawLine(padding + labelPadding + 1 + pointWidth, y0, getWidth() - padding, y1);
 				g2.setColor(Color.BLACK);
 				String yLabel = ((int) ((getMinScore()
-						+ (getMaxScore() - getMinScore()) * ((i * 1.0) / numberYDivisions)))) + "";
+						+ (maxScore - getMinScore()) * ((i * 1.0) / numberYDivisions)))) + "";
 				FontMetrics metrics = g2.getFontMetrics();
 				int labelWidth = metrics.stringWidth(yLabel);
 				g2.drawString(yLabel, x0 - labelWidth - 5, y0 + (metrics.getHeight() / 2) - 3);
@@ -116,7 +118,7 @@ public class GraphPanel extends JPanel {
 					g2.setColor(gridColor);
 					g2.drawLine(x0, getHeight() - padding - labelPadding - 1 - pointWidth, x1, padding);
 					g2.setColor(Color.BLACK);
-					String xLabel = DateFormat.getDateTimeInstance().format(getMinTime() + ydist *i / scores.size());
+					String xLabel = DateFormat.getDateTimeInstance().format(minTime + ydist *i / scores.size());
 					FontMetrics metrics = g2.getFontMetrics();
 					int labelWidth = metrics.stringWidth(xLabel);
 					g2.drawString(xLabel, x0 - labelWidth / 2, y0 + metrics.getHeight() + 3);

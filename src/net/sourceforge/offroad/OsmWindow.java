@@ -1758,7 +1758,7 @@ public class OsmWindow  implements IRouteInformationListener {
 		}
 		if (pAm instanceof SelectedGpxFile) {
 			SelectedGpxFile sgf = (SelectedGpxFile) pAm;
-			JMenuItem trackInfoItem = new JMenuItem(new ShowTrackDetailsAction(this, sgf));
+			JMenuItem trackInfoItem = new JMenuItem(new ShowTrackDetailsAction(this, sgf.getGpxFile()));
 			result.add(trackInfoItem);
 		}
 		if (pAm instanceof RouteCalculationResult) {
