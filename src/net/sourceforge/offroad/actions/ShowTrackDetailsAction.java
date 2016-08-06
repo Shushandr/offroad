@@ -19,6 +19,7 @@
 
 package net.sourceforge.offroad.actions;
 
+import java.awt.Color;
 import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.Desktop;
@@ -124,6 +125,8 @@ public class ShowTrackDetailsAction extends OffRoadAction implements LatLonGener
 
 					public void run() {
 						mContext.setWaitingCursor(true);
+						mGraphPanel.setBackgroundColor(Color.LIGHT_GRAY);
+						mGraphPanel.setDrawText(mContext.getOffRoadString("offroad.Calculating"));
 						mAdjustmentCancelled = false;
 						adjustElevationButton.setEnabled(false);
 						cancelElevationButton.setEnabled(true);
@@ -135,6 +138,8 @@ public class ShowTrackDetailsAction extends OffRoadAction implements LatLonGener
 							mContext.setWaitingCursor(false);
 							updateAnalysis();
 							updateGraphPanel();
+							mGraphPanel.setDrawText(null);
+							mGraphPanel.setBackgroundColor(Color.WHITE);
 						}
 					}
 				}).start();

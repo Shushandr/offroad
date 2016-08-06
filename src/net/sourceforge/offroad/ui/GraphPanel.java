@@ -58,9 +58,12 @@ public class GraphPanel extends JPanel {
 	private int pointWidth = 8;
 	private int numberYDivisions = 10;
 	private Map<Long, Double> scores;
+	private Color mBackgroundColor;
+	private String mDrawText;
 
 	public GraphPanel(Map<Long, Double> pScores) {
 		this.scores = pScores;
+		mBackgroundColor = Color.WHITE;
 	}
 
 	@Override
@@ -81,8 +84,7 @@ public class GraphPanel extends JPanel {
 			graphPoints.add(new Point(x1, y1));
 		}
 
-		// draw white background
-		g2.setColor(Color.WHITE);
+		g2.setColor(mBackgroundColor);
 		g2.fillRect(padding + labelPadding, padding, getWidth() - (2 * padding) - labelPadding,
 				getHeight() - 2 * padding - labelPadding);
 		g2.setColor(Color.BLACK);
@@ -152,7 +154,25 @@ public class GraphPanel extends JPanel {
 			int ovalH = pointWidth;
 			g2.fillOval(x, y, ovalW, ovalH);
 		}
+		
+		if(mDrawText != null){
+			drawRotate(g2, mDrawText);
+		}
 	}
+	
+	public void drawRotate(Graphics2D g2, String text) {
+		double place = Math.sqrt(getWidth()*getWidth()+getHeight()*getHeight());
+		double angle = Math.acos(getWidth()/place);
+		Graphics2D g2d = (Graphics2D) g2.create();
+		g2d.setFont(g2d.getFont().deriveFont(128f));
+		int stringWidth = g2d.getFontMetrics().stringWidth(text);
+		g2d.translate(getWidth()/2f, getHeight()/2f);
+		g2d.rotate(-angle);
+		double effectiveStringWidth = place/(2f*stringWidth);
+		g2d.scale(effectiveStringWidth,effectiveStringWidth);
+		g2d.drawString(text, (int) (-0.5f*stringWidth), 0);
+		g2d.dispose();
+	}  
 
 	// @Override
 	// public Dimension getPreferredSize() {
@@ -212,6 +232,7 @@ public class GraphPanel extends JPanel {
 			time += random.nextDouble() * 1000*60;
 		}
 		GraphPanel mainPanel = new GraphPanel(scores);
+		mainPanel.setDrawText("Calculating");
 		mainPanel.setPreferredSize(new Dimension(800, 600));
 		JFrame frame = new JFrame("DrawGraph");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -227,5 +248,21 @@ public class GraphPanel extends JPanel {
 				createAndShowGui();
 			}
 		});
+	}
+
+	public Color getBackgroundColor() {
+		return mBackgroundColor;
+	}
+
+	public void setBackgroundColor(Color pBackgroundColor) {
+		mBackgroundColor = pBackgroundColor;
+	}
+
+	public String getDrawText() {
+		return mDrawText;
+	}
+
+	public void setDrawText(String pDrawText) {
+		mDrawText = pDrawText;
 	}
 }

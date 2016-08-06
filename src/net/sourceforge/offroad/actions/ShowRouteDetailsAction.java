@@ -19,6 +19,7 @@
 
 package net.sourceforge.offroad.actions;
 
+import java.awt.Color;
 import java.awt.Container;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -103,8 +104,8 @@ public class ShowRouteDetailsAction extends OffRoadAction implements LatLonGener
 		updateGraphPanel();
 		contentPane.add(mGraphPanel, new GridBagConstraints(0, y++, 4, 1, 4.0, 10.0, GridBagConstraints.WEST,
 				GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
-		JButton adjustElevationButton = new JButton(mContext.getOffRoadString("offroad.adjust_elevation"));
-		JButton cancelElevationButton = new JButton(mContext.getOffRoadString("offroad.cancel_elevation"));
+		JButton adjustElevationButton = new JButton(mContext.getOffRoadString("offroad.adjust_elevation_calculation"));
+		JButton cancelElevationButton = new JButton(mContext.getOffRoadString("offroad.cancel_elevation_calculation"));
 		cancelElevationButton.setEnabled(false);
 		adjustElevationButton.addActionListener(new ActionListener(){
 			@Override
@@ -113,6 +114,8 @@ public class ShowRouteDetailsAction extends OffRoadAction implements LatLonGener
 
 					public void run() {
 						mContext.setWaitingCursor(true);
+						mGraphPanel.setBackgroundColor(Color.LIGHT_GRAY);
+						mGraphPanel.setDrawText(mContext.getOffRoadString("offroad.Calculating"));
 						mAdjustmentCancelled = false;
 						adjustElevationButton.setEnabled(false);
 						cancelElevationButton.setEnabled(true);
@@ -124,6 +127,8 @@ public class ShowRouteDetailsAction extends OffRoadAction implements LatLonGener
 							mContext.setWaitingCursor(false);
 							updateAnalysis();
 							updateGraphPanel();
+							mGraphPanel.setBackgroundColor(Color.WHITE);
+							mGraphPanel.setDrawText(null);
 						}
 					}
 				}).start();
