@@ -29,6 +29,7 @@ import java.awt.event.ActionListener;
 import java.text.DateFormat;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -38,6 +39,10 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 
 import net.osmand.data.LatLon;
+import net.osmand.plus.GPXUtilities.GPXFile;
+import net.osmand.plus.GPXUtilities.GPXTrackAnalysis;
+import net.osmand.plus.GPXUtilities.TrkSegment;
+import net.osmand.plus.GPXUtilities.WptPt;
 import net.osmand.plus.routing.RouteCalculationResult;
 import net.osmand.router.RouteSegmentResult;
 import net.sourceforge.offroad.OsmWindow;
@@ -155,13 +160,50 @@ public class ShowRouteDetailsAction extends OffRoadAction implements LatLonGener
 	}
 
 	public void updateAnalysis() {
+		// get elevations:
+		Map<LatLon, Double> elevations = new HashMap<LatLon, Double>();
+		for (RouteHolder routeHolder : mRouteHolderList) {
+			elevations.put(routeHolder.getLatLon(), routeHolder.getElevation());
+		}
+		// create gpx:
+		GPXFile gpxFile = mContext.getRoutingHelper().generateGPXFileWithRoute();
+		List<TrkSegment> pts = gpxFile.proccessPoints();
+		for (TrkSegment n : pts) {
+			for (WptPt pt : n.points) {
+				if(elevations.containsKey(pt.getLatLon())) {
+					Double elev = elevations.get(pt.getLatLon());
+					if(elev.doubleValue() != 0d){
+						pt.ele = elev;
+					}
+				}
+			}
+		}
+		GPXTrackAnalysis analysis = gpxFile.getAnalysis(System.currentTimeMillis());
 		String content = "<table border='2'><thead><th>Key</th><th>Value</th></thead><tbody>";
 		String inBrk = "</td><td align='right'>";
 		content += "<tr><td>" + mContext.getOffRoadString("totalDistance") + inBrk + toDist(mRouteCalculationResult.getWholeDistance()) + "</td></tr>";
 		content += "<tr><td>" + mContext.getOffRoadString("totalTime") + inBrk + toTimeString((long) (mRouteCalculationResult.getRoutingTime()*1000f)) + "</td></tr>";
+		content += "<tr><td>" + mContext.getOffRoadString("totalDistance") + inBrk + toDist(analysis.totalDistance) + "</td></tr>";
+		if(analysis.isTimeMoving()){
+			content += "<tr><td>" + mContext.getOffRoadString("totalDistanceMoving") + inBrk + toDist(analysis.totalDistanceMoving) + "</td></tr>";
+		}
+		content += "<tr><td>" + mContext.getOffRoadString("points") + inBrk + analysis.points + "</td></tr>";
+		if(analysis.isElevationSpecified()){
+			content += "<tr><td>" + mContext.getOffRoadString("minElevation") + inBrk + toDist(analysis.minElevation) + "</td></tr>";
+			content += "<tr><td>" + mContext.getOffRoadString("maxElevation") + inBrk + toDist(analysis.maxElevation) + "</td></tr>";
+			content += "<tr><td>" + mContext.getOffRoadString("diffElevation") + inBrk + (toDist(analysis.maxElevation-analysis.minElevation)) + "</td></tr>";
+			content += "<tr><td>" + mContext.getOffRoadString("diffElevationUp") + inBrk + toDist(analysis.diffElevationUp) + "</td></tr>";
+			content += "<tr><td>" + mContext.getOffRoadString("diffElevationDown") + inBrk + toDist(analysis.diffElevationDown) + "</td></tr>";
+			content += "<tr><td>" + mContext.getOffRoadString("avgElevation") + inBrk + toDist(analysis.avgElevation) + "</td></tr>";
+		}
 		content += "</tbody></table";
 		mContentDisplay.setText(content ); // showing off
 	}
+
+	private String toVelocity(float pValue) {
+		return MessageFormat.format("{0,number,#.##} km/h", pValue);
+	}
+
 
 	@Override
 	public void updateGraphPanel() {
