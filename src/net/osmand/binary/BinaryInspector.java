@@ -81,8 +81,8 @@ public class BinaryInspector {
 //				"/Users/victorshcherb/osmand/maps/Netherlands_europe_2.road.obf"
 //				"/Users/victorshcherb/osmand/maps/C_11_03_06.obf"
 //				"/home/foltin/.OffRoad/World_basemap.obf"
-//				"/home/foltin/.OffRoad/Germany_bremen_europe.obf"
-					"/home/foltin/.OffRoad/srtm/Austria_europe.srtm.obf"
+				"/home/foltin/.OffRoad/Germany_berlin_europe.obf"
+//					"/home/foltin/.OffRoad/srtm/Austria_europe.srtm.obf"
 					});
 		} else {
 			in.inspector(args);
@@ -889,17 +889,25 @@ public class BinaryInspector {
 		TIntArrayList order = obj.getNamesOrder();
 		if (names != null && !names.isEmpty()) {
 			b.append(" Names [");
+			b.append("{"+obj.getMapIndex().nameEncodingType + "}");
 			// int[] keys = names.keys();
 			for (int j = 0; j < order.size(); j++) {
 				if (j > 0) {
 					b.append(", ");
 				}
-				TagValuePair pair = obj.getMapIndex().decodeType(order.get(j));
-				if (pair == null) {
-					throw new NullPointerException("Type " + order.get(j) + "was not found");
+				int type = order.get(j);
+				if(type == obj.getMapIndex().nameEncodingType){
+					b.append("*");
 				}
-				b.append(pair.toSimpleString() + "(" + order.get(j) + ")");
-				b.append(" - ").append(names.get(order.get(j)));
+				if(type == obj.getMapIndex().nameEnEncodingType){
+					b.append("X");
+				}
+				TagValuePair pair = obj.getMapIndex().decodeType(type);
+				if (pair == null) {
+					throw new NullPointerException("Type " + type + "was not found");
+				}
+				b.append(pair.toSimpleString() + "(" + type + ")");
+				b.append(" - ").append(names.get(type));
 			}
 			b.append("]");
 		}

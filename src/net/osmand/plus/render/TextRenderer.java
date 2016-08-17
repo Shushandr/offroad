@@ -434,34 +434,27 @@ public class TextRenderer {
 			final TagValuePair pair, final double xMid, final double yMid, final Path2D pPath, final Point2D[] points) {
 		final TIntObjectHashMap<String> map = obj.getObjectNames();
 		if (map != null) {
-			// find preferred language key (first the given language, then english, then the rest)
+			// find preferred language key (first the given language, then English, then the rest)
 			Integer langTagL = obj.getMapIndex().getRule("name:" + rc.preferredLocale, null);
 			boolean langContainedL = langTagL != null && map.containsKey(langTagL);
 			if(!langContainedL){
 				langTagL = obj.getMapIndex().getRule("name:en", null);
 				langContainedL = langTagL != null && map.containsKey(langTagL);
 			}
-			if(!langContainedL){
-				langTagL = obj.getMapIndex().getRule("elevation", null);
-				langContainedL = langTagL != null && map.containsKey(langTagL);
-			}
-			if(langTagL == null){
-				return;
-			}
+			int nameEncodingType = obj.getMapIndex().nameEncodingType;
 			// assign final variables:
 			boolean langContained = langContainedL;
-			int langTag = langTagL;
+			int langTag = (langContained)?langTagL:nameEncodingType;
 			map.forEachEntry(new TIntObjectProcedure<String>() {
 				@Override
 				public boolean execute(int tag, String name) {
 					if (name != null && name.trim().length() > 0) {
-						boolean isName = tag == obj.getMapIndex().nameEncodingType;
-						String nameTag = isName ? "" : obj.getMapIndex().decodeType(tag).tag;
-						boolean skip = false;
-						if (isName && langContained) {
-							skip = true;
+						if (langContained && tag == nameEncodingType) {
+							return true;
 						} 
-						if(nameTag.startsWith("name:")) {
+						String nameTag = obj.getMapIndex().decodeType(tag).tag;
+						boolean skip = false;
+						if(nameTag.startsWith("name")) {
 							if (tag != langTag) {
 								skip = true;
 							} else {

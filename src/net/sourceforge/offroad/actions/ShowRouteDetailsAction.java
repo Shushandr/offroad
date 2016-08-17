@@ -38,6 +38,7 @@ import javax.swing.JButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 
+import net.osmand.Location;
 import net.osmand.data.LatLon;
 import net.osmand.plus.GPXUtilities.GPXFile;
 import net.osmand.plus.GPXUtilities.GPXTrackAnalysis;
@@ -71,18 +72,31 @@ public class ShowRouteDetailsAction extends OffRoadAction implements LatLonGener
 		mRouteCalculationResult = pRouteCalculationResult;
 		mElevationHelper = new ElevationHelper();
 		List<RouteSegmentResult> pts = mRouteCalculationResult.getOriginalRoute();
+		List<Location> locations = mRouteCalculationResult.getImmutableAllLocations();
+		int index = 0;
 		mRouteHolderList = new ArrayList<RouteHolder>();
 		for (RouteSegmentResult rsr : pts) {
 			for (int i = rsr.getStartPointIndex(); i != rsr.getEndPointIndex(); ) {
-				RouteHolder holder = new RouteHolder(rsr, i);
-				mRouteHolderList.add(holder);
-				log.debug("Adding segment result " + rsr + " and index " + i + " and time " + holder.getTime());
+				if(locations.size() > index){
+					if(!locations.get(index).getLatLon().equals(rsr.getPoint(i))){
+						log.error("Location doesn't coincide " + index );
+					}
+					RouteHolder holder = new RouteHolder(rsr, i, locations.get(index));
+					mRouteHolderList.add(holder);
+					log.debug("Adding segment result " + rsr + " and index " + i + " and time " + holder.getTime());
+				} else {
+					log.error("Not enough locations present : " + index);
+				}
 				if(rsr.isForwardDirection()){
 					i++;
 				} else {
 					i--;
 				}
+				index++;
 			}
+		}
+		if(index != locations.size()){
+			log.error("Not all locations of " + locations.size() + " used, but only " + index);
 		}
 	}
 
@@ -160,24 +174,8 @@ public class ShowRouteDetailsAction extends OffRoadAction implements LatLonGener
 	}
 
 	public void updateAnalysis() {
-		// get elevations:
-		Map<LatLon, Double> elevations = new HashMap<LatLon, Double>();
-		for (RouteHolder routeHolder : mRouteHolderList) {
-			elevations.put(routeHolder.getLatLon(), routeHolder.getElevation());
-		}
 		// create gpx:
 		GPXFile gpxFile = mContext.getRoutingHelper().generateGPXFileWithRoute();
-		List<TrkSegment> pts = gpxFile.proccessPoints();
-		for (TrkSegment n : pts) {
-			for (WptPt pt : n.points) {
-				if(elevations.containsKey(pt.getLatLon())) {
-					Double elev = elevations.get(pt.getLatLon());
-					if(elev.doubleValue() != 0d){
-						pt.ele = elev;
-					}
-				}
-			}
-		}
 		GPXTrackAnalysis analysis = gpxFile.getAnalysis(System.currentTimeMillis());
 		String content = "<table border='2'><thead><th>Key</th><th>Value</th></thead><tbody>";
 		String inBrk = "</td><td align='right'>";
@@ -229,14 +227,15 @@ public class ShowRouteDetailsAction extends OffRoadAction implements LatLonGener
 	private static class RouteHolder implements LatLonHolder {
 		private int mIndex;
 		public RouteSegmentResult mRsr;
-		public double ele;
 		private LatLon mLatLon;
+		private Location mLocation;
 
-		public RouteHolder(RouteSegmentResult pRsr, int pIndex) {
+		public RouteHolder(RouteSegmentResult pRsr, int pIndex, Location pLocation) {
 			super();
 			mRsr = pRsr;
 			mIndex = pIndex;
-			mLatLon = mRsr.getPoint(mIndex);
+			mLocation = pLocation;
+			mLatLon = pLocation.getLatLon();
 		}
 
 		public float getTime() {
@@ -261,12 +260,12 @@ public class ShowRouteDetailsAction extends OffRoadAction implements LatLonGener
 
 		@Override
 		public void setElevation(double pEle1) {
-			ele = pEle1;
+			mLocation.setAltitude(pEle1);
 		}
 
 		@Override
 		public double getElevation() {
-			return ele;
+			return mLocation.getAltitude();
 		}
 	}
 	
