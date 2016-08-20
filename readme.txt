@@ -28,9 +28,10 @@ An offline map viewer based on OsmAnd.
 
 Version History:
 
-0_1-Beta5:
+0_1:
 ============
-* First version of elevation correction for GPX files.
+* First version of elevation correction for GPX files. Using contour line maps, the GPX elevations can be adjusted according to their position. This is useful, if the elevations are not accurate (as recorded by my phone, for example).
+* Elevation diagram for routes. 
 
 0_1-Beta4:
 ============
