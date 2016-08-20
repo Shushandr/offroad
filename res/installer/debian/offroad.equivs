@@ -7,7 +7,7 @@ Homepage: http://OffRoadOsm.sourceforge.net
 Standards-Version: 3.9.2
 
 Package: offroad
-Version: 0.0.1
+Version: 0.1
 Maintainer: Christian Foltin <christianfoltin@users.sf.net>
 # Pre-Depends: <comma-separated list of packages>
 Depends: default-jre (>= 2:1.8) | java8-runtime
@@ -23,9 +23,10 @@ Readme: readme.txt
 # Extra-Files: <comma-separated list of additional files for the doc directory>
 Files: dist/LICENSE /usr/share/offroad/LICENSE
  dist/OffRoad.jar /usr/share/offroad/OffRoad.jar
- res/drawable-xhdpi/offroad_icon.png /usr/share/offroad/offroad_icon.png
+ res/offroad_icon.png /usr/share/offroad/offroad_icon.png
  res/installer/debian/OffRoad.desktop /usr/share/applications/OffRoad.desktop
  dist/lib/bzip2.jar /usr/share/offroad/lib/bzip2.jar
+ dist/lib/commons-lang3-3.4.jar /usr/share/offroad/lib/commons-lang3-3.4.jar
  dist/lib/commons-logging-1.1.1.jar /usr/share/offroad/lib/commons-logging-1.1.1.jar
  dist/lib/gnu-trove-osmand.jar /usr/share/offroad/lib/gnu-trove-osmand.jar
  dist/lib/json-20090211.jar /usr/share/offroad/lib/json-20090211.jar
