@@ -24,12 +24,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.text.MessageFormat;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.Icon;
-import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
@@ -43,8 +41,6 @@ import javax.swing.event.MenuListener;
 import org.apache.commons.logging.Log;
 
 import net.osmand.PlatformUtil;
-import net.osmand.plus.GPXUtilities;
-import net.osmand.plus.GPXUtilities.GPXFile;
 import net.sourceforge.offroad.OsmWindow;
 import net.sourceforge.offroad.data.persistence.ComponentLocationStorage;
 import net.sourceforge.offroad.ui.StayOpenCheckBoxMenuItem;

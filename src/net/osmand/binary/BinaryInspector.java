@@ -68,7 +68,7 @@ public class BinaryInspector {
 			in.inspector(new String[]{
 //				"-vpoi",
 				"-vmap",
-					"-vmapobjects", // "-vmapcoordinates", 
+					"-vmapobjects",  "-vmapcoordinates", 
 //				"-vrouting",
 //				"-vaddress", 
 //				"-vcities",//"-vstreetgroups", 
@@ -804,6 +804,7 @@ public class BinaryInspector {
 					}
 				},
 				new ResultMatcher<BinaryMapDataObject>() {
+					private int sCounter;
 					@Override
 					public boolean publish(BinaryMapDataObject obj) {
 						mapObjectsCounter.value++;
@@ -821,7 +822,10 @@ public class BinaryInspector {
 //							} else if(obj.getId() >> 1 == 205743436l) {
 							} else {
 								printMapDetails(obj, b, vInfo.vmapCoordinates);
-								println(b.toString());
+								if (b.length()>0) {
+									sCounter++;
+									println(sCounter + ": " + b.toString());
+								}
 							}
 						}
 						return false;
@@ -851,6 +855,8 @@ public class BinaryInspector {
 		if(multipolygon ) {
 			b.append("Multipolygon");
 		} else {
+			if(!obj.area)
+				return;
 			b.append(obj.area? "Area" : (obj.getPointsLength() > 1? "Way" : "Point"));
 		}
 		int[] types = obj.getTypes();

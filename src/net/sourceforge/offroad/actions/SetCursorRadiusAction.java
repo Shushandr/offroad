@@ -17,7 +17,7 @@
    Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 */
 
-package net.sourceforge.offroad.ui;
+package net.sourceforge.offroad.actions;
 
 import java.awt.event.ActionEvent;
 
@@ -26,7 +26,6 @@ import javax.swing.Icon;
 import net.osmand.data.LatLon;
 import net.osmand.util.MapUtils;
 import net.sourceforge.offroad.OsmWindow;
-import net.sourceforge.offroad.actions.OffRoadAction;
 
 /**
  * @author foltin

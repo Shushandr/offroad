@@ -50,6 +50,7 @@ import net.osmand.util.Algorithms;
 import net.osmand.util.MapAlgorithms;
 import net.osmand.util.MapUtils;
 import net.sourceforge.offroad.OsmWindow;
+import net.sourceforge.offroad.ui.OsmBitmapPanel.IntermediateImageListener;
 
 public class MapRenderRepositories {
 
@@ -536,7 +537,7 @@ public class MapRenderRepositories {
 
 	
 
-	public synchronized RenderingResult loadMGap(Graphics2D pGraphics2d, RotatedTileBox tileRect, RenderingRulesStorage storage) {
+	public synchronized RenderingResult loadMGap(Graphics2D pGraphics2d, RotatedTileBox tileRect, RenderingRulesStorage storage, IntermediateImageListener pListener) {
 		boolean prevInterrupted = interrupted;
 		interrupted = false;
 		RenderingResult result = null;
@@ -680,7 +681,7 @@ public class MapRenderRepositories {
 			// 1. generate image step by step
 			this.prevBmpLocation = this.bmpLocation;
 			this.bmpLocation = tileRect;
-			renderer.generateNewBitmap(currentRenderingContext, cObjects, pGraphics2d, renderingReq);
+			renderer.generateNewBitmap(currentRenderingContext, cObjects, pGraphics2d, renderingReq, pListener);
 			// Force to use rendering request in order to prevent Garbage Collector when it is used in C++
 			if(renderingReq != null){
 				log.debug("Debug :" + renderingReq != null);				

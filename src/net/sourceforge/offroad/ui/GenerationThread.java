@@ -6,8 +6,9 @@ import javax.swing.SwingUtilities;
 
 import net.osmand.data.RotatedTileBox;
 import net.osmand.plus.render.OsmandRenderer.RenderingResult;
+import net.sourceforge.offroad.ui.OsmBitmapPanel.IntermediateImageListener;
 
-class GenerationThread extends OffRoadUIThread {
+class GenerationThread extends OffRoadUIThread implements IntermediateImageListener {
 	/**
 	 * 
 	 */
@@ -23,9 +24,8 @@ class GenerationThread extends OffRoadUIThread {
 	@Override
 	public void runInBackground() {
 		// generate in background
-		BufferedImage image = mOsmBitmapPanel.createImage();
-		mResult = mOsmBitmapPanel.drawImage(image, mTileCopy);
-		mNewBitmap = image;
+		mNewBitmap = mOsmBitmapPanel.createImage();
+		mResult = mOsmBitmapPanel.drawImage(mNewBitmap, mTileCopy, this);
 	}
 	
 	public void runAfterThreadsBeforeHaveFinished() {
@@ -37,5 +37,10 @@ class GenerationThread extends OffRoadUIThread {
 				mOsmBitmapPanel.setImage(mNewBitmap, mTileCopy, mResult);
 			}
 		});
+	}
+
+	@Override
+	public void propagateImage() {
+		runAfterThreadsBeforeHaveFinished();
 	}
 }

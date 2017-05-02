@@ -1170,7 +1170,7 @@ public class RouteProvider {
 				new RouteCalculationResult(params.ctx.getString(R.string.no_route));
 			}
 		} catch (JSONException e) {
-			log.error("JSON Parsing went wrong", e);
+			log.error("JSON Parsing went wrong. Content: " + content.toString(), e);
 		}
 		params.intermediates = null;
 		return new RouteCalculationResult(res, null, params, null);

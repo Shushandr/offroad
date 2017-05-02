@@ -7,9 +7,13 @@ import java.awt.Graphics2D;
 import java.awt.Stroke;
 import java.awt.TexturePaint;
 import java.awt.geom.Path2D;
+import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -35,6 +39,7 @@ import net.osmand.util.MapUtils;
 import net.sourceforge.offroad.Cap;
 import net.sourceforge.offroad.DashPathEffect;
 import net.sourceforge.offroad.ui.ColorUtils;
+import net.sourceforge.offroad.ui.OsmBitmapPanel.IntermediateImageListener;
 import net.sourceforge.offroad.ui.Paint;
 import net.sourceforge.offroad.ui.Paint.Style;
 
@@ -55,6 +60,11 @@ public class OsmandRenderer {
 //	private DisplayMetrics dm;
 
 	private TextRenderer textRenderer;
+
+//	private FileWriter fileWriter;
+//	private FileWriter binOut;
+//	private StringBuffer multiDraw = new StringBuffer();
+//	private int arrayIndex = 0;
 
 	public class MapDataObjectPrimitive {
 		BinaryMapDataObject obj;
@@ -117,6 +127,7 @@ public class OsmandRenderer {
 
 	public OsmandRenderer() {
 		textRenderer = new TextRenderer();
+//		startWriter();
 	}
 
 	public Stroke getDashEffect(float pWidth, RenderingContext rc, float[] cachedValues, float st, int cap){
@@ -181,7 +192,7 @@ public class OsmandRenderer {
 		}
 	
 	public void generateNewBitmap(RenderingContext rc, List<BinaryMapDataObject> objects, Graphics2D pGraphics2d, 
-				RenderingRuleSearchRequest render) {
+				RenderingRuleSearchRequest render, IntermediateImageListener pListener) {
 		long now = System.currentTimeMillis();
 		// fill area
 		if (rc.defaultColor != 0) {
@@ -199,6 +210,7 @@ public class OsmandRenderer {
 
 			rc.lastRenderedKey = 0;
 			drawObject(rc, pGraphics2d, render, polygonsArray, 0);
+			pListener.propagateImage();
 			rc.lastRenderedKey = 5;
 			if (rc.shadowRenderingMode > 1) {
 				drawObject(rc, pGraphics2d, render, linesArray, 1);
@@ -206,9 +218,11 @@ public class OsmandRenderer {
 			rc.lastRenderedKey = 40;
 			drawObject(rc, pGraphics2d, render, linesArray, 2);
 			rc.lastRenderedKey = 60;
+			pListener.propagateImage();
 
 			drawObject(rc, pGraphics2d, render, pointsArray, 3);
 			rc.lastRenderedKey = 125;
+			pListener.propagateImage();
 
 
 			long beforeIconTextTime = System.currentTimeMillis() - now;
@@ -223,6 +237,8 @@ public class OsmandRenderer {
 			log.debug(rc.renderingDebugInfo);
 
 		}
+//		closeWriter();
+//		fileWriter = null;
 	}
 
 //	public float getDensity(){
@@ -912,9 +928,76 @@ public class OsmandRenderer {
 	}
 
 	private void drawPath(Graphics2D pGraphics2d, Path2D pPath) {
+//		PathIterator it = pPath.getPathIterator(null);
+//		boolean started = false;
+//		int counter = 0;
+//		while (!it.isDone()) {
+//			float[] coords = new float[6];
+//			int seg = it.currentSegment(coords);
+//			switch(seg){
+//			case PathIterator.SEG_MOVETO:
+//				if(started){
+//					finalizeDraw(counter);
+//				}
+//				started = true;
+//				counter  = 0;
+//			case PathIterator.SEG_LINETO:
+//				write(coords[0]+"\n");
+//				write(coords[1]+"\n");
+//				counter++;
+//				break;
+//			case PathIterator.SEG_CLOSE:
+//				break;
+//			}
+//			it.next();
+//		} 
+//		finalizeDraw(counter);
 		pGraphics2d.draw(pPath);
 	}
 
+//	private void startWriter() {
+//		try {
+//			fileWriter = new FileWriter("Coords.java");
+//			binOut = new FileWriter("coords.bin");
+//			fileWriter.write("import java.nio.FloatBuffer;\n"
+//					+ "public class Coords {\n"
+//					+ "public static FloatBuffer coords = FloatBuffer.allocate(AMOUNT);\n static {\n");
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//	}
+//
+//
+//	
+//	private void finalizeDraw(int counter) {
+//		multiDraw.append("  " + counter + ", 1, " + arrayIndex + ", 0, \n" );
+//		arrayIndex += counter;
+//	}
+//
+//	private void write(String str) {
+//		if (fileWriter != null) {
+//			try {
+//				binOut.write(str);
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
+//		}
+//	}
+//
+//	private void closeWriter() {
+//		if (fileWriter != null) {
+//			try {
+//				fileWriter.write("}\n public static int[] multi = new int[]{\n");
+//				fileWriter.write(multiDraw.toString());
+//				fileWriter.write("};\n public final int AMOUNT=" + arrayIndex + ";\n\n}\n");
+//				fileWriter.close();
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			} 
+//		}
+//	}
+//
+//
 		
 	private static Stroke oneWayPaint(float pWidth, DashPathEffect pDashEffect){
 		return new BasicStroke(pWidth, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 1.0f, pDashEffect.getDashes(), pDashEffect.getDashPhase());

@@ -275,11 +275,15 @@ public class OsmBitmapPanel extends JPanel {
 		}
 	}
 
-	RenderingResult drawImage(BufferedImage pImage, RotatedTileBox pTileBox) {
+	public interface IntermediateImageListener {
+		void propagateImage();
+	}
+	
+	RenderingResult drawImage(BufferedImage pImage, RotatedTileBox pTileBox, IntermediateImageListener pListener) {
 		clear(pImage);
 		Graphics2D graphics = pImage.createGraphics();
 		Graphics2D g2 = createGraphics(graphics);
-		RenderingResult result = mContext.loadMGap(g2, pTileBox);
+		RenderingResult result = mContext.loadMGap(g2, pTileBox, pListener);
 		g2.dispose();
 		graphics.dispose();
 		return result;

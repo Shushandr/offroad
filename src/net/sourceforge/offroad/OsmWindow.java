@@ -129,6 +129,7 @@ import net.osmand.router.RoutingConfiguration.Builder;
 import net.osmand.util.MapUtils;
 import net.sourceforge.offroad.actions.AboutDialogAction;
 import net.sourceforge.offroad.actions.AddFavoriteAction;
+import net.sourceforge.offroad.actions.ChangeIconSizeAction;
 import net.sourceforge.offroad.actions.ChooseApplicationModeAction;
 import net.sourceforge.offroad.actions.ChooseRendererAction;
 import net.sourceforge.offroad.actions.ChooseRouteServiceAction;
@@ -150,6 +151,7 @@ import net.sourceforge.offroad.actions.PointNavigationAction.HelperAction;
 import net.sourceforge.offroad.actions.RouteAction;
 import net.sourceforge.offroad.actions.SearchAddressAction;
 import net.sourceforge.offroad.actions.SelectTrackAction;
+import net.sourceforge.offroad.actions.SetCursorRadiusAction;
 import net.sourceforge.offroad.actions.SetRenderingRule;
 import net.sourceforge.offroad.actions.ShowFavoriteAction;
 import net.sourceforge.offroad.actions.ShowRouteDetailsAction;
@@ -167,13 +169,12 @@ import net.sourceforge.offroad.res.Resources;
 import net.sourceforge.offroad.ui.AmenityTablePanel;
 import net.sourceforge.offroad.ui.AmenityTableUpdateThread;
 import net.sourceforge.offroad.ui.BlindIcon;
-import net.sourceforge.offroad.ui.ChangeIconSizeAction;
 import net.sourceforge.offroad.ui.IContextMenuProvider;
 import net.sourceforge.offroad.ui.OffRoadPopupMenuListener;
 import net.sourceforge.offroad.ui.OsmBitmapPanel;
+import net.sourceforge.offroad.ui.OsmBitmapPanel.IntermediateImageListener;
 import net.sourceforge.offroad.ui.OsmBitmapPanelMouseAdapter;
 import net.sourceforge.offroad.ui.PoiFilterRenderer;
-import net.sourceforge.offroad.ui.SetCursorRadiusAction;
 
 /**
  * OffRoad
@@ -1019,8 +1020,8 @@ public class OsmWindow  implements IRouteInformationListener {
 	}
 
 
-	public RenderingResult loadMGap(Graphics2D pG2, RotatedTileBox pTileRect) {
-		return getRenderer().loadMGap(pG2, pTileRect, getRenderingRulesStorage());
+	public RenderingResult loadMGap(Graphics2D pG2, RotatedTileBox pTileRect, IntermediateImageListener pListener) {
+		return getRenderer().loadMGap(pG2, pTileRect, getRenderingRulesStorage(), pListener);
 	}
 
 	public MapRenderRepositories getRenderer() {

@@ -17,13 +17,12 @@
    Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 */
 
-package net.sourceforge.offroad.ui;
+package net.sourceforge.offroad.actions;
 
 import java.awt.event.ActionEvent;
 
 import net.osmand.plus.render.RenderingIcons;
 import net.sourceforge.offroad.OsmWindow;
-import net.sourceforge.offroad.actions.OffRoadAction;
 import net.sourceforge.offroad.actions.OffRoadAction.SelectableAction;
 
 /**

@@ -1,7 +1,6 @@
 package net.osmand.plus.views;
 
 import java.awt.Graphics2D;
-import java.awt.Polygon;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
@@ -20,7 +19,6 @@ import net.osmand.data.QuadRect;
 import net.osmand.data.QuadTree;
 import net.osmand.data.RotatedTileBox;
 import net.osmand.util.MapAlgorithms;
-import net.sourceforge.offroad.OsmWindow;
 import net.sourceforge.offroad.ui.OsmBitmapPanel;
 
 public abstract class OsmandMapLayer {
