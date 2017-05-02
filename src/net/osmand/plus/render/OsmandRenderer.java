@@ -210,7 +210,7 @@ public class OsmandRenderer {
 
 			rc.lastRenderedKey = 0;
 			drawObject(rc, pGraphics2d, render, polygonsArray, 0);
-			pListener.propagateImage();
+//			pListener.propagateImage();
 			rc.lastRenderedKey = 5;
 			if (rc.shadowRenderingMode > 1) {
 				drawObject(rc, pGraphics2d, render, linesArray, 1);
