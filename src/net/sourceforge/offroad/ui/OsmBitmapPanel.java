@@ -40,6 +40,7 @@ import net.osmand.data.RotatedTileBox;
 import net.osmand.data.RotatedTileBox.RotatedTileBoxBuilder;
 import net.osmand.plus.OsmandSettings;
 import net.osmand.plus.render.OsmandRenderer.RenderingResult;
+import net.osmand.plus.views.DrawPolylineLayer;
 import net.osmand.plus.views.FavoritesLayer;
 import net.osmand.plus.views.GPXLayer;
 import net.osmand.plus.views.MapControlsLayer;
@@ -116,6 +117,7 @@ public class OsmBitmapPanel extends JPanel {
 		addLayer(new MapInfoLayer(this, routeLayer), 8);
 		mCompassButton = new RoundButton();
 		addLayer(new MapControlsLayer(this), 9);
+		addLayer(new DrawPolylineLayer(this), 10);
 		DirectSearchLayer directSearchLayer = new DirectSearchLayer();
 		// combine the action with the layer
 		mContext.mDirectSearchAction.registerDirectSearchReceiver(directSearchLayer);
@@ -304,6 +306,7 @@ public class OsmBitmapPanel extends JPanel {
 		newZoom = (int) checkZoom(newZoom);
 		delta = newZoom-tileCopy.getZoom();
 		if(delta == 0){
+			log.info("No zooming, as delta is zero");
 			return;
 		}
 		ZoomAnimationThread animationThread = new ZoomAnimationThread(this, delta, pNewCenter);
@@ -311,11 +314,13 @@ public class OsmBitmapPanel extends JPanel {
 			
 			@Override
 			public void threadStarted() {
+				log.debug("Zooming started");
 				mZoomIsRunning = true;
 			}
 			
 			@Override
 			public void threadFinished() {
+				log.debug("Zooming stopped");
 				mZoomIsRunning = false;
 			}
 		});
@@ -350,6 +355,7 @@ public class OsmBitmapPanel extends JPanel {
 			pThread.shouldContinue();
 		}
 		mLastThread = pThread;
+		log.info("New thread " + pThread + " is queued.");
 		mThreadPool.execute(pThread);
 		if(pThread instanceof GenerationThread){
 			queue(new GenerateLayerOverlayThread(this, copyCurrentTileBox()));
@@ -411,11 +417,15 @@ public class OsmBitmapPanel extends JPanel {
 	}
 
 	public void setCursor(Point pCursorPoint) {
-		synchronized (mCurrentTileBox) {
-			mCursorPosition = mCurrentTileBox.getLatLonFromPixel(pCursorPoint.x, pCursorPoint.y);
-		}
+		mCursorPosition = getLatLon(pCursorPoint);
 		System.out.println("Setting cursor to " + mCursorPosition);
 		repaint();
+	}
+
+	public LatLon getLatLon(Point pCursorPoint) {
+		synchronized (mCurrentTileBox) {
+			return mCurrentTileBox.getLatLonFromPixel(pCursorPoint.x, pCursorPoint.y);
+		}
 	}
 
 	public void move(LatLon pLocation, int pZoom) {

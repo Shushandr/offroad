@@ -326,6 +326,8 @@ public class OsmWindow  implements IRouteInformationListener {
 
 	private boolean mDirectSearchVisible; 
 	
+	private Vector<LatLon> mPolyline = new Vector<>();
+	
 	public void createAndShowUI() {
 		mDirectSearchTextField = new JTextField(getOffRoadString("offroad.DirectSearchText"));
 		mDirectSearchFuzzy = new JCheckBox(getOffRoadString("offroad.fuzzy_search"));
@@ -1216,16 +1218,37 @@ public class OsmWindow  implements IRouteInformationListener {
 			}
 			LatLon mousePosition = mDrawPanel.copyCurrentTileBox().getLatLonFromPixel(e.getX(), e.getY());
 			double distance = MapUtils.getDistance(mousePosition, cursorPosition)/1000d;
+			// now, check if polyline is present:
+			double polyDist = 0;
+			if(mPolyline.size()>0){
+				for (int i = 0; i < mPolyline.size(); i++) {
+					LatLon pos = mPolyline.get(i);
+					if(i+1 < mPolyline.size()){
+						LatLon pos2 = mPolyline.get(i+1);
+						polyDist += MapUtils.getDistance(pos, pos2);
+					}
+				}
+				polyDist /= 1000d;
+			}
 			Object[] messageArguments = { new Double(distance),
 					new Double(cursorPosition.getLatitude()),
-					new Double(cursorPosition.getLongitude()) };
+					new Double(cursorPosition.getLongitude()),
+					mPolyline.size()};
+			Object[] polyArguments =  {polyDist};
 			MessageFormat formatter = new MessageFormat(
 					getOffRoadString("offroad.string47")); //$NON-NLS-1$
 			String message = formatter.format(messageArguments);
-//			mStatusLabel.setBackground(Color.GRAY);
+			if (!mPolyline.isEmpty()) {
+				formatter = new MessageFormat(getOffRoadString("offroad.string47.poly"));
+				message += " " + formatter.format(polyArguments);
+			}
 			mStatusLabel.setText(message);
 		}
 		
+	}
+	
+	public Vector<LatLon> getPolyline() {
+		return mPolyline;
 	}
 
 	public RendererRegistry getRendererRegistry() {
@@ -1377,6 +1400,7 @@ public class OsmWindow  implements IRouteInformationListener {
 	}
 
 	public void setCursorPosition(LatLon pLoc) {
+		mPolyline.clear();
 		mDrawPanel.setCursor(pLoc);
 		addPoint(pLoc);
 		queueAmenityTableUpdate(pLoc);
@@ -1790,6 +1814,17 @@ public class OsmWindow  implements IRouteInformationListener {
 				log.fatal("Caught: " + e, e);
 			}
 		}
+	}
+
+	public void addPolylinePoint(Point pPoint) {
+		if(mPolyline.isEmpty()){
+			LatLon cursorPosition = mDrawPanel.getCursorPosition();
+			if(cursorPosition == null){
+				return;
+			}
+			mPolyline.add(cursorPosition);
+		}
+		mPolyline.add(mDrawPanel.getLatLon(pPoint));
 	}
 
 

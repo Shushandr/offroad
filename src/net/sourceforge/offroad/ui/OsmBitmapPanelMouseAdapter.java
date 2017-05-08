@@ -33,12 +33,14 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 		}
 
 		public void actionPerformed(ActionEvent evt) {
+			log.info("Zoom action is fired");
 			if(drawPanel.isZoomRunning()){
-				log.info("Don't zoom as there is something running.");
+				log.info("Don't zoom as there is something running. Try later automatically.");
+				mZoomTimer.restart();
 			} else {
 				drawPanel.zoomChange(-mCounter, mPoint);
+				mCounter = 0;
 			}
-			mCounter = 0;
 		}
 	}
 
@@ -82,7 +84,7 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 	}
 	
 	public boolean isPopup(MouseEvent e) {
-		return e.getButton() != MouseEvent.BUTTON1;
+		return e.isPopupTrigger();
 	}
 	
 	@Override
@@ -124,6 +126,7 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 			return;
 		}
 //		drawPanel.directZoomIncrement(pE.getWheelRotation(), pE.getPoint());
+		log.info("Wheel event detected: " + pE);
 		mZoomPerformer.addWheelEvent(pE.getWheelRotation(), pE.getPoint());
 		mZoomTimer.restart();
 	}
@@ -151,7 +154,12 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 		if(isPopup(e)){
 			return;
 		}
-		mContext.setCursorPosition(e.getPoint());
+		if(e.isShiftDown()){
+			// do a polyline
+			mContext.addPolylinePoint(e.getPoint());
+		} else {
+			mContext.setCursorPosition(e.getPoint());
+		}
 	}
 
 	@Override
