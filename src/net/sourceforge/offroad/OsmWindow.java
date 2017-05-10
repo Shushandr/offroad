@@ -120,6 +120,7 @@ import net.osmand.plus.routing.RouteDirectionInfo;
 import net.osmand.plus.routing.RouteProvider.RouteService;
 import net.osmand.plus.routing.RoutingHelper;
 import net.osmand.plus.routing.RoutingHelper.IRouteInformationListener;
+import net.osmand.plus.views.DrawPolylineLayer;
 import net.osmand.plus.views.POIMapLayer;
 import net.osmand.render.RenderingRuleProperty;
 import net.osmand.render.RenderingRulesStorage;
@@ -325,8 +326,6 @@ public class OsmWindow  implements IRouteInformationListener {
 
 
 	private boolean mDirectSearchVisible; 
-	
-	private Vector<LatLon> mPolyline = new Vector<>();
 	
 	public void createAndShowUI() {
 		mDirectSearchTextField = new JTextField(getOffRoadString("offroad.DirectSearchText"));
@@ -1220,11 +1219,12 @@ public class OsmWindow  implements IRouteInformationListener {
 			double distance = MapUtils.getDistance(mousePosition, cursorPosition)/1000d;
 			// now, check if polyline is present:
 			double polyDist = 0;
-			if(mPolyline.size()>0){
-				for (int i = 0; i < mPolyline.size(); i++) {
-					LatLon pos = mPolyline.get(i);
-					if(i+1 < mPolyline.size()){
-						LatLon pos2 = mPolyline.get(i+1);
+			Vector<LatLon> selectedPolyline = mDrawPanel.getPolylineLayer().getSelectedPolyline();
+			if(selectedPolyline.size()>0){
+				for (int i = 0; i < selectedPolyline.size(); i++) {
+					LatLon pos = selectedPolyline.get(i);
+					if(i+1 < selectedPolyline.size()){
+						LatLon pos2 = selectedPolyline.get(i+1);
 						polyDist += MapUtils.getDistance(pos, pos2);
 					}
 				}
@@ -1233,12 +1233,12 @@ public class OsmWindow  implements IRouteInformationListener {
 			Object[] messageArguments = { new Double(distance),
 					new Double(cursorPosition.getLatitude()),
 					new Double(cursorPosition.getLongitude()),
-					mPolyline.size()};
+					selectedPolyline.size()};
 			Object[] polyArguments =  {polyDist};
 			MessageFormat formatter = new MessageFormat(
 					getOffRoadString("offroad.string47")); //$NON-NLS-1$
 			String message = formatter.format(messageArguments);
-			if (!mPolyline.isEmpty()) {
+			if (!selectedPolyline.isEmpty()) {
 				formatter = new MessageFormat(getOffRoadString("offroad.string47.poly"));
 				message += " " + formatter.format(polyArguments);
 			}
@@ -1247,10 +1247,6 @@ public class OsmWindow  implements IRouteInformationListener {
 		
 	}
 	
-	public Vector<LatLon> getPolyline() {
-		return mPolyline;
-	}
-
 	public RendererRegistry getRendererRegistry() {
 		return mRendererRegistry;
 	}
@@ -1400,7 +1396,6 @@ public class OsmWindow  implements IRouteInformationListener {
 	}
 
 	public void setCursorPosition(LatLon pLoc) {
-		mPolyline.clear();
 		mDrawPanel.setCursor(pLoc);
 		addPoint(pLoc);
 		queueAmenityTableUpdate(pLoc);
@@ -1816,18 +1811,9 @@ public class OsmWindow  implements IRouteInformationListener {
 		}
 	}
 
-	public void addPolylinePoint(Point pPoint) {
-		if(mPolyline.isEmpty()){
-			LatLon cursorPosition = mDrawPanel.getCursorPosition();
-			if(cursorPosition == null){
-				return;
-			}
-			mPolyline.add(cursorPosition);
-		}
-		mPolyline.add(mDrawPanel.getLatLon(pPoint));
+	public DrawPolylineLayer getPolylineLayer(){
+		return mDrawPanel.getPolylineLayer();
 	}
-
-
 	
 }
 

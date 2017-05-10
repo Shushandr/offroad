@@ -14,7 +14,6 @@ import javax.swing.Timer;
 import org.apache.commons.logging.Log;
 
 import net.osmand.PlatformUtil;
-import net.osmand.data.LatLon;
 import net.osmand.data.RotatedTileBox;
 import net.sourceforge.offroad.OsmWindow;
 
@@ -156,7 +155,7 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 		}
 		if(e.isShiftDown()){
 			// do a polyline
-			mContext.addPolylinePoint(e.getPoint());
+			mContext.getPolylineLayer().addPolylinePoint(e.getPoint());
 		} else {
 			mContext.setCursorPosition(e.getPoint());
 		}

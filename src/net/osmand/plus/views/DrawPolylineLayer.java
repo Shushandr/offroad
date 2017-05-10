@@ -20,12 +20,17 @@
 package net.osmand.plus.views;
 
 import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.geom.Point2D;
+import java.util.List;
 import java.util.Vector;
 
 import net.osmand.data.LatLon;
+import net.osmand.data.PointDescription;
 import net.osmand.data.RotatedTileBox;
 import net.sourceforge.offroad.R;
 import net.sourceforge.offroad.ui.DirectOffroadLayer;
+import net.sourceforge.offroad.ui.IContextMenuProvider;
 import net.sourceforge.offroad.ui.OsmBitmapPanel;
 import net.sourceforge.offroad.ui.Paint;
 
@@ -33,25 +38,30 @@ import net.sourceforge.offroad.ui.Paint;
  * @author foltin
  * @date 08.05.2017
  */
-public class DrawPolylineLayer extends OsmandMapLayer implements DirectOffroadLayer {
+public class DrawPolylineLayer extends OsmandMapLayer implements DirectOffroadLayer, IContextMenuProvider {
 
-	private OsmBitmapPanel mOsmBitmapPanel;
+	private OsmBitmapPanel mDrawPanel;
 	private Paint area;
+	private Vector<LatLon> mPolyline = new Vector<>();
+	
+	public Vector<LatLon> getSelectedPolyline(){
+		return mPolyline;
+	}
 
 	public DrawPolylineLayer(OsmBitmapPanel pOsmBitmapPanel) {
-		mOsmBitmapPanel = pOsmBitmapPanel;
+		mDrawPanel = pOsmBitmapPanel;
 	}
 
 	@Override
 	public void initLayer(OsmBitmapPanel pView) {
 		area = new Paint();
-		area.setColor(mOsmBitmapPanel.getResources().getColor(R.color.region_downloading));
+		area.setColor(mDrawPanel.getResources().getColor(R.color.region_downloading));
 
 	}
 
 	@Override
 	public void onDraw(Graphics2D pCanvas, RotatedTileBox pTileBox, DrawSettings pSettings) {
-		Vector<LatLon> polyline = mOsmBitmapPanel.getContext().getPolyline();
+		Vector<LatLon> polyline = getSelectedPolyline();
 		if(polyline.isEmpty()){
 			return;
 		}
@@ -77,5 +87,55 @@ public class DrawPolylineLayer extends OsmandMapLayer implements DirectOffroadLa
 	public boolean drawInScreenPixels() {
 		return false;
 	}
+
+	@Override
+	public String getObjectDescription(Object pO) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public PointDescription getObjectName(Object pO) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean disableSingleTap() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean disableLongPressOnMap() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean isObjectClickable(Object pO) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void collectObjectsFromPoint(Point2D pPoint, RotatedTileBox pTileBox, List<Object> pRes) {
+	}
+
+	@Override
+	public LatLon getObjectLocation(Object pO) {
+		return null;
+	}
+	public void addPolylinePoint(Point pPoint) {
+		if(mPolyline.isEmpty()){
+			LatLon cursorPosition = mDrawPanel.getCursorPosition();
+			if(cursorPosition == null){
+				return;
+			}
+			mPolyline.add(cursorPosition);
+		}
+		mPolyline.add(mDrawPanel.getLatLon(pPoint));
+	}
+
 
 }

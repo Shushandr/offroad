@@ -89,6 +89,8 @@ public class OsmBitmapPanel extends JPanel {
 	private double mCursorRadiusSizeInMeters = 100;
 	private boolean mZoomIsRunning = false;
 
+	private DrawPolylineLayer mPolylineLayer;
+
 
 	public OsmBitmapPanel(OsmWindow pWin) {
 		mContext = pWin;
@@ -117,7 +119,8 @@ public class OsmBitmapPanel extends JPanel {
 		addLayer(new MapInfoLayer(this, routeLayer), 8);
 		mCompassButton = new RoundButton();
 		addLayer(new MapControlsLayer(this), 9);
-		addLayer(new DrawPolylineLayer(this), 10);
+		mPolylineLayer = new DrawPolylineLayer(this);
+		addLayer(mPolylineLayer, 10);
 		DirectSearchLayer directSearchLayer = new DirectSearchLayer();
 		// combine the action with the layer
 		mContext.mDirectSearchAction.registerDirectSearchReceiver(directSearchLayer);
@@ -355,7 +358,7 @@ public class OsmBitmapPanel extends JPanel {
 			pThread.shouldContinue();
 		}
 		mLastThread = pThread;
-		log.info("New thread " + pThread + " is queued.");
+		log.debug("New thread " + pThread + " is queued.");
 		mThreadPool.execute(pThread);
 		if(pThread instanceof GenerationThread){
 			queue(new GenerateLayerOverlayThread(this, copyCurrentTileBox()));
@@ -725,5 +728,8 @@ public class OsmBitmapPanel extends JPanel {
 	public JButton findViewById(int pMapCompassButton) {
 		return mCompassButton;
 	}
-
+	
+	public DrawPolylineLayer getPolylineLayer() {
+		return mPolylineLayer;
+	}
 }
