@@ -1220,7 +1220,7 @@ public class OsmWindow  implements IRouteInformationListener {
 			// now, check if polyline is present:
 			double polyDist = 0;
 			Vector<LatLon> selectedPolyline = mDrawPanel.getPolylineLayer().getSelectedPolyline();
-			if(selectedPolyline.size()>0){
+			if(selectedPolyline != null && selectedPolyline.size()>0){
 				for (int i = 0; i < selectedPolyline.size(); i++) {
 					LatLon pos = selectedPolyline.get(i);
 					if(i+1 < selectedPolyline.size()){
@@ -1232,13 +1232,12 @@ public class OsmWindow  implements IRouteInformationListener {
 			}
 			Object[] messageArguments = { new Double(distance),
 					new Double(cursorPosition.getLatitude()),
-					new Double(cursorPosition.getLongitude()),
-					selectedPolyline.size()};
+					new Double(cursorPosition.getLongitude())};
 			Object[] polyArguments =  {polyDist};
 			MessageFormat formatter = new MessageFormat(
 					getOffRoadString("offroad.string47")); //$NON-NLS-1$
 			String message = formatter.format(messageArguments);
-			if (!selectedPolyline.isEmpty()) {
+			if (polyDist != 0) {
 				formatter = new MessageFormat(getOffRoadString("offroad.string47.poly"));
 				message += " " + formatter.format(polyArguments);
 			}

@@ -157,6 +157,7 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 			// do a polyline
 			mContext.getPolylineLayer().addPolylinePoint(e.getPoint());
 		} else {
+			mContext.getPolylineLayer().endPolyline();
 			mContext.setCursorPosition(e.getPoint());
 		}
 	}

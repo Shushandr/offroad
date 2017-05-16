@@ -28,6 +28,7 @@ import java.util.Vector;
 import net.osmand.data.LatLon;
 import net.osmand.data.PointDescription;
 import net.osmand.data.RotatedTileBox;
+import net.osmand.plus.views.DrawPolylineLayer.Polyline;
 import net.sourceforge.offroad.R;
 import net.sourceforge.offroad.ui.DirectOffroadLayer;
 import net.sourceforge.offroad.ui.IContextMenuProvider;
@@ -40,12 +41,25 @@ import net.sourceforge.offroad.ui.Paint;
  */
 public class DrawPolylineLayer extends OsmandMapLayer implements DirectOffroadLayer, IContextMenuProvider {
 
+	public static class Polyline extends Vector<LatLon>{
+		
+	}
+	
 	private OsmBitmapPanel mDrawPanel;
 	private Paint area;
-	private Vector<LatLon> mPolyline = new Vector<>();
+	private Paint areaSelected;
+	private Vector<Polyline> mPolylines = new Vector<>();
+	private int selectedIndex = -1;
 	
-	public Vector<LatLon> getSelectedPolyline(){
-		return mPolyline;
+	public Polyline getSelectedPolyline(){
+		if(checkIndex()){
+			return mPolylines.get(selectedIndex);
+		}
+		return null;
+	}
+
+	public boolean checkIndex() {
+		return selectedIndex>=0 && selectedIndex < mPolylines.size();
 	}
 
 	public DrawPolylineLayer(OsmBitmapPanel pOsmBitmapPanel) {
@@ -55,26 +69,37 @@ public class DrawPolylineLayer extends OsmandMapLayer implements DirectOffroadLa
 	@Override
 	public void initLayer(OsmBitmapPanel pView) {
 		area = new Paint();
-		area.setColor(mDrawPanel.getResources().getColor(R.color.region_downloading));
-
+		area.setColor(mDrawPanel.getResources().getColor(R.color.region_selected));
+		area.setStrokeWidth(2.0f * mDrawPanel.getScaleCoefficient());
+		areaSelected = new Paint();
+		areaSelected.setColor(mDrawPanel.getResources().getColor(R.color.region_downloading));
+		areaSelected.setStrokeWidth(4.0f * mDrawPanel.getScaleCoefficient());
 	}
 
 	@Override
 	public void onDraw(Graphics2D pCanvas, RotatedTileBox pTileBox, DrawSettings pSettings) {
-		Vector<LatLon> polyline = getSelectedPolyline();
-		if(polyline.isEmpty()){
-			return;
-		}
-		area.updateGraphics(pCanvas);
-		for (int i = 0; i < polyline.size(); i++) {
-			LatLon point = polyline.get(i);
-			if(i<polyline.size()-1){
-				LatLon nextPoint = polyline.get(i+1);
+		Polyline selPolyline = getSelectedPolyline();
+		for (Polyline polyline : mPolylines) {
+			if(selPolyline == polyline){
+				areaSelected.updateGraphics(pCanvas);
+			} else {
+				area.updateGraphics(pCanvas);
+			}
+			for (int i = 0; i < polyline.size(); i++) {
+				LatLon point = polyline.get(i);
 				int locationX1 = (int) pTileBox.getPixXFromLatLon(point);
 				int locationY1 = (int) pTileBox.getPixYFromLatLon(point);
-				int locationX2 = (int) pTileBox.getPixXFromLatLon(nextPoint);
-				int locationY2 = (int) pTileBox.getPixYFromLatLon(nextPoint);
-				pCanvas.drawLine(locationX1, locationY1, locationX2, locationY2);
+				if(i<polyline.size()-1){
+					LatLon nextPoint = polyline.get(i+1);
+					int locationX2 = (int) pTileBox.getPixXFromLatLon(nextPoint);
+					int locationY2 = (int) pTileBox.getPixYFromLatLon(nextPoint);
+					pCanvas.drawLine(locationX1, locationY1, locationX2, locationY2);
+				}
+				if(selPolyline == polyline){
+					// draw little circles around the edges, scale with factor
+					int circleRadius = (int) (8f * mDrawPanel.getScaleCoefficient());
+					pCanvas.fillOval(locationX1-circleRadius, locationY1-circleRadius, 2*circleRadius, 2*circleRadius);
+				}
 			}
 		}
 	}
@@ -126,15 +151,27 @@ public class DrawPolylineLayer extends OsmandMapLayer implements DirectOffroadLa
 	public LatLon getObjectLocation(Object pO) {
 		return null;
 	}
+
 	public void addPolylinePoint(Point pPoint) {
-		if(mPolyline.isEmpty()){
+		Polyline polyline = getSelectedPolyline();
+		// nothing selected? then add a new line
+		if(polyline == null){
+			polyline = new Polyline();
+			mPolylines.add(polyline);
+			selectedIndex = mPolylines.size()-1;
+		}
+		if(polyline.isEmpty()){
 			LatLon cursorPosition = mDrawPanel.getCursorPosition();
 			if(cursorPosition == null){
 				return;
 			}
-			mPolyline.add(cursorPosition);
+			polyline.add(cursorPosition);
 		}
-		mPolyline.add(mDrawPanel.getLatLon(pPoint));
+		polyline.add(mDrawPanel.getLatLon(pPoint));
+	}
+
+	public void endPolyline() {
+		selectedIndex = -1;
 	}
 
 
