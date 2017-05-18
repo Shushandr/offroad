@@ -15,6 +15,7 @@ import org.apache.commons.logging.Log;
 
 import net.osmand.PlatformUtil;
 import net.osmand.data.RotatedTileBox;
+import net.osmand.plus.views.OsmandMapLayer;
 import net.sourceforge.offroad.OsmWindow;
 
 public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements ComponentListener {
@@ -159,6 +160,16 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 		} else {
 			mContext.getPolylineLayer().endPolyline();
 			mContext.setCursorPosition(e.getPoint());
+		}
+		// check for selection:
+		for (OsmandMapLayer	 layer : mContext.getDrawPanel().getLayers()) {
+			if (layer instanceof ISelectionInterface) {
+				ISelectionInterface sel = (ISelectionInterface) layer;
+				if(sel.isSelection(e.getPoint())){
+					sel.setSelection(e.getPoint());
+					return;
+				}
+			}
 		}
 	}
 

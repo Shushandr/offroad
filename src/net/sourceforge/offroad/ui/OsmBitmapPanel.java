@@ -431,6 +431,14 @@ public class OsmBitmapPanel extends JPanel {
 		}
 	}
 
+	public Point getPoint(LatLon pLatLon) {
+		synchronized (mCurrentTileBox) {
+			int posx = (int) mCurrentTileBox.getPixXFromLatLon(pLatLon);
+			int posy = (int) mCurrentTileBox.getPixYFromLatLon(pLatLon);
+			return new Point(posx, posy);
+		}
+	}
+	
 	public void move(LatLon pLocation, int pZoom) {
 		RotatedTileBox tb = copyCurrentTileBox();
 		tb.setLatLonCenter(pLocation.getLatitude(), pLocation.getLongitude());
