@@ -121,6 +121,7 @@ import net.osmand.plus.routing.RouteProvider.RouteService;
 import net.osmand.plus.routing.RoutingHelper;
 import net.osmand.plus.routing.RoutingHelper.IRouteInformationListener;
 import net.osmand.plus.views.DrawPolylineLayer;
+import net.osmand.plus.views.DrawPolylineLayer.Polyline;
 import net.osmand.plus.views.POIMapLayer;
 import net.osmand.render.RenderingRuleProperty;
 import net.osmand.render.RenderingRulesStorage;
@@ -149,6 +150,7 @@ import net.sourceforge.offroad.actions.OffRoadAction.OffRoadMenuItem;
 import net.sourceforge.offroad.actions.PoiFilterAction;
 import net.sourceforge.offroad.actions.PointNavigationAction;
 import net.sourceforge.offroad.actions.PointNavigationAction.HelperAction;
+import net.sourceforge.offroad.actions.RemovePolylineAction;
 import net.sourceforge.offroad.actions.RouteAction;
 import net.sourceforge.offroad.actions.SearchAddressAction;
 import net.sourceforge.offroad.actions.SelectTrackAction;
@@ -1784,6 +1786,11 @@ public class OsmWindow  implements IRouteInformationListener {
 			RouteCalculationResult rcr = (RouteCalculationResult) pAm;
 			JMenuItem routeInfoItem = new JMenuItem(new ShowRouteDetailsAction(this, rcr));
 			result.add(routeInfoItem);
+		}
+		if (pAm instanceof Polyline) {
+			Polyline polyline = (Polyline) pAm;
+			JMenuItem remPolyAction = new JMenuItem(new RemovePolylineAction(this, polyline));
+			result.add(remPolyAction);
 		}
 		return result;
 	}

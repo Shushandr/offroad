@@ -29,6 +29,7 @@ import net.osmand.PlatformUtil;
 import net.osmand.data.LatLon;
 import net.osmand.data.PointDescription;
 import net.osmand.data.RotatedTileBox;
+import net.osmand.plus.views.DrawPolylineLayer.Polyline;
 import net.sourceforge.offroad.R;
 import net.sourceforge.offroad.ui.DirectOffroadLayer;
 import net.sourceforge.offroad.ui.IContextMenuProvider;
@@ -148,17 +149,17 @@ public class DrawPolylineLayer extends OsmandMapLayer
 	private Paint area;
 	private Paint areaSelected;
 	private Vector<Polyline> mPolylines = new Vector<>();
-	private int selectedIndex = -1;
+	private int mSelectedIndex = -1;
 
 	public Polyline getSelectedPolyline() {
 		if (checkIndex()) {
-			return mPolylines.get(selectedIndex);
+			return mPolylines.get(mSelectedIndex);
 		}
 		return null;
 	}
 
 	public boolean checkIndex() {
-		return selectedIndex >= 0 && selectedIndex < mPolylines.size();
+		return mSelectedIndex >= 0 && mSelectedIndex < mPolylines.size();
 	}
 
 	public DrawPolylineLayer(OsmBitmapPanel pOsmBitmapPanel) {
@@ -245,6 +246,17 @@ public class DrawPolylineLayer extends OsmandMapLayer
 
 	@Override
 	public void collectObjectsFromPoint(Point2D pPoint, RotatedTileBox pTileBox, List<Object> pRes) {
+		Point pDest = convertToPoint(pPoint);
+		for (Polyline polyline : mPolylines) {
+			if(polyline.getDistance(pDest)< SELECTION_RADIUS){
+				pRes.add(polyline);
+			}
+		}
+
+	}
+
+	public Point convertToPoint(Point2D pPoint) {
+		return new Point((int)pPoint.getX(), (int)pPoint.getY());
 	}
 
 	@Override
@@ -258,7 +270,7 @@ public class DrawPolylineLayer extends OsmandMapLayer
 		if (polyline == null) {
 			polyline = new Polyline();
 			mPolylines.add(polyline);
-			selectedIndex = mPolylines.size() - 1;
+			mSelectedIndex = mPolylines.size() - 1;
 		}
 		if (polyline.isEmpty()) {
 			LatLon cursorPosition = mDrawPanel.getCursorPosition();
@@ -271,7 +283,7 @@ public class DrawPolylineLayer extends OsmandMapLayer
 	}
 
 	public void endPolyline() {
-		selectedIndex = -1;
+		mSelectedIndex = -1;
 	}
 
 	@Override
@@ -290,7 +302,7 @@ public class DrawPolylineLayer extends OsmandMapLayer
 		int i = 0;
 		for (Polyline polyline : mPolylines) {
 			if(polyline.getDistance(pDest)< SELECTION_RADIUS){
-				selectedIndex = i;
+				mSelectedIndex = i;
 				return;
 			}
 			i++;
@@ -301,7 +313,7 @@ public class DrawPolylineLayer extends OsmandMapLayer
 	public IDragInformation isDragPoint(Point pLastDragPoint, Point pPoint) {
 		if(!checkIndex())
 			return null;
-		EdgeDistance distanceToEdges = mPolylines.get(selectedIndex).getDistanceToEdges(pPoint);
+		EdgeDistance distanceToEdges = mPolylines.get(mSelectedIndex).getDistanceToEdges(pPoint);
 		log.info("Found distance : " + distanceToEdges);
 		if(distanceToEdges.distance < SELECTION_RADIUS){
 			log.info("Found collision with " + distanceToEdges);
@@ -325,6 +337,19 @@ public class DrawPolylineLayer extends OsmandMapLayer
 				polyline.set(indexOf, mDrawPanel.getLatLon(pNewPoint));
 				log.info("Moved some element.");
 			}
+		}
+	}
+
+	public void remove(Polyline pPolyline) {
+		Polyline sel = null;
+		if(checkIndex()){
+			sel = mPolylines.get(mSelectedIndex);
+		}
+		mPolylines.remove(pPolyline);
+		if(sel != null && mPolylines.contains(sel)){
+			mSelectedIndex = mPolylines.indexOf(sel);
+		} else {
+			mSelectedIndex = -1;
 		}
 	}
 
