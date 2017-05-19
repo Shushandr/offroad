@@ -25,6 +25,7 @@ import java.awt.geom.Point2D;
 import java.util.List;
 import java.util.Vector;
 
+import net.osmand.PlatformUtil;
 import net.osmand.data.LatLon;
 import net.osmand.data.PointDescription;
 import net.osmand.data.RotatedTileBox;
@@ -41,10 +42,105 @@ import net.sourceforge.offroad.ui.Paint;
  */
 public class DrawPolylineLayer extends OsmandMapLayer
 		implements ISelectionInterface, DirectOffroadLayer, IContextMenuProvider {
+	
+	private static class PolylinePointDragInformation implements IDragInformation {
+		public Polyline mPolyline;
+		public int mIndex;
+	}
 
 	private static final int SELECTION_RADIUS = 20;
+	public static class EdgeDistance {
+		double distance;
+		Polyline mPolyline;
+		int index;
+		public EdgeDistance(double pDistance, Polyline pPolyline, int pIndex, Point pPointP) {
+			super();
+			distance = pDistance;
+			mPolyline = pPolyline;
+			index = pIndex;
+			mPointP = pPointP;
+		}
+		@Override
+		public String toString() {
+			return "EdgeDistance [distance=" + distance + ", mPolyline=" + mPolyline + ", index=" + index + ", mPointP="
+					+ mPointP + "]";
+		}
+		private Point mPointP;
+	}
 
-	public static class Polyline extends Vector<LatLon> {
+	private final static org.apache.commons.logging.Log log = PlatformUtil.getLog(DrawPolylineLayer.class);
+
+	public class Polyline extends Vector<LatLon> {
+		public EdgeDistance getDistanceToEdges(Point pDest){
+			double minDist = Double.MAX_VALUE;
+			Point minPointP = null;
+			int index = 0;
+			int minIndex = -1;
+			for (LatLon latLonP : this) {
+				Point pointP = mDrawPanel.getPoint(latLonP);
+				double dist = pDest.distance(pointP);
+				if(dist < minDist){
+					minIndex = index;
+					minDist = dist;
+					minPointP = pointP;
+				}
+				index++;
+			}
+			EdgeDistance ret = new EdgeDistance(minDist, this, minIndex, minPointP);
+			return ret;
+		}
+		public double getDistance(Point pDest){
+			double minDist = Double.MAX_VALUE;
+			Point lastPointInLine = null;
+			for (LatLon latLonP : this) {
+				Point pointP = mDrawPanel.getPoint(latLonP);
+				if (lastPointInLine != null) {
+					minDist = Math.min(getDistance(pDest, pointP, lastPointInLine), minDist);
+				}
+				lastPointInLine = pointP;
+			}
+			return minDist;
+		}
+		
+		public double getDistance(Point pDest, Point pointA, Point pointB) {
+			// adapted from
+			// http://stackoverflow.com/questions/849211/shortest-distance-between-a-point-and-a-line-segment
+			float x1 = pointA.x;
+			float y1 = pointA.y;
+			float x2 = pointB.x;
+			float y2 = pointB.y;
+			float x = pDest.x;
+			float y = pDest.y;
+			float A = x - x1;
+			float B = y - y1;
+			float C = x2 - x1;
+			float D = y2 - y1;
+
+			float dot = A * C + B * D;
+			float len_sq = C * C + D * D;
+			float param = -1;
+			// in case of 0 length line
+			if (len_sq != 0) {
+				param = dot / len_sq;
+			}
+
+			float xx, yy;
+
+			if (param < 0) {
+				xx = x1;
+				yy = y1;
+			} else if (param > 1) {
+				xx = x2;
+				yy = y2;
+			} else {
+				xx = x1 + param * C;
+				yy = y1 + param * D;
+			}
+
+			float dx = x - xx;
+			float dy = y - yy;
+			return Math.sqrt(dx * dx + dy * dy);
+		}
 
 	}
 
@@ -181,76 +277,54 @@ public class DrawPolylineLayer extends OsmandMapLayer
 	@Override
 	public boolean isSelection(Point pDest) {
 		for (Polyline polyline : mPolylines) {
-			Point lastPointInLine = null;
-			for (LatLon latLonP : polyline) {
-				Point pointP = mDrawPanel.getPoint(latLonP);
-				if (lastPointInLine != null) {
-					if (getDistance(pDest, pointP, lastPointInLine) < SELECTION_RADIUS) {
-						return true;
-					}
-				}
-				lastPointInLine = pointP;
+			if(polyline.getDistance(pDest)< SELECTION_RADIUS){
+				return true;
 			}
 		}
 		return false;
 	}
 
-	public double getDistance(Point pDest, Point pointA, Point pointB) {
-		// adapted from
-		// http://stackoverflow.com/questions/849211/shortest-distance-between-a-point-and-a-line-segment
-		float x1 = pointA.x;
-		float y1 = pointA.y;
-		float x2 = pointB.x;
-		float y2 = pointB.y;
-		float x = pDest.x;
-		float y = pDest.y;
-		float A = x - x1;
-		float B = y - y1;
-		float C = x2 - x1;
-		float D = y2 - y1;
-
-		float dot = A * C + B * D;
-		float len_sq = C * C + D * D;
-		float param = -1;
-		// in case of 0 length line
-		if (len_sq != 0) {
-			param = dot / len_sq;
-		}
-
-		float xx, yy;
-
-		if (param < 0) {
-			xx = x1;
-			yy = y1;
-		} else if (param > 1) {
-			xx = x2;
-			yy = y2;
-		} else {
-			xx = x1 + param * C;
-			yy = y1 + param * D;
-		}
-
-		float dx = x - xx;
-		float dy = y - yy;
-		return Math.sqrt(dx * dx + dy * dy);
-	}
 
 	@Override
 	public void setSelection(Point pDest) {
 		int i = 0;
 		for (Polyline polyline : mPolylines) {
-			Point lastPointInLine = null;
-			for (LatLon latLonP : polyline) {
-				Point pointP = mDrawPanel.getPoint(latLonP);
-				if (lastPointInLine != null) {
-					if (getDistance(pDest, pointP, lastPointInLine) < SELECTION_RADIUS) {
-						selectedIndex = i;
-						return;
-					}
-				}
-				lastPointInLine = pointP;
+			if(polyline.getDistance(pDest)< SELECTION_RADIUS){
+				selectedIndex = i;
+				return;
 			}
 			i++;
+		}
+	}
+
+	@Override
+	public IDragInformation isDragPoint(Point pLastDragPoint, Point pPoint) {
+		if(!checkIndex())
+			return null;
+		EdgeDistance distanceToEdges = mPolylines.get(selectedIndex).getDistanceToEdges(pPoint);
+		log.info("Found distance : " + distanceToEdges);
+		if(distanceToEdges.distance < SELECTION_RADIUS){
+			log.info("Found collision with " + distanceToEdges);
+			PolylinePointDragInformation info = new PolylinePointDragInformation();
+			info.mPolyline = distanceToEdges.mPolyline;
+			info.mIndex = distanceToEdges.index;
+			return info;
+		}
+		return null;
+	}
+
+	@Override
+	public void drag(Point pNewPoint, IDragInformation pInfo) {
+		if(!checkIndex())
+			return;
+		if (pInfo instanceof PolylinePointDragInformation) {
+			PolylinePointDragInformation polyInfo = (PolylinePointDragInformation) pInfo;
+			int indexOf = polyInfo.mIndex;
+			Polyline polyline = polyInfo.mPolyline;
+			if(indexOf < polyline.size()){
+				polyline.set(indexOf, mDrawPanel.getLatLon(pNewPoint));
+				log.info("Moved some element.");
+			}
 		}
 	}
 

@@ -17,12 +17,15 @@ import net.osmand.PlatformUtil;
 import net.osmand.data.RotatedTileBox;
 import net.osmand.plus.views.OsmandMapLayer;
 import net.sourceforge.offroad.OsmWindow;
+import net.sourceforge.offroad.ui.ISelectionInterface.IDragInformation;
 
 public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements ComponentListener {
 	private static final int ZOOM_DELAY_MILLISECONDS = 100;
 	private static final int ROTATE_DELAY_MILLISECONDS = 500;
 	private final static Log log = PlatformUtil.getLog(OsmBitmapPanelMouseAdapter.class);
-
+	private ISelectionInterface mDragInterface = null;
+	
+	
 	public class ZoomPerformer implements ActionListener {
 		private int mCounter;
 		private Point mPoint;
@@ -67,6 +70,7 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 	private RotatePerformer mRotatePerformer;
 	private MouseEvent mMouseEvent;
 	private OsmWindow mContext;
+	private IDragInformation mDragInformation;
 
 	public OsmBitmapPanelMouseAdapter(OsmBitmapPanel drawPanel) {
 		this.drawPanel = drawPanel;
@@ -93,17 +97,40 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 			return;
 		}
 		lastDragPoint = new Point(e.getPoint());
+		mDragInterface = null;
 	}
 
 	@Override
 	public void mouseDragged(MouseEvent e) {
 		// no button is pressed in that event. !?!
-		Point deltaPoint = lastDragPoint;
-		if(deltaPoint == null){
+		if(lastDragPoint == null){
 			return;
 		}
-		deltaPoint.translate(-e.getPoint().x, -e.getPoint().y);
-		lastDragPoint = new Point(e.getPoint());
+		Point deltaPoint = new Point(lastDragPoint);
+		Point point = new Point(e.getPoint());
+		deltaPoint.translate(-point.x, -point.y);
+		// check for layer consuming the drag:
+		if(mDragInterface != null){
+			mDragInterface.drag(point, mDragInformation);
+			drawPanel.repaint();
+			log.info("Drag");
+			return;
+		}
+		for (OsmandMapLayer	 layer : mContext.getDrawPanel().getLayers()) {
+			if (layer instanceof ISelectionInterface) {
+				ISelectionInterface sel = (ISelectionInterface) layer;
+				IDragInformation information = sel.isDragPoint(lastDragPoint, point);
+				if(information != null){
+					mDragInterface = sel;
+					mDragInformation = information;
+					sel.drag(point, mDragInformation);
+					log.info("Drag");
+					drawPanel.repaint();
+					return;
+				}
+			}
+		}
+		lastDragPoint = new Point(point);
 		drawPanel.dragImage(deltaPoint);
 	}
 	
@@ -113,11 +140,13 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 			return;
 		}
 		drawPanel.drawLater();
+		mDragInterface = null;
 	}
 
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent pE) {
 		pE.consume();
+		lastDragPoint = null;
 		if(pE.isControlDown()){
 			// rotate:
 			mRotatePerformer.addWheelEvent(10*pE.getPreciseWheelRotation(), pE.getPoint());
@@ -157,6 +186,7 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 		if(e.isShiftDown()){
 			// do a polyline
 			mContext.getPolylineLayer().addPolylinePoint(e.getPoint());
+			return;
 		} else {
 			mContext.getPolylineLayer().endPolyline();
 			mContext.setCursorPosition(e.getPoint());

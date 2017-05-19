@@ -26,6 +26,17 @@ import java.awt.Point;
  * @date 16.05.2017
  */
 public interface ISelectionInterface {
+	public interface IDragInformation {
+		
+	};
 	boolean isSelection(Point p);
 	void setSelection(Point p);
+	/**
+	 * @param pLastDragPoint
+	 * @param pPoint
+	 * @return a non-null value means true! The value has to be stored and given on subsequent 
+	 * drags to the drag method.
+	 */
+	IDragInformation isDragPoint(Point pLastDragPoint, Point pPoint);
+	void drag(Point pDeltaPoint, IDragInformation pInformation);
 }
