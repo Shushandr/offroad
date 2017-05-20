@@ -156,7 +156,7 @@ public class DrawPolylineLayer extends OsmandMapLayer
 			for (LatLon latLon : this) {
 				v.add(new Node(latLon.getLatitude(), latLon.getLongitude(), 1));
 			}
-			return OsmMapUtils.getArea(v)/1000000d;
+			return OsmMapUtils.getArea(v);
 		}
 
 		/**
@@ -344,9 +344,7 @@ public class DrawPolylineLayer extends OsmandMapLayer
 		if (!checkIndex())
 			return null;
 		EdgeDistance distanceToEdges = mPolylines.get(mSelectedIndex).getDistanceToEdges(pPoint);
-		log.info("Found distance : " + distanceToEdges);
 		if (distanceToEdges.distance < SELECTION_RADIUS) {
-			log.info("Found collision with " + distanceToEdges);
 			PolylinePointDragInformation info = new PolylinePointDragInformation();
 			info.mPolyline = distanceToEdges.mPolyline;
 			info.mIndex = distanceToEdges.index;
@@ -365,7 +363,6 @@ public class DrawPolylineLayer extends OsmandMapLayer
 			Polyline polyline = polyInfo.mPolyline;
 			if (indexOf < polyline.size()) {
 				polyline.set(indexOf, mDrawPanel.getLatLon(pNewPoint));
-				log.info("Moved some element.");
 			}
 		}
 	}
