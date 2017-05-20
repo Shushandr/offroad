@@ -1220,26 +1220,21 @@ public class OsmWindow  implements IRouteInformationListener {
 			LatLon mousePosition = mDrawPanel.copyCurrentTileBox().getLatLonFromPixel(e.getX(), e.getY());
 			double distance = MapUtils.getDistance(mousePosition, cursorPosition)/1000d;
 			// now, check if polyline is present:
+			Polyline selectedPolyline = mDrawPanel.getPolylineLayer().getSelectedPolyline();
 			double polyDist = 0;
-			Vector<LatLon> selectedPolyline = mDrawPanel.getPolylineLayer().getSelectedPolyline();
-			if(selectedPolyline != null && selectedPolyline.size()>0){
-				for (int i = 0; i < selectedPolyline.size(); i++) {
-					LatLon pos = selectedPolyline.get(i);
-					if(i+1 < selectedPolyline.size()){
-						LatLon pos2 = selectedPolyline.get(i+1);
-						polyDist += MapUtils.getDistance(pos, pos2);
-					}
-				}
-				polyDist /= 1000d;
+			double polyArea = 0;
+			if(selectedPolyline != null){
+				polyDist = selectedPolyline.calculateLength();
+				polyArea = selectedPolyline.calculateArea();
 			}
 			Object[] messageArguments = { new Double(distance),
 					new Double(cursorPosition.getLatitude()),
 					new Double(cursorPosition.getLongitude())};
-			Object[] polyArguments =  {polyDist};
+			Object[] polyArguments =  {polyDist, polyArea};
 			MessageFormat formatter = new MessageFormat(
 					getOffRoadString("offroad.string47")); //$NON-NLS-1$
 			String message = formatter.format(messageArguments);
-			if (polyDist != 0) {
+			if (polyDist != 0 || polyArea != 0) {
 				formatter = new MessageFormat(getOffRoadString("offroad.string47.poly"));
 				message += " " + formatter.format(polyArguments);
 			}

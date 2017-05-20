@@ -29,7 +29,9 @@ import net.osmand.PlatformUtil;
 import net.osmand.data.LatLon;
 import net.osmand.data.PointDescription;
 import net.osmand.data.RotatedTileBox;
-import net.osmand.plus.views.DrawPolylineLayer.Polyline;
+import net.osmand.osm.edit.Node;
+import net.osmand.osm.edit.OsmMapUtils;
+import net.osmand.util.MapUtils;
 import net.sourceforge.offroad.R;
 import net.sourceforge.offroad.ui.DirectOffroadLayer;
 import net.sourceforge.offroad.ui.IContextMenuProvider;
@@ -43,17 +45,19 @@ import net.sourceforge.offroad.ui.Paint;
  */
 public class DrawPolylineLayer extends OsmandMapLayer
 		implements ISelectionInterface, DirectOffroadLayer, IContextMenuProvider {
-	
+
 	private static class PolylinePointDragInformation implements IDragInformation {
 		public Polyline mPolyline;
 		public int mIndex;
 	}
 
 	private static final int SELECTION_RADIUS = 20;
+
 	public static class EdgeDistance {
 		double distance;
 		Polyline mPolyline;
 		int index;
+
 		public EdgeDistance(double pDistance, Polyline pPolyline, int pIndex, Point pPointP) {
 			super();
 			distance = pDistance;
@@ -61,18 +65,20 @@ public class DrawPolylineLayer extends OsmandMapLayer
 			index = pIndex;
 			mPointP = pPointP;
 		}
+
 		@Override
 		public String toString() {
 			return "EdgeDistance [distance=" + distance + ", mPolyline=" + mPolyline + ", index=" + index + ", mPointP="
 					+ mPointP + "]";
 		}
+
 		private Point mPointP;
 	}
 
 	private final static org.apache.commons.logging.Log log = PlatformUtil.getLog(DrawPolylineLayer.class);
 
 	public class Polyline extends Vector<LatLon> {
-		public EdgeDistance getDistanceToEdges(Point pDest){
+		public EdgeDistance getDistanceToEdges(Point pDest) {
 			double minDist = Double.MAX_VALUE;
 			Point minPointP = null;
 			int index = 0;
@@ -80,7 +86,7 @@ public class DrawPolylineLayer extends OsmandMapLayer
 			for (LatLon latLonP : this) {
 				Point pointP = mDrawPanel.getPoint(latLonP);
 				double dist = pDest.distance(pointP);
-				if(dist < minDist){
+				if (dist < minDist) {
 					minIndex = index;
 					minDist = dist;
 					minPointP = pointP;
@@ -90,7 +96,8 @@ public class DrawPolylineLayer extends OsmandMapLayer
 			EdgeDistance ret = new EdgeDistance(minDist, this, minIndex, minPointP);
 			return ret;
 		}
-		public double getDistance(Point pDest){
+
+		public double getDistance(Point pDest) {
 			double minDist = Double.MAX_VALUE;
 			Point lastPointInLine = null;
 			for (LatLon latLonP : this) {
@@ -102,7 +109,7 @@ public class DrawPolylineLayer extends OsmandMapLayer
 			}
 			return minDist;
 		}
-		
+
 		public double getDistance(Point pDest, Point pointA, Point pointB) {
 			// adapted from
 			// http://stackoverflow.com/questions/849211/shortest-distance-between-a-point-and-a-line-segment
@@ -143,6 +150,30 @@ public class DrawPolylineLayer extends OsmandMapLayer
 			return Math.sqrt(dx * dx + dy * dy);
 		}
 
+
+		public double calculateArea() {
+			Vector<Node> v = new Vector<>();
+			for (LatLon latLon : this) {
+				v.add(new Node(latLon.getLatitude(), latLon.getLongitude(), 1));
+			}
+			return OsmMapUtils.getArea(v)/1000000d;
+		}
+
+		/**
+		 * @return the length of the polyline in kilometers
+		 */
+		public float calculateLength() {
+			float polyDist = 0f;
+			for (int i = 0; i < size(); i++) {
+				LatLon pos = get(i);
+				if (i + 1 < size()) {
+					LatLon pos2 = get(i + 1);
+					polyDist += MapUtils.getDistance(pos, pos2);
+				}
+			}
+			polyDist /= 1000d;
+			return polyDist;
+		}
 	}
 
 	private OsmBitmapPanel mDrawPanel;
@@ -248,7 +279,7 @@ public class DrawPolylineLayer extends OsmandMapLayer
 	public void collectObjectsFromPoint(Point2D pPoint, RotatedTileBox pTileBox, List<Object> pRes) {
 		Point pDest = convertToPoint(pPoint);
 		for (Polyline polyline : mPolylines) {
-			if(polyline.getDistance(pDest)< SELECTION_RADIUS){
+			if (polyline.getDistance(pDest) < SELECTION_RADIUS) {
 				pRes.add(polyline);
 			}
 		}
@@ -256,7 +287,7 @@ public class DrawPolylineLayer extends OsmandMapLayer
 	}
 
 	public Point convertToPoint(Point2D pPoint) {
-		return new Point((int)pPoint.getX(), (int)pPoint.getY());
+		return new Point((int) pPoint.getX(), (int) pPoint.getY());
 	}
 
 	@Override
@@ -289,19 +320,18 @@ public class DrawPolylineLayer extends OsmandMapLayer
 	@Override
 	public boolean isSelection(Point pDest) {
 		for (Polyline polyline : mPolylines) {
-			if(polyline.getDistance(pDest)< SELECTION_RADIUS){
+			if (polyline.getDistance(pDest) < SELECTION_RADIUS) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-
 	@Override
 	public void setSelection(Point pDest) {
 		int i = 0;
 		for (Polyline polyline : mPolylines) {
-			if(polyline.getDistance(pDest)< SELECTION_RADIUS){
+			if (polyline.getDistance(pDest) < SELECTION_RADIUS) {
 				mSelectedIndex = i;
 				return;
 			}
@@ -311,11 +341,11 @@ public class DrawPolylineLayer extends OsmandMapLayer
 
 	@Override
 	public IDragInformation isDragPoint(Point pLastDragPoint, Point pPoint) {
-		if(!checkIndex())
+		if (!checkIndex())
 			return null;
 		EdgeDistance distanceToEdges = mPolylines.get(mSelectedIndex).getDistanceToEdges(pPoint);
 		log.info("Found distance : " + distanceToEdges);
-		if(distanceToEdges.distance < SELECTION_RADIUS){
+		if (distanceToEdges.distance < SELECTION_RADIUS) {
 			log.info("Found collision with " + distanceToEdges);
 			PolylinePointDragInformation info = new PolylinePointDragInformation();
 			info.mPolyline = distanceToEdges.mPolyline;
@@ -327,13 +357,13 @@ public class DrawPolylineLayer extends OsmandMapLayer
 
 	@Override
 	public void drag(Point pNewPoint, IDragInformation pInfo) {
-		if(!checkIndex())
+		if (!checkIndex())
 			return;
 		if (pInfo instanceof PolylinePointDragInformation) {
 			PolylinePointDragInformation polyInfo = (PolylinePointDragInformation) pInfo;
 			int indexOf = polyInfo.mIndex;
 			Polyline polyline = polyInfo.mPolyline;
-			if(indexOf < polyline.size()){
+			if (indexOf < polyline.size()) {
 				polyline.set(indexOf, mDrawPanel.getLatLon(pNewPoint));
 				log.info("Moved some element.");
 			}
@@ -342,11 +372,11 @@ public class DrawPolylineLayer extends OsmandMapLayer
 
 	public void remove(Polyline pPolyline) {
 		Polyline sel = null;
-		if(checkIndex()){
+		if (checkIndex()) {
 			sel = mPolylines.get(mSelectedIndex);
 		}
 		mPolylines.remove(pPolyline);
-		if(sel != null && mPolylines.contains(sel)){
+		if (sel != null && mPolylines.contains(sel)) {
 			mSelectedIndex = mPolylines.indexOf(sel);
 		} else {
 			mSelectedIndex = -1;

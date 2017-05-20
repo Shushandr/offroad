@@ -113,7 +113,6 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 		if(mDragInterface != null){
 			mDragInterface.drag(point, mDragInformation);
 			drawPanel.repaint();
-			log.info("Drag");
 			return;
 		}
 		for (OsmandMapLayer	 layer : mContext.getDrawPanel().getLayers()) {
@@ -124,7 +123,6 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 					mDragInterface = sel;
 					mDragInformation = information;
 					sel.drag(point, mDragInformation);
-					log.info("Drag");
 					drawPanel.repaint();
 					return;
 				}
