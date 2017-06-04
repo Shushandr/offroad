@@ -23,14 +23,8 @@ import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.Toolkit;
 import java.awt.Window;
-import java.io.StringReader;
-import java.io.StringWriter;
 
 import javax.swing.JOptionPane;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -49,34 +43,17 @@ public class ComponentLocationStorage {
 
 	
 	public static String marshall(ComponentLocationStorage pStorage){
-		try {
-			JAXBContext jaxbContext = JAXBContext.newInstance(getClasses(), null);
-			Marshaller m = jaxbContext.createMarshaller();
-			StringWriter writer = new StringWriter();
-			m.marshal(pStorage, writer);
-			return writer.toString();
-		} catch (JAXBException ex) {
-			ex.printStackTrace();
-		}
-		return null;
+		Class[] classes = getClasses();
+		return OsmWindow.marshall(pStorage, classes);
 	}
 
 	static Class[] getClasses() {
-		return new Class[]{ComponentLocationStorage.class, OsmWindowLocationStorage.class};
+		return new Class[] { ComponentLocationStorage.class, OsmWindowLocationStorage.class };
 	}
-	
-	public static ComponentLocationStorage unmarshall(String pInput){
-		try {
-			JAXBContext jaxbContext = JAXBContext.newInstance(getClasses(), null);
-			Unmarshaller m = jaxbContext.createUnmarshaller();
-			ComponentLocationStorage storage = (ComponentLocationStorage) m.unmarshal(new StringReader(pInput));
-			return storage;
-		} catch (JAXBException ex) {
-			ex.printStackTrace();
-		}
-		return null;
+
+	public static ComponentLocationStorage unmarshall(String pInput) {
+		return (ComponentLocationStorage) OsmWindow.unmarshall(pInput, getClasses());
 	}
-	
 	
 	public static void main(String[] args) {
 		ComponentLocationStorage st = new ComponentLocationStorage();

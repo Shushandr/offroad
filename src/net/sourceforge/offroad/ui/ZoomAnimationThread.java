@@ -27,9 +27,9 @@ class ZoomAnimationThread extends OffRoadUIThread {
 		for (int i = 0; i < it; ++i) {
 			tb = getDestinationTileBox(originalZoom, it, i);
 			mOsmBitmapPanel.setCurrentTileBox(tb);
-			log.info("Set tile box " + tb + " and now repaint.");
+			log.debug("Set tile box " + tb + " and now repaint.");
 			mOsmBitmapPanel.repaintAndWait(50);
-			log.info("Set tile box " + tb + " and now repaint. Done.");
+			log.debug("Set tile box " + tb + " and now repaint. Done.");
 		}
 	}
 

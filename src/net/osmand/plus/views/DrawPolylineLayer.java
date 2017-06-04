@@ -25,6 +25,9 @@ import java.awt.geom.Point2D;
 import java.util.List;
 import java.util.Vector;
 
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
 import net.osmand.PlatformUtil;
 import net.osmand.data.LatLon;
 import net.osmand.data.PointDescription;
@@ -32,6 +35,7 @@ import net.osmand.data.RotatedTileBox;
 import net.osmand.osm.edit.Node;
 import net.osmand.osm.edit.OsmMapUtils;
 import net.osmand.util.MapUtils;
+import net.sourceforge.offroad.OsmWindow;
 import net.sourceforge.offroad.R;
 import net.sourceforge.offroad.ui.DirectOffroadLayer;
 import net.sourceforge.offroad.ui.IContextMenuProvider;
@@ -76,15 +80,90 @@ public class DrawPolylineLayer extends OsmandMapLayer
 	}
 
 	private final static org.apache.commons.logging.Log log = PlatformUtil.getLog(DrawPolylineLayer.class);
+	private static final String POLYLINES_STORAGE = "POLYLINES_STORAGE";
 
-	public class Polyline extends Vector<LatLon> {
-		public EdgeDistance getDistanceToEdges(Point pDest) {
+	
+	@XmlRootElement
+	public static class Polylines  {
+		private Vector<Polyline> mPolylineItems = new Vector<>();
+		public boolean contains(Object pO) {
+			return mPolylineItems.contains(pO);
+		}
+		public int indexOf(Object pO) {
+			return mPolylineItems.indexOf(pO);
+		}
+		public boolean remove(Object pO) {
+			return mPolylineItems.remove(pO);
+		}
+		public int size() {
+			return mPolylineItems.size();
+		}
+		public boolean isEmpty() {
+			return mPolylineItems.isEmpty();
+		}
+		public Polyline get(int pIndex) {
+			return mPolylineItems.get(pIndex);
+		}
+		public boolean add(Polyline pE) {
+			return mPolylineItems.add(pE);
+		}
+		@XmlElement(name="polyline")
+		public Vector<Polyline> getPolylineItems() {
+			return mPolylineItems;
+		}
+		public void setPolylineItems(Vector<Polyline> pItems) {
+			mPolylineItems = pItems;
+		}
+		public Polylines() {
+		}
+		
+		
+	}
+	
+	@XmlRootElement
+	public static class Polyline {
+		private Vector<LatLon> mCoordinates = new Vector<>();
+		public LatLon set(int pIndex, LatLon pElement) {
+			return mCoordinates.set(pIndex, pElement);
+		}
+		public boolean contains(Object pO) {
+			return mCoordinates.contains(pO);
+		}
+		public int indexOf(Object pO) {
+			return mCoordinates.indexOf(pO);
+		}
+		public boolean remove(Object pO) {
+			return mCoordinates.remove(pO);
+		}
+		public int size() {
+			return mCoordinates.size();
+		}
+		public boolean isEmpty() {
+			return mCoordinates.isEmpty();
+		}
+		public LatLon get(int pIndex) {
+			return mCoordinates.get(pIndex);
+		}
+		public boolean add(LatLon pE) {
+			return mCoordinates.add(pE);
+		}
+		@XmlElement(name="latlon")
+		public Vector<LatLon> getCoordinates() {
+			return mCoordinates;
+		}
+		public void setCoordinates(Vector<LatLon> pItems) {
+			mCoordinates = pItems;
+		}
+		
+		public Polyline() {
+		}
+		public EdgeDistance getDistanceToEdges(Point pDest, OsmBitmapPanel pDrawPanel) {
 			double minDist = Double.MAX_VALUE;
 			Point minPointP = null;
 			int index = 0;
 			int minIndex = -1;
-			for (LatLon latLonP : this) {
-				Point pointP = mDrawPanel.getPoint(latLonP);
+			for (LatLon latLonP : this.getCoordinates()) {
+				Point pointP = pDrawPanel.getPoint(latLonP);
 				double dist = pDest.distance(pointP);
 				if (dist < minDist) {
 					minIndex = index;
@@ -97,11 +176,11 @@ public class DrawPolylineLayer extends OsmandMapLayer
 			return ret;
 		}
 
-		public double getDistance(Point pDest) {
+		public double getDistance(Point pDest, OsmBitmapPanel pDrawPanel) {
 			double minDist = Double.MAX_VALUE;
 			Point lastPointInLine = null;
-			for (LatLon latLonP : this) {
-				Point pointP = mDrawPanel.getPoint(latLonP);
+			for (LatLon latLonP : this.getCoordinates()) {
+				Point pointP = pDrawPanel.getPoint(latLonP);
 				if (lastPointInLine != null) {
 					minDist = Math.min(getDistance(pDest, pointP, lastPointInLine), minDist);
 				}
@@ -153,7 +232,7 @@ public class DrawPolylineLayer extends OsmandMapLayer
 
 		public double calculateArea() {
 			Vector<Node> v = new Vector<>();
-			for (LatLon latLon : this) {
+			for (LatLon latLon : this.getCoordinates()) {
 				v.add(new Node(latLon.getLatitude(), latLon.getLongitude(), 1));
 			}
 			return OsmMapUtils.getArea(v);
@@ -179,7 +258,7 @@ public class DrawPolylineLayer extends OsmandMapLayer
 	private OsmBitmapPanel mDrawPanel;
 	private Paint area;
 	private Paint areaSelected;
-	private Vector<Polyline> mPolylines = new Vector<>();
+	private Polylines mPolylines = new Polylines();
 	private int mSelectedIndex = -1;
 
 	public Polyline getSelectedPolyline() {
@@ -200,17 +279,26 @@ public class DrawPolylineLayer extends OsmandMapLayer
 	@Override
 	public void initLayer(OsmBitmapPanel pView) {
 		area = new Paint();
-		area.setColor(mDrawPanel.getResources().getColor(R.color.region_selected));
+		area.setColor(mDrawPanel.getResources().getColor(R.color.region_downloading));
 		area.setStrokeWidth(2.0f * mDrawPanel.getScaleCoefficient());
 		areaSelected = new Paint();
 		areaSelected.setColor(mDrawPanel.getResources().getColor(R.color.region_downloading));
 		areaSelected.setStrokeWidth(4.0f * mDrawPanel.getScaleCoefficient());
+		// get storage:
+		String storageResult = (String) pView.getContext().getOffroadProperties().get(POLYLINES_STORAGE);
+		if(storageResult != null){
+			Object storage = OsmWindow.unmarshall(storageResult, getStorageClasses());
+			if (storage instanceof Polylines) {
+				Polylines polylines = (Polylines) storage;
+				mPolylines = polylines;
+			}
+		}
 	}
 
 	@Override
 	public void onDraw(Graphics2D pCanvas, RotatedTileBox pTileBox, DrawSettings pSettings) {
 		Polyline selPolyline = getSelectedPolyline();
-		for (Polyline polyline : mPolylines) {
+		for (Polyline polyline : mPolylines.getPolylineItems()) {
 			if (selPolyline == polyline) {
 				areaSelected.updateGraphics(pCanvas);
 			} else {
@@ -238,6 +326,14 @@ public class DrawPolylineLayer extends OsmandMapLayer
 
 	@Override
 	public void destroyLayer() {
+		// save information
+		String res = OsmWindow.marshall(mPolylines, getStorageClasses());
+		log.info("Storage: " + res);
+		OsmWindow.getInstance().getOffroadProperties().put(POLYLINES_STORAGE, res);
+	}
+
+	public Class[] getStorageClasses() {
+		return new Class[]{Polyline.class, LatLon.class, Polylines.class};
 	}
 
 	@Override
@@ -278,8 +374,8 @@ public class DrawPolylineLayer extends OsmandMapLayer
 	@Override
 	public void collectObjectsFromPoint(Point2D pPoint, RotatedTileBox pTileBox, List<Object> pRes) {
 		Point pDest = convertToPoint(pPoint);
-		for (Polyline polyline : mPolylines) {
-			if (polyline.getDistance(pDest) < SELECTION_RADIUS) {
+		for (Polyline polyline : mPolylines.getPolylineItems()) {
+			if (polyline.getDistance(pDest, mDrawPanel) < SELECTION_RADIUS) {
 				pRes.add(polyline);
 			}
 		}
@@ -319,8 +415,8 @@ public class DrawPolylineLayer extends OsmandMapLayer
 
 	@Override
 	public boolean isSelection(Point pDest) {
-		for (Polyline polyline : mPolylines) {
-			if (polyline.getDistance(pDest) < SELECTION_RADIUS) {
+		for (Polyline polyline : mPolylines.getPolylineItems()) {
+			if (polyline.getDistance(pDest, mDrawPanel) < SELECTION_RADIUS) {
 				return true;
 			}
 		}
@@ -330,8 +426,8 @@ public class DrawPolylineLayer extends OsmandMapLayer
 	@Override
 	public void setSelection(Point pDest) {
 		int i = 0;
-		for (Polyline polyline : mPolylines) {
-			if (polyline.getDistance(pDest) < SELECTION_RADIUS) {
+		for (Polyline polyline : mPolylines.getPolylineItems()) {
+			if (polyline.getDistance(pDest, mDrawPanel) < SELECTION_RADIUS) {
 				mSelectedIndex = i;
 				return;
 			}
@@ -343,7 +439,7 @@ public class DrawPolylineLayer extends OsmandMapLayer
 	public IDragInformation isDragPoint(Point pLastDragPoint, Point pPoint) {
 		if (!checkIndex())
 			return null;
-		EdgeDistance distanceToEdges = mPolylines.get(mSelectedIndex).getDistanceToEdges(pPoint);
+		EdgeDistance distanceToEdges = mPolylines.get(mSelectedIndex).getDistanceToEdges(pPoint, mDrawPanel);
 		if (distanceToEdges.distance < SELECTION_RADIUS) {
 			PolylinePointDragInformation info = new PolylinePointDragInformation();
 			info.mPolyline = distanceToEdges.mPolyline;

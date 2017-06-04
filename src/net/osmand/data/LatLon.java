@@ -2,12 +2,25 @@ package net.osmand.data;
 
 import java.io.Serializable;
 
+import javax.xml.bind.annotation.XmlRootElement;
+
 import net.osmand.util.MapUtils;
 
+@XmlRootElement
 public class LatLon implements Serializable {
-	private final double longitude;
-	private final double latitude;
+	public void setLongitude(double pLongitude) {
+		longitude = pLongitude;
+	}
 
+	public void setLatitude(double pLatitude) {
+		latitude = pLatitude;
+	}
+	private double longitude;
+	private double latitude;
+
+	public LatLon() {
+	}
+	
 	public LatLon(double latitude, double longitude) {
 		this.latitude = latitude;
 		this.longitude = longitude;

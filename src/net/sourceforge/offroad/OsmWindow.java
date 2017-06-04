@@ -25,6 +25,8 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.net.Authenticator;
 import java.net.URI;
 import java.net.URL;
@@ -69,6 +71,7 @@ import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.commons.logging.Log;
@@ -1608,6 +1611,7 @@ public class OsmWindow  implements IRouteInformationListener {
 	}
 
 	private void closeWindow() {
+		mDrawPanel.removeAllLayers();
 		// save properties:
 		saveSettings();
 		mFrame.dispose();
@@ -1815,6 +1819,31 @@ public class OsmWindow  implements IRouteInformationListener {
 	public DrawPolylineLayer getPolylineLayer(){
 		return mDrawPanel.getPolylineLayer();
 	}
+	
+	public static String marshall(Object pStorage, Class[] pClasses){
+		try {
+			JAXBContext jaxbContext = JAXBContext.newInstance(pClasses, null);
+			Marshaller m = jaxbContext.createMarshaller();
+			StringWriter writer = new StringWriter();
+			m.marshal(pStorage, writer);
+			return writer.toString();
+		} catch (JAXBException ex) {
+			ex.printStackTrace();
+		}
+		return null;
+	}
+
+	public static Object unmarshall(String pInput, Class[] pClasses){
+		try {
+			JAXBContext jaxbContext = JAXBContext.newInstance(pClasses, null);
+			Unmarshaller m = jaxbContext.createUnmarshaller();
+			return m.unmarshal(new StringReader(pInput));
+		} catch (JAXBException ex) {
+			ex.printStackTrace();
+		}
+		return null;
+	}
+
 	
 }
 
