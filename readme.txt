@@ -28,6 +28,13 @@ An offline map viewer based on OsmAnd.
 
 Version History:
 
+0_2:
+============
+* Added polylines (use shift+click to create a polyline)
+* Measurement of length and area of polylines
+* Polylines are stored
+* Polylines can be changed by moving the edges
+
 0_1:
 ============
 * First version of elevation correction for GPX files. Using contour line maps, the GPX elevations can be adjusted according to their position. This is useful, if the elevations are not accurate (as recorded by my phone, for example).
