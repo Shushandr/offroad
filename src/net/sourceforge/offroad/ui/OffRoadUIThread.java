@@ -53,9 +53,11 @@ public class OffRoadUIThread implements Runnable {
 	protected boolean mShouldContinue = false;
 	protected OsmBitmapPanel mOsmBitmapPanel;
 	private Set<OffRoadUIThreadListener> mListeners = new HashSet<>();
+	protected String mName;
 
-	public OffRoadUIThread(OsmBitmapPanel pOsmBitmapPanel) {
+	public OffRoadUIThread(OsmBitmapPanel pOsmBitmapPanel, String pName) {
 		mOsmBitmapPanel = pOsmBitmapPanel;
+		mName = pName;
 	}
 	
 	public void addListener(OffRoadUIThreadListener pListener){
@@ -147,7 +149,7 @@ public class OffRoadUIThread implements Runnable {
 	}
 	
 	protected String printQueue() {
-		String ret = "This: " + this + ", ";
+		String ret =  getName() + ", ";
 		if(mNextThread!=null){
 			ret += mNextThread.printQueue();
 		}
@@ -156,6 +158,10 @@ public class OffRoadUIThread implements Runnable {
 	
 	protected OsmWindow getContext(){
 		return mOsmBitmapPanel.getContext();
+	}
+
+	public String getName() {
+		return mName;
 	}
 
 }

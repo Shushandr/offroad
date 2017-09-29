@@ -39,7 +39,7 @@ public class AmenityTableUpdateThread extends OffRoadUIThread {
 	private AmenityTablePanel mAmenityTable;
 
 	public AmenityTableUpdateThread(OsmBitmapPanel pOsmBitmapPanel, LatLon pLocation, AmenityTablePanel pAmenityTable) {
-		super(pOsmBitmapPanel);
+		super(pOsmBitmapPanel, "AmenityTableUpdate");
 		mLocation = pLocation;
 		mAmenityTable = pAmenityTable;
 	}

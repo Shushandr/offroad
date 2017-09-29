@@ -191,12 +191,12 @@ public class OsmBitmapPanel extends JPanel {
 			
 			@Override
 			public void threadStarted(OffRoadUIThread pThread) {
-				mContext.showQueueInformation("Starting thread " + pThread.getClass().getName());
+				mContext.showQueueInformation("Starting thread " + pThread.printQueue());
 			}
 			
 			@Override
 			public void threadFinished(OffRoadUIThread pThread) {
-				mContext.showQueueInformation("Stopping thread " + pThread.getClass().getName());
+				mContext.showQueueInformation("Stopping thread " + pThread.printQueue());
 			}
 		};
 		mMapThreadPool = new PoolClass("Map"); 

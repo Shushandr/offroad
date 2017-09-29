@@ -38,7 +38,7 @@ public class GenerateLayerOverlayThread extends OffRoadUIThread {
 	private RotatedTileBox mTileBox;
 
 	public GenerateLayerOverlayThread(OsmBitmapPanel pOsmBitmapPanel, RotatedTileBox pTileCopy) {
-		super(pOsmBitmapPanel);
+		super(pOsmBitmapPanel, "Overlay");
 		mTileBox = pTileCopy;
 	}
 

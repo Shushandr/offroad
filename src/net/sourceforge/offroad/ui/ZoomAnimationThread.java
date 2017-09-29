@@ -14,7 +14,7 @@ class ZoomAnimationThread extends OffRoadUIThread {
 	private final Point mNewCenter;
 
 	ZoomAnimationThread(OsmBitmapPanel pOsmBitmapPanel, int pWheelRotation, Point pNewCenter) {
-		super(pOsmBitmapPanel);
+		super(pOsmBitmapPanel, "ZoomAnimation");
 		mWheelRotation = pWheelRotation;
 		mNewCenter = pNewCenter;
 	}

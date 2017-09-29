@@ -17,7 +17,7 @@ class GenerationThread extends OffRoadUIThread implements IntermediateImageListe
 	protected RenderingResult mResult;
 
 	GenerationThread(OsmBitmapPanel pOsmBitmapPanel, RotatedTileBox pTileCopy) {
-		super(pOsmBitmapPanel);
+		super(pOsmBitmapPanel, "Generation");
 		mTileCopy = pTileCopy.copy();
 	}
 

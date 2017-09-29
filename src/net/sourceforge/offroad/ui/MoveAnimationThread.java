@@ -10,7 +10,7 @@ class MoveAnimationThread extends OffRoadUIThread {
 	private final float mDeltaY;
 
 	MoveAnimationThread(OsmBitmapPanel pOsmBitmapPanel, float pDeltaX, float pDeltaY) {
-		super(pOsmBitmapPanel);
+		super(pOsmBitmapPanel, "MoveAnimation");
 		mDeltaX = pDeltaX;
 		mDeltaY = pDeltaY;
 	}

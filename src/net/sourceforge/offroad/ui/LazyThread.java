@@ -30,6 +30,7 @@ public class LazyThread extends GenerationThread {
 
 	LazyThread(OsmBitmapPanel pOsmBitmapPanel, RotatedTileBox pTileCopy) {
 		super(pOsmBitmapPanel, pTileCopy);
+		mName = "L" + mName;
 	}
 
 	public void runInBackground() {
