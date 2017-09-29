@@ -137,6 +137,8 @@ public class OsmBitmapPanel extends JPanel {
 
 	private PoolClass mBackgroundThreadPool;
 
+	private OffRoadUIThreadListener mQueueInfoListener;
+
 
 	public OsmBitmapPanel(OsmWindow pWin) {
 		mContext = pWin;
@@ -185,6 +187,18 @@ public class OsmBitmapPanel extends JPanel {
 			}
 		};
 		new Timer(INACTIVITY_TIME_IN_MILLISECONDS, updateCursorAction).start();
+		mQueueInfoListener = new OffRoadUIThreadListener() {
+			
+			@Override
+			public void threadStarted(OffRoadUIThread pThread) {
+				mContext.showQueueInformation("Starting thread " + pThread.getClass().getName());
+			}
+			
+			@Override
+			public void threadFinished(OffRoadUIThread pThread) {
+				mContext.showQueueInformation("Stopping thread " + pThread.getClass().getName());
+			}
+		};
 		mMapThreadPool = new PoolClass("Map"); 
 		mBackgroundThreadPool = new PoolClass("Background"); 
 		add(mCompassButton, getComponentCount()-1);
@@ -364,13 +378,13 @@ public class OsmBitmapPanel extends JPanel {
 		animationThread.addListener(new OffRoadUIThreadListener() {
 			
 			@Override
-			public void threadStarted() {
+			public void threadStarted(OffRoadUIThread pThread) {
 				log.debug("Zooming started");
 				mZoomIsRunning = true;
 			}
 			
 			@Override
-			public void threadFinished() {
+			public void threadFinished(OffRoadUIThread pThread) {
 				log.debug("Zooming stopped");
 				mZoomIsRunning = false;
 			}
@@ -398,6 +412,7 @@ public class OsmBitmapPanel extends JPanel {
 			mBackgroundThreadPool.queue(pThread);
 		} else {
 			pThread.addListener(mInactivityListener);
+			pThread.addListener(mQueueInfoListener);
 			mMapThreadPool.queue(pThread);
 			if(pThread instanceof GenerationThread){
 				GenerationThread genThread = (GenerationThread) pThread;

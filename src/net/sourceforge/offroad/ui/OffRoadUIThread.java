@@ -44,8 +44,8 @@ public class OffRoadUIThread implements Runnable {
 
 	
 	public interface OffRoadUIThreadListener {
-		public void threadStarted();
-		public void threadFinished();
+		public void threadStarted(OffRoadUIThread pThread);
+		public void threadFinished(OffRoadUIThread pThread);
 	}
 
 	protected OffRoadUIThread mNextThread = null;
@@ -91,7 +91,7 @@ public class OffRoadUIThread implements Runnable {
 	public void run() {
 		try {
 			for (OffRoadUIThreadListener listener : mListeners) {
-				listener.threadStarted();
+				listener.threadStarted(this);
 			} 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -115,7 +115,7 @@ public class OffRoadUIThread implements Runnable {
 			hasFinished = true;
 		}
 		for (OffRoadUIThreadListener listener : mListeners) {
-			listener.threadFinished();
+			listener.threadFinished(this);
 		}
 	}
 

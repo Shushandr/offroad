@@ -155,12 +155,12 @@ class InactivityListener implements ActionListener, AWTEventListener, OffRoadUIT
 	}
 
 	@Override
-	public void threadStarted() {
+	public void threadStarted(OffRoadUIThread pThread) {
 		timer.stop();
 	}
 
 	@Override
-	public void threadFinished() {
+	public void threadFinished(OffRoadUIThread pThread) {
 		restart();
 	}
 }

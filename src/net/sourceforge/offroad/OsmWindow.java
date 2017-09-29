@@ -330,7 +330,10 @@ public class OsmWindow  implements IRouteInformationListener {
 	private JButton mDirectSearchClose;
 
 
-	private boolean mDirectSearchVisible; 
+	private boolean mDirectSearchVisible;
+
+
+	private JLabel mQueueStatus; 
 	
 	public void createAndShowUI() {
 		mDirectSearchTextField = new JTextField(getOffRoadString("offroad.DirectSearchText"));
@@ -358,6 +361,8 @@ public class OsmWindow  implements IRouteInformationListener {
 		
 		mStatusLabel = new JLabel("!"); //$NON-NLS-1$
 		mStatusLabel.setPreferredSize(mStatusLabel.getPreferredSize());
+		mQueueStatus = new JLabel("!"); //$NON-NLS-1$
+		mQueueStatus.setPreferredSize(mQueueStatus.getPreferredSize());
 		mRouteProgressBar = new JProgressBar();
 		mRouteProgressBar.setMaximum(100);
 		mRouteProgressBar.setStringPainted(true);
@@ -379,6 +384,7 @@ public class OsmWindow  implements IRouteInformationListener {
 //		mStatusBar.add(mDirectSearchPanel, new GridBagConstraints(x++, 0, 1, 1, 1, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 		mDirectSearchVisible = false;
 		x++;
+		mStatusBar.add(mQueueStatus, new GridBagConstraints(x++, 0, 1, 1, 1, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 		mStatusBar.add(mRouteProgressStatus, new GridBagConstraints(x++, 0, 1, 1, 0, 1, GridBagConstraints.EAST, GridBagConstraints.VERTICAL, new Insets(0, 0, 0, 0), 0, 0));
 		mStatusBar.add(mRouteProgressBar, new GridBagConstraints(x++, 0, 1, 1, 1, 1, GridBagConstraints.EAST, GridBagConstraints.VERTICAL, new Insets(0, 0, 0, 0), 0, 0));
 		
@@ -1330,6 +1336,10 @@ public class OsmWindow  implements IRouteInformationListener {
 		mDontUpdateStatusLabelCounter = 4;
 	}
 
+	public void showQueueInformation(String pMsg) {
+		mQueueStatus.setText(pMsg);
+	}
+	
 	public void runInUIThread(Runnable pRunnable) {
 		SwingUtilities.invokeLater(pRunnable);
 	}
