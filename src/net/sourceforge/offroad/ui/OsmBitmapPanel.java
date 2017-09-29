@@ -72,14 +72,56 @@ public class OsmBitmapPanel extends JPanel {
 	private List<OsmandMapLayer> layers = new ArrayList<OsmandMapLayer>();
 	private Map<OsmandMapLayer, Float> zOrders = new HashMap<OsmandMapLayer, Float>();
 	private POIMapLayer mPoiLayer;
-	private ExecutorService mThreadPool;
-	private OffRoadUIThread mLastThread;
+	public enum PoolType {
+		MAP,
+		BACKGROUND
+	};
+	private static final class PoolClass {
+		private ExecutorService mThreadPool;
+		private OffRoadUIThread mLastThread;
+		private String mName;
+		public PoolClass(String pName){
+			mName = pName;
+			mThreadPool = Executors.newFixedThreadPool(4);
+		}
+		public void queue(OffRoadUIThread pThread) {
+			if(mLastThread != null){
+				synchronized(mLastThread){
+					if(!mLastThread.hasFinished()){
+						mLastThread.setNextThread(pThread);
+					} else {
+						pThread.shouldContinue();
+					}
+				}
+			} else {
+				pThread.shouldContinue();
+			}
+			mLastThread = pThread;
+			log.debug("New thread " + pThread + " is queued in queue " + this.mName +".");
+			mThreadPool.execute(pThread);
+		}
+		@Override
+		public String toString() {
+			return "PoolClass [mName=" + mName + ", mThreadPool=" + mThreadPool + ", mLastThread=" + mLastThread + "]";
+		}
+		public boolean isQueueEmpty() {
+			if(mLastThread != null){
+				synchronized(mLastThread){
+					if(mLastThread.hasFinished()){
+						return true;
+					}
+				}
+				return false;
+			}
+			return true;
+		}
+	};
 	private InactivityListener mInactivityListener;
 	private CalculateUnzoomedPicturesAction mUnzoomedPicturesAction;
 	private RoundButton mCompassButton;
 	private List<ImageStorage> mEffectivelyDrawnImages = new ArrayList<>();
 
-	private int mZoomCounter;
+//	private int mZoomCounter;
 
 	private BufferedImage mLayerImage;
 	private RotatedTileBox mLayerImageTileBox;
@@ -90,6 +132,10 @@ public class OsmBitmapPanel extends JPanel {
 	private boolean mZoomIsRunning = false;
 
 	private DrawPolylineLayer mPolylineLayer;
+
+	private PoolClass mMapThreadPool;
+
+	private PoolClass mBackgroundThreadPool;
 
 
 	public OsmBitmapPanel(OsmWindow pWin) {
@@ -139,7 +185,8 @@ public class OsmBitmapPanel extends JPanel {
 			}
 		};
 		new Timer(INACTIVITY_TIME_IN_MILLISECONDS, updateCursorAction).start();
-		mThreadPool = Executors.newFixedThreadPool(4);
+		mMapThreadPool = new PoolClass("Map"); 
+		mBackgroundThreadPool = new PoolClass("Background"); 
 		add(mCompassButton, getComponentCount()-1);
 		int size = mCompassButton.getZoomedCircleRadius();
 		mCompassButton.setBounds(100, 100, size, size);
@@ -276,6 +323,7 @@ public class OsmBitmapPanel extends JPanel {
 	void setImage(BufferedImage pImage, RotatedTileBox pGenerationTileBox, RenderingResult pResult) {
 		if(pImage != null){
 			mUnzoomedPicturesAction.addToCache(pGenerationTileBox, pImage, pResult);
+			log.debug("Added image to zoom " + pGenerationTileBox.getZoom());
 			repaint();
 		}
 	}
@@ -328,15 +376,16 @@ public class OsmBitmapPanel extends JPanel {
 			}
 		});
 		RotatedTileBox destinationTileBox = animationThread.getDestinationTileBox(tileCopy.getZoom(), 10, 9);
-		queue(animationThread);
+		log.info("Destination tile box zoom is " + destinationTileBox.getZoom());
+		queue(animationThread, PoolType.MAP);
 		GenerationThread genThread = new LazyThread(this, destinationTileBox);
-		mZoomCounter++;
-		if(mZoomCounter >= 4){
-			mZoomCounter = 0;
-			// every fourth zoom, we generate
-			genThread = new GenerationThread(this, destinationTileBox);
-		}
-		queue(genThread);
+//		mZoomCounter++;
+//		if(mZoomCounter >= 100){
+//			mZoomCounter = 0;
+//			// every fourth zoom, we generate
+//			genThread = new GenerationThread(this, destinationTileBox);
+//		}
+		queue(genThread, PoolType.MAP);
 	}
 
 	public boolean isZoomRunning() {
@@ -344,34 +393,27 @@ public class OsmBitmapPanel extends JPanel {
 	}
 
 	
-	public void queue(OffRoadUIThread pThread) {
-		pThread.addListener(mInactivityListener);
-		if(mLastThread != null){
-			synchronized(mLastThread){
-				if(!mLastThread.hasFinished()){
-					mLastThread.setNextThread(pThread);
-				} else {
-					pThread.shouldContinue();
-				}
-			}
+	public void queue(OffRoadUIThread pThread, PoolType pType) {
+		if(pType.equals(PoolType.BACKGROUND)) {
+			mBackgroundThreadPool.queue(pThread);
 		} else {
-			pThread.shouldContinue();
-		}
-		mLastThread = pThread;
-		log.debug("New thread " + pThread + " is queued.");
-		mThreadPool.execute(pThread);
-		if(pThread instanceof GenerationThread){
-			queue(new GenerateLayerOverlayThread(this, copyCurrentTileBox()));
+			pThread.addListener(mInactivityListener);
+			mMapThreadPool.queue(pThread);
+			if(pThread instanceof GenerationThread){
+				GenerationThread genThread = (GenerationThread) pThread;
+				GenerateLayerOverlayThread overlayThread = new GenerateLayerOverlayThread(this, genThread.mTileCopy.copy());
+				mBackgroundThreadPool.queue(overlayThread);
+			}
 		}
 	}
 
 	public float checkZoom(float newZoom) {
 		MapLevel mapInstance = OsmandIndex.MapLevel.getDefaultInstance();
-		int minZoom = mapInstance.hasMinzoom() ? mapInstance.getMinzoom() : 1;
+		int minZoom = mapInstance.hasMinzoom() ? Math.max(mapInstance.getMinzoom(), OsmWindow.MIN_ZOOM) : OsmWindow.MIN_ZOOM;
 		if (newZoom < minZoom) {
 			newZoom = minZoom;
 		}
-		int maxZoom = mapInstance.hasMaxzoom() ? mapInstance.getMaxzoom() : OsmWindow.MAX_ZOOM;
+		int maxZoom = mapInstance.hasMaxzoom() ? Math.min(mapInstance.getMaxzoom(), OsmWindow.MAX_ZOOM) : OsmWindow.MAX_ZOOM;
 		if (newZoom > maxZoom) {
 			newZoom = maxZoom;
 		}
@@ -380,7 +422,7 @@ public class OsmBitmapPanel extends JPanel {
 
 	public void moveImage(float pDeltaX, float pDeltaY) {
 		RotatedTileBox tb = moveTileBox(pDeltaX, pDeltaY);
-		queue(new LazyThread(this, tb));
+		queue(new LazyThread(this, tb), PoolType.MAP);
 	}
 
 	public RotatedTileBox moveTileBox(float pDeltaX, float pDeltaY) {
@@ -405,8 +447,8 @@ public class OsmBitmapPanel extends JPanel {
 	}
 	public void moveAnimated(float pDeltaX, float pDeltaY, RotatedTileBox tileBox) {
 		MoveAnimationThread animationThread = new MoveAnimationThread(this, pDeltaX, pDeltaY);
-		queue(animationThread);
-		queue(new GenerationThread(this, tileBox));
+		queue(animationThread, PoolType.MAP);
+		queue(new LazyThread(this, tileBox), PoolType.MAP);
 	}
 
 	public BufferedImage createImage() {
@@ -445,7 +487,7 @@ public class OsmBitmapPanel extends JPanel {
 		int newZoom = (int) checkZoom(pZoom);
 		tb.setZoom(newZoom);
 		setCurrentTileBox(tb);
-		queue(new GenerationThread(this, tb));
+		queue(new LazyThread(this, tb), PoolType.MAP);
 	}
 
 	public void setCursor(LatLon pLocation) {
@@ -467,7 +509,7 @@ public class OsmBitmapPanel extends JPanel {
 		RotatedTileBox tb = copyCurrentTileBox();
 		tb.setPixelDimensions(getWidth(), getHeight());
 		setCurrentTileBox(tb);
-		queue(new GenerationThread(this, tb));
+		queue(new LazyThread(this, tb), PoolType.MAP);
 	}
 
 	public void saveImage(File pSelectedFile) {
@@ -484,7 +526,7 @@ public class OsmBitmapPanel extends JPanel {
 	}
 
 	public void rotateIncrement(double pDegrees) {
-		queue(new GenerationThread(this, copyCurrentTileBox()));
+		queue(new LazyThread(this, copyCurrentTileBox()), PoolType.MAP);
 	}
 
 	public void directRotateIncrement(double pDegrees) {
@@ -675,7 +717,7 @@ public class OsmBitmapPanel extends JPanel {
 						// instead of setting this, we store it:
 						addToCache(mTileCopy, mNewBitmap, mResult);
 					}
-				});
+				}, PoolType.BACKGROUND);
 			}
 		}
 		
@@ -689,25 +731,17 @@ public class OsmBitmapPanel extends JPanel {
 	}
 
 	/**
-	 * @return true, if the queue is currently empty.
+	 * @return true, if both queues are currently empty.
 	 */
 	protected boolean isQueueEmpty() {
-		if(mLastThread != null){
-			synchronized(mLastThread){
-				if(mLastThread.hasFinished()){
-					return true;
-				}
-			}
-			return false;
-		}
-		return true;
+		return mMapThreadPool.isQueueEmpty() && mBackgroundThreadPool.isQueueEmpty();
 	}
-
 	public OffRoadResources getResources() {
 		return mContext.getResources();
 	}
 
 	public void setLayerImage(BufferedImage pLayerImage, RotatedTileBox pTileBox) {
+		log.info("Set layer image to zoom " + pTileBox.getZoom());
 		mLayerImage = pLayerImage;
 		mLayerImageTileBox = pTileBox;
 		repaint();

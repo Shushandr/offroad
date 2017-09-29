@@ -217,7 +217,7 @@ public class OsmWindow  implements IRouteInformationListener {
 	public static final String PROXY_USE_SETTINGS = "proxy.use_settings";
 	public static final String PROXY_EXCEPTION = "proxy.exception";
 	private static final String OFFROAD_PROPERTIES = "offroad";
-	public static final int MIN_ZOOM = 1;
+	public static final int MIN_ZOOM = 5;
 	private static final String MODE_WORLD_WRITEABLE = "mode_world_writeable";
 	private static final String VECTOR_INDEXES_CHECK = "vector_indexes_check";
 	public static final String OSMAND_ICONS_DIR_PREFIX = "osmand_icons_dir_prefix";
@@ -1405,7 +1405,7 @@ public class OsmWindow  implements IRouteInformationListener {
 
 	private void queueAmenityTableUpdate(LatLon pLoc) {
 		// queue update of the amenity table.
-		getDrawPanel().queue(new AmenityTableUpdateThread(getDrawPanel(), pLoc, mAmenityTable));
+		getDrawPanel().queue(new AmenityTableUpdateThread(getDrawPanel(), pLoc, mAmenityTable), OsmBitmapPanel.PoolType.BACKGROUND);
 	}
 
 	

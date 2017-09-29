@@ -49,8 +49,8 @@ public class GenerateLayerOverlayThread extends OffRoadUIThread {
 				int millis = 20;
 				counter += millis;
 				Thread.sleep(millis);
-				if(counter >=500){
-					// we have waited half a second.
+				if(counter >=1000){
+					// we have waited a second.
 					// this is not done, unless we have for one second no other thread:
 					log.debug("THREAD:" + this + " executes its background task.");
 					createLayers();

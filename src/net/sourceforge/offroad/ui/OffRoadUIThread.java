@@ -35,6 +35,11 @@ import net.sourceforge.offroad.OsmWindow;
  * @date 26.04.2016
  */
 public class OffRoadUIThread implements Runnable {
+	@Override
+	public String toString() {
+		return "OffRoadUIThread ["+this.getClass().getName() + "]";
+	}
+
 	protected final static Log log = PlatformUtil.getLog(OffRoadUIThread.class);
 
 	
