@@ -514,6 +514,10 @@ public class OsmBitmapPanel extends JPanel {
 		return mCursorPosition;
 	}
 
+	public LatLon getMouseLocation() {
+		return getLatLon(getMousePosition());
+	}
+	
 	public OsmWindow getContext() {
 		return mContext;
 	}

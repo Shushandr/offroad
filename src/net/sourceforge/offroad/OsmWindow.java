@@ -146,6 +146,7 @@ import net.sourceforge.offroad.actions.DownloadAction;
 import net.sourceforge.offroad.actions.ExportRouteAction;
 import net.sourceforge.offroad.actions.ExportTracksAction;
 import net.sourceforge.offroad.actions.GpxImportAction;
+import net.sourceforge.offroad.actions.InsertPointIntoPolylineAction;
 import net.sourceforge.offroad.actions.NavigationBackAction;
 import net.sourceforge.offroad.actions.NavigationForwardAction;
 import net.sourceforge.offroad.actions.NavigationRotationAction;
@@ -1798,8 +1799,8 @@ public class OsmWindow  implements IRouteInformationListener {
 		}
 		if (pAm instanceof Polyline) {
 			Polyline polyline = (Polyline) pAm;
-			JMenuItem remPolyAction = new JMenuItem(new RemovePolylineAction(this, polyline));
-			result.add(remPolyAction);
+			result.add(new JMenuItem(new InsertPointIntoPolylineAction(this, polyline, getDrawPanel().getMouseLocation())));
+			result.add(new JMenuItem(new RemovePolylineAction(this, polyline)));
 		}
 		return result;
 	}

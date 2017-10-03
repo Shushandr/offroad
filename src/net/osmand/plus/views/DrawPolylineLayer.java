@@ -34,6 +34,7 @@ import net.osmand.data.PointDescription;
 import net.osmand.data.RotatedTileBox;
 import net.osmand.osm.edit.Node;
 import net.osmand.osm.edit.OsmMapUtils;
+import net.osmand.plus.views.DrawPolylineLayer.PolylineDistance;
 import net.osmand.util.MapUtils;
 import net.sourceforge.offroad.OsmWindow;
 import net.sourceforge.offroad.R;
@@ -46,6 +47,10 @@ import net.sourceforge.offroad.ui.Paint;
 /**
  * @author foltin
  * @date 08.05.2017
+ */
+/**
+ * @author foltin
+ * @date 03.10.2017
  */
 public class DrawPolylineLayer extends OsmandMapLayer
 		implements ISelectionInterface, DirectOffroadLayer, IContextMenuProvider {
@@ -79,6 +84,26 @@ public class DrawPolylineLayer extends OsmandMapLayer
 		private Point mPointP;
 	}
 
+	public static class PolylineDistance {
+		double distance;
+		Polyline mPolyline;
+		int mIndexStartingSegment;
+		int mIndexEndingSegment;
+		public PolylineDistance(double pDistance, Polyline pPolyline, int pIndexStartingSegment,
+				int pIndexEndingSegment) {
+			super();
+			distance = pDistance;
+			mPolyline = pPolyline;
+			mIndexStartingSegment = pIndexStartingSegment;
+			mIndexEndingSegment = pIndexEndingSegment;
+		}
+		@Override
+		public String toString() {
+			return "PolylineDistance [distance=" + distance + ", mPolyline=" + mPolyline + ", mIndexStartingSegment="
+					+ mIndexStartingSegment + ", mIndexEndingSegment=" + mIndexEndingSegment + "]";
+		}
+	}
+	
 	private final static org.apache.commons.logging.Log log = PlatformUtil.getLog(DrawPolylineLayer.class);
 	private static final String POLYLINES_STORAGE = "POLYLINES_STORAGE";
 
@@ -157,6 +182,9 @@ public class DrawPolylineLayer extends OsmandMapLayer
 		
 		public Polyline() {
 		}
+		public EdgeDistance getDistanceToEdges(LatLon pDest, OsmBitmapPanel pDrawPanel) {
+			return getDistanceToEdges(pDrawPanel.getPoint(pDest), pDrawPanel);
+		}
 		public EdgeDistance getDistanceToEdges(Point pDest, OsmBitmapPanel pDrawPanel) {
 			double minDist = Double.MAX_VALUE;
 			Point minPointP = null;
@@ -177,16 +205,33 @@ public class DrawPolylineLayer extends OsmandMapLayer
 		}
 
 		public double getDistance(Point pDest, OsmBitmapPanel pDrawPanel) {
+			PolylineDistance distanceInfo = getDistanceInformation(pDest, pDrawPanel);
+			if(distanceInfo == null) {
+				return Double.MAX_VALUE;
+			}
+			return distanceInfo.distance;
+		}
+		public PolylineDistance getDistanceInformation(Point pDest, OsmBitmapPanel pDrawPanel) {
 			double minDist = Double.MAX_VALUE;
 			Point lastPointInLine = null;
+			int indexAfterSegment = 0;
+			int minDistanceIndex = -1;
 			for (LatLon latLonP : this.getCoordinates()) {
 				Point pointP = pDrawPanel.getPoint(latLonP);
 				if (lastPointInLine != null) {
-					minDist = Math.min(getDistance(pDest, pointP, lastPointInLine), minDist);
+					double dist = getDistance(pDest, pointP, lastPointInLine);
+					if(dist < minDist) {
+						minDistanceIndex = indexAfterSegment;
+					}
+					minDist = Math.min(dist, minDist);
 				}
 				lastPointInLine = pointP;
+				indexAfterSegment++;
 			}
-			return minDist;
+			if(minDistanceIndex < 0) {
+				return null;
+			}
+			return new PolylineDistance(minDist, this, minDistanceIndex-1, minDistanceIndex);
 		}
 
 		public double getDistance(Point pDest, Point pointA, Point pointB) {
@@ -252,6 +297,9 @@ public class DrawPolylineLayer extends OsmandMapLayer
 			}
 			polyDist /= 1000d;
 			return polyDist;
+		}
+		public void insert(LatLon pLatLon, int pIndexToInsert) {
+			mCoordinates.insertElementAt(pLatLon, pIndexToInsert);
 		}
 	}
 
@@ -474,6 +522,22 @@ public class DrawPolylineLayer extends OsmandMapLayer
 		} else {
 			mSelectedIndex = -1;
 		}
+	}
+
+	/**Adds a new (inner) point to an existing polyline.
+	 * @param pPolyline
+	 * @param pLatLon
+	 */
+	public void insertPolylinePoint(Polyline pPolyline, LatLon pLatLon) {
+		if (!checkIndex())
+			return;
+		Polyline selectedPolyline = mPolylines.get(mSelectedIndex);
+		PolylineDistance distanceToPolyline = selectedPolyline.getDistanceInformation(mDrawPanel.getPoint(pLatLon), mDrawPanel);
+		int ind = 1;
+		if(distanceToPolyline != null) {
+			ind = distanceToPolyline.mIndexEndingSegment;
+		}
+		selectedPolyline.insert(pLatLon, ind);
 	}
 
 }
