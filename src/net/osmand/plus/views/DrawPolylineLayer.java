@@ -540,4 +540,14 @@ public class DrawPolylineLayer extends OsmandMapLayer
 		selectedPolyline.insert(pLatLon, ind);
 	}
 
+	public void removePolylinePoint(Polyline pPolyline, LatLon pLatLon) {
+		if (!checkIndex())
+			return;
+		EdgeDistance distanceToEdges = mPolylines.get(mSelectedIndex).getDistanceToEdges(pLatLon, mDrawPanel);
+		if (distanceToEdges.distance < SELECTION_RADIUS) {
+			Polyline poly = distanceToEdges.mPolyline;
+			poly.remove(poly.get(distanceToEdges.index));
+		}
+	}
+
 }
