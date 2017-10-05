@@ -73,6 +73,7 @@ public class OsmBitmapPanel extends JPanel {
 	private Map<OsmandMapLayer, Float> zOrders = new HashMap<OsmandMapLayer, Float>();
 	private POIMapLayer mPoiLayer;
 	public enum PoolType {
+		ANIMATION,
 		MAP,
 		BACKGROUND
 	};
@@ -139,6 +140,8 @@ public class OsmBitmapPanel extends JPanel {
 
 	private OffRoadUIThreadListener mQueueInfoListener;
 
+	private PoolClass mAnimationThreadPool;
+
 
 	public OsmBitmapPanel(OsmWindow pWin) {
 		mContext = pWin;
@@ -199,6 +202,7 @@ public class OsmBitmapPanel extends JPanel {
 				mContext.showQueueInformation("Stopping thread " + pThread.printQueue());
 			}
 		};
+		mAnimationThreadPool = new PoolClass("Animation");
 		mMapThreadPool = new PoolClass("Map"); 
 		mBackgroundThreadPool = new PoolClass("Background"); 
 		add(mCompassButton, getComponentCount()-1);
@@ -391,14 +395,8 @@ public class OsmBitmapPanel extends JPanel {
 		});
 		RotatedTileBox destinationTileBox = animationThread.getDestinationTileBox(tileCopy.getZoom(), 10, 9);
 		log.info("Destination tile box zoom is " + destinationTileBox.getZoom());
-		queue(animationThread, PoolType.MAP);
+		queue(animationThread, PoolType.ANIMATION);
 		GenerationThread genThread = new LazyThread(this, destinationTileBox);
-//		mZoomCounter++;
-//		if(mZoomCounter >= 100){
-//			mZoomCounter = 0;
-//			// every fourth zoom, we generate
-//			genThread = new GenerationThread(this, destinationTileBox);
-//		}
 		queue(genThread, PoolType.MAP);
 	}
 
@@ -408,16 +406,21 @@ public class OsmBitmapPanel extends JPanel {
 
 	
 	public void queue(OffRoadUIThread pThread, PoolType pType) {
-		if(pType.equals(PoolType.BACKGROUND)) {
+		if (pType.equals(PoolType.BACKGROUND)) {
 			mBackgroundThreadPool.queue(pThread);
 		} else {
 			pThread.addListener(mInactivityListener);
 			pThread.addListener(mQueueInfoListener);
-			mMapThreadPool.queue(pThread);
-			if(pThread instanceof GenerationThread){
-				GenerationThread genThread = (GenerationThread) pThread;
-				GenerateLayerOverlayThread overlayThread = new GenerateLayerOverlayThread(this, genThread.mTileCopy.copy());
-				mBackgroundThreadPool.queue(overlayThread);
+			if (pType.equals(PoolType.ANIMATION)) {
+				mAnimationThreadPool.queue(pThread);
+			} else {
+				mMapThreadPool.queue(pThread);
+				if (pThread instanceof GenerationThread) {
+					GenerationThread genThread = (GenerationThread) pThread;
+					GenerateLayerOverlayThread overlayThread = new GenerateLayerOverlayThread(this,
+							genThread.mTileCopy.copy());
+					mBackgroundThreadPool.queue(overlayThread);
+				}
 			}
 		}
 	}
@@ -462,7 +465,7 @@ public class OsmBitmapPanel extends JPanel {
 	}
 	public void moveAnimated(float pDeltaX, float pDeltaY, RotatedTileBox tileBox) {
 		MoveAnimationThread animationThread = new MoveAnimationThread(this, pDeltaX, pDeltaY);
-		queue(animationThread, PoolType.MAP);
+		queue(animationThread, PoolType.ANIMATION);
 		queue(new LazyThread(this, tileBox), PoolType.MAP);
 	}
 
