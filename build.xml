@@ -119,6 +119,7 @@ hash=${hash}
 		<echo message="vmarg: ${vmarg}">
 		</echo>
 		<java fork="yes" dir="${dist}" spawn="false" failonerror="false" maxmemory="1024M" jar="${OffRoad.jar}">
+			<jvmarg line="--add-modules java.se.ee" />
 			<jvmarg value="-D${vmarg}=true" />
 			<!--	<jvmarg value="-Djava.util.logging.config.file=commons-logging.properties" /> -->
 		</java>
