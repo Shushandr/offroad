@@ -23,17 +23,41 @@ class ZoomAnimationThread extends OffRoadUIThread {
 	public void runAfterThreadsBeforeHaveFinished() {
 		RotatedTileBox tb = mOsmBitmapPanel.copyCurrentTileBox();
 		int originalZoom = tb.getZoom();
-		int it = 10;
-		for (int i = 0; i < it; ++i) {
-			tb = getDestinationTileBox(originalZoom, it, i);
-			mOsmBitmapPanel.setCurrentTileBox(tb);
-			log.debug("Set tile box " + tb + " and now repaint.");
-			mOsmBitmapPanel.repaintAndWait(50);
-			log.debug("Set tile box " + tb + " and now repaint. Done.");
+//		it -2 == v0 * (it-2)  + a (it-2)²
+//				a =  ( it(1-v0) + 2*v0-2)/(it-2)²
+		int it;
+		if(mNextThread == null) {
+			// use acceleration only if it is the last thread in the row.
+			it = 30;
+			float v0 = 2f;
+			float a = (it*(1f-v0) + 2f*v0 - 2f)/(it-2f)/(it-2f);
+			for (int i = 0; i < it-1; ++i) {
+				float zoom = v0 * i + a*i*i;
+				log.info("Zoom is " + zoom + " for step " + i + " and velocity " + v0 + " and acceleration " + a);
+				tb = getDestinationTileBox(originalZoom, it, zoom);
+				mOsmBitmapPanel.setCurrentTileBox(tb);
+				log.debug("Set tile box " + tb + " and now repaint.");
+				mOsmBitmapPanel.repaintAndWait(50);
+				log.debug("Set tile box " + tb + " and now repaint. Done.");
+			}
+		} else {
+			it = 10;
+			for (int i = 0; i < it-2; ++i) {
+				tb = getDestinationTileBox(originalZoom, it, i);
+				mOsmBitmapPanel.setCurrentTileBox(tb);
+				log.debug("Set tile box " + tb + " and now repaint.");
+				mOsmBitmapPanel.repaintAndWait(50);
+				log.debug("Set tile box " + tb + " and now repaint. Done.");
+			}
 		}
+		tb = getDestinationTileBox(originalZoom, it, it-1);
+		mOsmBitmapPanel.setCurrentTileBox(tb);
+		log.debug("Set tile box " + tb + " and now repaint.");
+		mOsmBitmapPanel.repaintAndWait(50);
+		log.debug("Set tile box " + tb + " and now repaint. Done.");
 	}
 
-	public RotatedTileBox getDestinationTileBox(int originalZoom, int it, int i) {
+	public RotatedTileBox getDestinationTileBox(int originalZoom, float it, float i) {
 		RotatedTileBox tb = mOsmBitmapPanel.copyCurrentTileBox();
 		// get old center:
 		LatLon oldCenter = tb.getLatLonFromPixel(mNewCenter.x, mNewCenter.y);
