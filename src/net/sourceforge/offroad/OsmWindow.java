@@ -953,7 +953,7 @@ public class OsmWindow  implements IRouteInformationListener {
 
 
 	private void loadStrings(String ct, String fileName) {
-		InputStream is = getResource("res/values-" + ct + "/" + fileName);
+		InputStream is = getResource("res/values-" + ct + File.separator + fileName);
 		if (is == null) {
 			is = getResource("res/values/" + fileName); // $NON-NLS-1$
 		}
@@ -1062,7 +1062,7 @@ public class OsmWindow  implements IRouteInformationListener {
 			String name = pIndex;
 			InputStream is = this.getClass().getResourceAsStream(name);
 			if(is == null){
-				name = "/"+pIndex; //$NON-NLS-1$
+				name = File.separator + pIndex; //$NON-NLS-1$
 				is = this.getClass().getResourceAsStream(name);
 				if(is == null){
 					System.err.println("ERROR: Resource not found: "  + pIndex); //$NON-NLS-1$
@@ -1643,7 +1643,7 @@ public class OsmWindow  implements IRouteInformationListener {
 		if(mBufferedImageCache.containsKey(image)){
 			return mBufferedImageCache .get(image);
 		}
-		String path = IMAGE_PATH + getIconSize() + "/" + image + ".png";
+		String path = IMAGE_PATH + getIconSize() + File.separator + image + ".png";
 		BufferedImage res = readImageInternally(path);
 		mBufferedImageCache.put(image, res);
 		return res;
@@ -1814,7 +1814,7 @@ public class OsmWindow  implements IRouteInformationListener {
 
 
 	public String getOsmandIconsDir(){
-		return OSMAND_ICONS_DIR + getIconSize() + "/";
+		return OSMAND_ICONS_DIR + getIconSize() + File.separator;
 	}
 
 	public String getIconSize() {

@@ -291,7 +291,7 @@ public class GpxSelectionHelper {
 	
 	public SelectedGpxFile getSelectedFileByName(String path) {
 		for (SelectedGpxFile s : selectedGPXFiles) {
-			if (s.getGpxFile().path.endsWith("/" + path)) {
+			if (s.getGpxFile().path.endsWith(File.separator + path)) {
 				return s;
 			}
 		}

@@ -408,7 +408,7 @@ public class GpxUiHelper {
 						map.put(absolutePath ? f.getAbsolutePath() :
 								parent + f.getName(), f.lastModified());
 					} else if (f.isDirectory()) {
-						readGpxDirectory(f, map, parent + f.getName() + "/", absolutePath);
+						readGpxDirectory(f, map, parent + f.getName() + File.separator, absolutePath);
 					}
 				}
 			}

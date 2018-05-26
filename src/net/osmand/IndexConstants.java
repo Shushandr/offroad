@@ -41,7 +41,7 @@ public class IndexConstants {
 	
 	public static final String INDEX_DOWNLOAD_DOMAIN = "download.osmand.net";
 	public static final String APP_DIR = "osmand/"; //$NON-NLS-1$
-	public static final String MAPS_PATH = "";
+	public static final String MAPS_PATH = "maps/";
 	public static final String BACKUP_INDEX_DIR= "backup/";
 	public static final String GPX_INDEX_DIR = "tracks/";
 	public static final String GPX_RECORDED_INDEX_DIR = GPX_INDEX_DIR + "rec/";
@@ -50,6 +50,7 @@ public class IndexConstants {
 	public static final String LIVE_INDEX_DIR= "live/";
 	public static final String TOURS_INDEX_DIR= "tours/";
 	public static final String SRTM_INDEX_DIR = "srtm/"; //$NON-NLS-1$
+	public static final String MAPS_INDEX_DIR = "maps/"; //$NON-NLS-1$
 	public static final String ROADS_INDEX_DIR = "roads/"; //$NON-NLS-1$
 	public static final String WIKI_INDEX_DIR = "wiki/"; //$NON-NLS-1$
 	public static final String AV_INDEX_DIR = "avnotes/"; //$NON-NLS-1$

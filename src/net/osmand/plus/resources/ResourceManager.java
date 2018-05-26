@@ -237,8 +237,10 @@ public class ResourceManager {
 		File appPath = context.getAppPath(null);
 		File roadsPath = context.getAppPath(IndexConstants.ROADS_INDEX_DIR);
 		roadsPath.mkdirs();
+		File mapsPath = context.getAppPath(IndexConstants.MAPS_PATH);
+		mapsPath.mkdirs();
 		
-		collectFiles(appPath, IndexConstants.BINARY_MAP_INDEX_EXT, files);
+		collectFiles(mapsPath, IndexConstants.BINARY_MAP_INDEX_EXT, files);
 		renameRoadsFiles(files, roadsPath);
 		collectFiles(roadsPath, IndexConstants.BINARY_MAP_INDEX_EXT, files);
 		collectFiles(context.getAppPath(IndexConstants.WIKI_INDEX_DIR), IndexConstants.BINARY_MAP_INDEX_EXT, files);
