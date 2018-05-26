@@ -58,7 +58,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
-import javax.swing.JPopupMenu.Separator;
 import javax.swing.JProgressBar;
 import javax.swing.JSeparator;
 import javax.swing.JSplitPane;
@@ -163,6 +162,7 @@ import net.sourceforge.offroad.actions.SelectTrackAction;
 import net.sourceforge.offroad.actions.SetCursorRadiusAction;
 import net.sourceforge.offroad.actions.SetRenderingRule;
 import net.sourceforge.offroad.actions.ShowFavoriteAction;
+import net.sourceforge.offroad.actions.ShowPolylineDetailsAction;
 import net.sourceforge.offroad.actions.ShowRouteDetailsAction;
 import net.sourceforge.offroad.actions.ShowTargetPointAction;
 import net.sourceforge.offroad.actions.ShowTrackDetailsAction;
@@ -1807,6 +1807,7 @@ public class OsmWindow  implements IRouteInformationListener {
 						new RemovePointFromPolylineAction(this, polyline, getDrawPanel().getMouseLocation())));
 			}
 			result.add(new JMenuItem(new RemovePolylineAction(this, polyline)));
+			result.add(new JMenuItem(new ShowPolylineDetailsAction(this, polyline)));
 		}
 		return result;
 	}
