@@ -499,6 +499,20 @@ public class OsmBitmapPanel extends JPanel {
 		}
 	}
 	
+	public boolean isNearCenter(LatLon pLatLon, float pPercentage) {
+		if(pPercentage < 0f || pPercentage > 1f) {
+			throw new IllegalArgumentException("Percentage is out of range [0..1]: "+ pPercentage);
+		}
+		Point destination = getPoint(pLatLon);
+		if(destination.x < getWidth()*(0.5f - 0.5f*pPercentage) || destination.x > getWidth()*(0.5f + 0.5f*pPercentage)) {
+			return false;
+		}
+		if(destination.y < getHeight()*(0.5f - 0.5f*pPercentage) || destination.y > getHeight()*(0.5f + 0.5f*pPercentage)) {
+			return false;
+		}
+		return true;
+	}
+	
 	public void move(LatLon pLocation, int pZoom) {
 		RotatedTileBox tb = copyCurrentTileBox();
 		tb.setLatLonCenter(pLocation.getLatitude(), pLocation.getLongitude());

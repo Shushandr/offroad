@@ -1862,6 +1862,15 @@ public class OsmWindow  implements IRouteInformationListener {
 		return null;
 	}
 
+	public void moveDirectly(LatLon pLatLon) {
+		if(mDrawPanel.isNearCenter(pLatLon, 0.5f)) {
+			mDrawPanel.setCursor(pLatLon);
+			return;
+		}
+		mDrawPanel.move(pLatLon, getZoom());
+		mDrawPanel.setCursor(pLatLon);
+	}
+
 	
 }
 

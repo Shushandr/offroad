@@ -262,7 +262,7 @@ public class GeoServer extends Thread {
 					}
 					Double lat = Double.parseDouble(coords[0]);
 					Double lon = Double.parseDouble(coords[1]);
-					mFrame.move(new LatLon(lat, lon), null);
+					mFrame.moveDirectly(new LatLon(lat, lon));
 				}
 			});
 			in.close();
