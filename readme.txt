@@ -30,7 +30,7 @@ Version History:
 
 0_3:
 ============
-* Moved maps to ~/.OffRoad/maps
+* Moved maps to ~/.OffRoad/maps (you have to **move your maps** or to re-download)
 * Improved the map-server
 * Added jaxb to be compatible with java > 9.
 

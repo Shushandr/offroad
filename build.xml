@@ -67,7 +67,7 @@ hash=${hash}
 				<include name="jaxb-impl.jar"/>
 				<include name="jaxb-jxc.jar"/>
 				<include name="jaxb-xjc.jar"/>
-
+				<include name="activation.jar"/>
 			</fileset>
 		</copy>
 		<tempfile prefix="manifest" property="temp.manifest.file"/>
