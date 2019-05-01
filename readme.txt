@@ -28,6 +28,12 @@ An offline map viewer based on OsmAnd.
 
 Version History:
 
+0_3:
+============
+* Moved maps to ~/.OffRoad/maps
+* Improved the map-server
+* Added jaxb to be compatible with java > 9.
+
 0_2:
 ============
 * Added polylines (use shift+click to create a polyline)
