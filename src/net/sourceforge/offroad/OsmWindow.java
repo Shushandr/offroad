@@ -560,20 +560,37 @@ public class OsmWindow  implements IRouteInformationListener {
 		
 		HashMap<String, JMenu> categoryMenus = new HashMap<>();
 		for (RenderingRuleProperty customProp : getRenderingRulesStorage().PROPS.getCustomRules()) {
+			if(customProp.getCategory()==null){
+				continue;
+			}
+			if (!customProp.isBoolean() && !customProp.isString()) {
+				continue;
+			}
+			if(!categoryMenus.containsKey(customProp.getCategory())){
+				JMenu jMenu = new JMenu(getString("rendering_category_" + customProp.getCategory()));
+				jRenderPropertiesMenu.add(jMenu);
+				categoryMenus.put(customProp.getCategory(), jMenu);
+			}
+			JMenu jMenu = categoryMenus.get(customProp.getCategory());
 			if (customProp.isBoolean()) {
-				if(customProp.getCategory()==null){
-					continue;
-				}
-				if(!categoryMenus.containsKey(customProp.getCategory())){
-					JMenu jMenu = new JMenu(getString("rendering_category_" + customProp.getCategory()));
-					jRenderPropertiesMenu.add(jMenu);
-					categoryMenus.put(customProp.getCategory(), jMenu);
-				}
 				CommonPreference<Boolean> pref = prefs.getCustomRenderBooleanProperty(customProp.getAttrName());
 				log.debug("PROP: "  + customProp.getAttrName()+ ", " + customProp.getCategory() + "=" + pref.get());
-				JMenu jMenu = categoryMenus.get(customProp.getCategory());
 				JMenuItem item = new OffRoadMenuItem(new SetRenderingRule(this, customProp), jMenu);
 				jMenu.add(item);
+			} else {
+				JMenu submenu = new JMenu(getString("rendering_attr_" + customProp.getAttrName() + "_name"));
+				String defaultValue = customProp.getDefaultValueDescription();
+				if (defaultValue != null) {
+					// Add default item
+					JMenuItem item = new OffRoadMenuItem(new SetRenderingRule(this, customProp, customProp.getDefaultValueDescription(), true), submenu);
+					submenu.add(item);
+				}
+				for (String val: customProp.getPossibleValues())
+				{
+					JMenuItem item = new OffRoadMenuItem(new SetRenderingRule(this, customProp, val, false), submenu);
+					submenu.add(item);
+				}
+				jMenu.add(submenu);
 			}
 		}
 		jViewMenu.add(jRenderPropertiesMenu);

@@ -33,10 +33,32 @@ import net.sourceforge.offroad.actions.OffRoadAction.SelectableAction;
 public class SetRenderingRule extends OffRoadAction implements SelectableAction {
 
 	private RenderingRuleProperty mCustomProp;
+	private String mValue;
+	private boolean mIsDefault;
 
 	public SetRenderingRule(OsmWindow pWin, RenderingRuleProperty pCustomProp) {
 		super(pWin, pWin.getString("rendering_attr_" + pCustomProp.getAttrName() + "_name"), null);
 		mCustomProp = pCustomProp;
+		mValue = null;
+		mIsDefault = false;
+	}
+
+	private static String valueToName(OsmWindow pWin, String value)
+	{
+		// If the string is a int value there is no translation
+		// string and we just return it unchanged
+		try {
+			Integer.parseInt(value);
+			return value;
+		} catch (NumberFormatException e) {}
+		return pWin.getString("rendering_value_" + value + "_name");
+	}
+
+	public SetRenderingRule(OsmWindow pWin, RenderingRuleProperty pCustomProp, String value, boolean isDefault) {
+		super(pWin, valueToName(pWin, value), null);
+		mCustomProp = pCustomProp;
+		mValue = value;
+		mIsDefault = isDefault;
 	}
 
 	/*
@@ -47,8 +69,15 @@ public class SetRenderingRule extends OffRoadAction implements SelectableAction 
 	 */
 	@Override
 	public void actionPerformed(ActionEvent pE) {
-		CommonPreference<Boolean> pref = getPreference();
-		pref.set(!pref.get());
+		if (mValue != null) {
+			CommonPreference<String> pref = getStringPreference();
+			// resetToDefault seems not entirely reliable, so always call set first
+			pref.set(mValue);
+			if (mIsDefault) pref.resetToDefault();
+		} else {
+			CommonPreference<Boolean> pref = getPreference();
+			pref.set(!pref.get());
+		}
 		mContext.getDrawPanel().drawLater();
 	}
 
@@ -58,8 +87,17 @@ public class SetRenderingRule extends OffRoadAction implements SelectableAction 
 		return pref;
 	}
 
+	private CommonPreference<String> getStringPreference() {
+		CommonPreference<String> pref = mContext.getSettings()
+				.getCustomRenderProperty(mCustomProp.getAttrName());
+		return pref;
+	}
+
 	@Override
 	public boolean isSelected() {
+		if (mValue != null) {
+			return mValue.equals(getStringPreference().get());
+		}
 		CommonPreference<Boolean> pref = getPreference();
 		return pref.get();
 	}
