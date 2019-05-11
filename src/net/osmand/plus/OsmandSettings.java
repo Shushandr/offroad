@@ -2025,15 +2025,6 @@ public class OsmandSettings {
 		{
 			makeProfile();
 		}
-
-		@Override
-		protected boolean setValue(Object prefs, String val) {
-			val = RendererRegistry.DEFAULT_RENDER;
-			super.setValue(prefs, val);
-			return true;
-		}
-
-		;
 	};
 
 
