@@ -28,6 +28,12 @@ An offline map viewer based on OsmAnd.
 
 Version History:
 
+0_4:
+============
+* Fixed a bug of 0.3 under windows
+* Support modifying String type render options (thanks for the patch)
+* Fixed storage of render options
+
 0_3:
 ============
 * Moved maps to ~/.OffRoad/maps (you have to **move your maps** or to re-download)

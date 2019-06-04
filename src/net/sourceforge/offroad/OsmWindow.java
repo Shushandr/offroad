@@ -970,7 +970,7 @@ public class OsmWindow  implements IRouteInformationListener {
 
 
 	private void loadStrings(String ct, String fileName) {
-		InputStream is = getResource("res/values-" + ct + File.separator + fileName);
+		InputStream is = getResource("res/values-" + ct + "/" + fileName);
 		if (is == null) {
 			is = getResource("res/values/" + fileName); // $NON-NLS-1$
 		}
@@ -1079,7 +1079,7 @@ public class OsmWindow  implements IRouteInformationListener {
 			String name = pIndex;
 			InputStream is = this.getClass().getResourceAsStream(name);
 			if(is == null){
-				name = File.separator + pIndex; //$NON-NLS-1$
+				name = "/" + pIndex; //$NON-NLS-1$
 				is = this.getClass().getResourceAsStream(name);
 				if(is == null){
 					System.err.println("ERROR: Resource not found: "  + pIndex); //$NON-NLS-1$

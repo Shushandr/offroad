@@ -46,7 +46,7 @@ public class AboutDialogAction extends OffRoadAction {
 	public void actionPerformed(ActionEvent pE) {
 		VersionInfo ver = mContext.getVersion();
 		JOptionPane.showMessageDialog(mContext.getWindow(),
-				mContext.getOffRoadString("offroad.about_content", new String[]{ver.version, ver.hash}),
+				mContext.getOffRoadString("offroad.about_content", ver.version, ver.hash),
 				mContext.getOffRoadString("offroad.about_title"), JOptionPane.PLAIN_MESSAGE);
 	}
 
