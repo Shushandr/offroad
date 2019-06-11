@@ -1660,7 +1660,7 @@ public class OsmWindow  implements IRouteInformationListener {
 		if(mBufferedImageCache.containsKey(image)){
 			return mBufferedImageCache .get(image);
 		}
-		String path = IMAGE_PATH + getIconSize() + File.separator + image + ".png";
+		String path = IMAGE_PATH + getIconSize() + "/" + image + ".png";
 		BufferedImage res = readImageInternally(path);
 		mBufferedImageCache.put(image, res);
 		return res;
@@ -1831,7 +1831,7 @@ public class OsmWindow  implements IRouteInformationListener {
 
 
 	public String getOsmandIconsDir(){
-		return OSMAND_ICONS_DIR + getIconSize() + File.separator;
+		return OSMAND_ICONS_DIR + getIconSize() + "/";
 	}
 
 	public String getIconSize() {

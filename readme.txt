@@ -28,6 +28,10 @@ An offline map viewer based on OsmAnd.
 
 Version History:
 
+0_5:
+============
+* Fixed a bug of 0.4 under windows not showing POI icons
+
 0_4:
 ============
 * Fixed a bug of 0.3 under windows
