@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +53,7 @@ public class ExportTracksAction extends OffRoadAction {
 		if(selectedFile!=null){
 			PrintWriter writer;
 			try {
-				writer = new PrintWriter(selectedFile, "UTF-8");
+				writer = new PrintWriter(selectedFile, StandardCharsets.UTF_8);
 				writer.println(getHtmlFile(selectedFile));
 				writer.close();
 				mContext.openDocument(selectedFile.toURI().toURL());

@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -190,11 +191,7 @@ public class GpxImportAction extends OffRoadAction {
 						is = new FileInputStream(pIntentUri);
 						final String result = Kml2Gpx.toGpx(is);
 						if (result != null) {
-							try {
-								return GPXUtilities.loadGPXFile(mContext, new ByteArrayInputStream(result.getBytes("UTF-8")));
-							} catch (UnsupportedEncodingException e) {
-								return null;
-							}
+							return GPXUtilities.loadGPXFile(mContext, new ByteArrayInputStream(result.getBytes(StandardCharsets.UTF_8)));
 						}
 				} catch (FileNotFoundException e) {
 					//
