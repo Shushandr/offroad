@@ -271,8 +271,7 @@ public class ShowRouteDetailsAction extends OffRoadAction implements LatLonGener
 	
 	@Override
 	public List<LatLonHolder> getPoints() {
-		ArrayList<LatLonHolder> res = new ArrayList<>();
-		res.addAll(mRouteHolderList);
+		ArrayList<LatLonHolder> res = new ArrayList<>(mRouteHolderList);
 		return res;
 	}
 
