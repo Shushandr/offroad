@@ -76,7 +76,8 @@ public class OsmBitmapPanel extends JPanel {
 		ANIMATION,
 		MAP,
 		BACKGROUND
-	};
+	}
+
 	private static final class PoolClass {
 		private ExecutorService mThreadPool;
 		private OffRoadUIThread mLastThread;
@@ -116,7 +117,8 @@ public class OsmBitmapPanel extends JPanel {
 			}
 			return true;
 		}
-	};
+	}
+
 	private InactivityListener mInactivityListener;
 	private CalculateUnzoomedPicturesAction mUnzoomedPicturesAction;
 	private RoundButton mCompassButton;

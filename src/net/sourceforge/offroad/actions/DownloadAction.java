@@ -125,7 +125,8 @@ public class DownloadAction extends OffRoadAction {
 
 	enum DownloadStatus {
 		DOWNLOADED, UPDATEABLE, NOTPRESENT
-	};
+	}
+
 	public class DownloadedTableCellRenderer extends DefaultTableCellRenderer {
 		@Override
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,

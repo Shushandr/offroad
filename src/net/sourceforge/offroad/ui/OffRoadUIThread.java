@@ -78,7 +78,7 @@ public class OffRoadUIThread implements Runnable {
 	
 	public void runInBackground() {
 		// overwrite if needed.
-	};
+	}
 
 	/**
 	 * Is NOT executed in the ui thread!

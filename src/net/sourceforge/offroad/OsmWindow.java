@@ -295,7 +295,7 @@ public class OsmWindow  implements IRouteInformationListener {
 	
 	private enum SearchType {
 		AMENITY, ROUTE
-	};
+	}
 
 	private SearchType mSearchType = SearchType.AMENITY;
 
@@ -740,7 +740,7 @@ public class OsmWindow  implements IRouteInformationListener {
 						checkMaps();
 					}
 				});
-			};
+			}
 		});
 		mFrame.setVisible(true);
 	}

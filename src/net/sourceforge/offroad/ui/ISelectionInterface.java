@@ -28,7 +28,8 @@ import java.awt.Point;
 public interface ISelectionInterface {
 	public interface IDragInformation {
 		
-	};
+	}
+
 	boolean isSelection(Point p);
 	void setSelection(Point p);
 	/**
