@@ -595,8 +595,7 @@ public class OsmWindow  implements IRouteInformationListener {
 		}
 		jViewMenu.add(jRenderPropertiesMenu);
 		JMenu jIconSizePropertiesMenu = new JMenu(getOffRoadString("offroad.icons_size_menu"));
-		for (int i = 0; i < sOsmandIconsPrefixes.length; i++) {
-			String prefix = sOsmandIconsPrefixes[i];
+		for (String prefix : sOsmandIconsPrefixes) {
 			JMenuItem item = new OffRoadMenuItem(new ChangeIconSizeAction(this, prefix), jIconSizePropertiesMenu);
 			jIconSizePropertiesMenu.add(item);
 		}
@@ -782,8 +781,7 @@ public class OsmWindow  implements IRouteInformationListener {
 	}
 	
 	private void adaptMenuMnemonics(Component[] components) {
-		for (int i = 0; i < components.length; i++) {
-			Component comp = components[i];
+		for (Component comp : components) {
 			if (comp instanceof AbstractButton) {
 				AbstractButton but = (AbstractButton) comp;
 				setMnemonic(but);
@@ -1036,9 +1034,7 @@ public class OsmWindow  implements IRouteInformationListener {
 
 	public static void scaleAllFonts(float pScale) {
 		log.info("Scaling fonts with scale " + pScale);
-		for (Iterator i = UIManager.getLookAndFeelDefaults().keySet()
-				.iterator(); i.hasNext();) {
-			Object next = i.next();
+		for (Object next : UIManager.getLookAndFeelDefaults().keySet()) {
 			if (next instanceof String) {
 				String key = (String) next;
 				if (key.endsWith(".font")) { //$NON-NLS-1$
@@ -1046,7 +1042,7 @@ public class OsmWindow  implements IRouteInformationListener {
 					Font biggerFont = font.deriveFont(pScale * font.getSize2D());
 					// change ui default to bigger font
 					UIManager.put(key, biggerFont);
-				}				
+				}
 			}
 		}
 	}

@@ -627,9 +627,8 @@ public class OsmBitmapPanel extends JPanel {
 		final QuadPoint c = pTileBox.getCenterPixelPoint();
 		DrawSettings settings = new DrawSettings(false);
 		List<OsmandMapLayer> layers = getLayers();
-		for (int i = 0; i < layers.size(); i++) {
-			OsmandMapLayer layer = layers.get(i);
-			if(pDrawDirectLayers != (layer instanceof DirectOffroadLayer)){
+		for (OsmandMapLayer layer : layers) {
+			if (pDrawDirectLayers != (layer instanceof DirectOffroadLayer)) {
 				continue;
 			}
 			Graphics2D glayer = createGraphics(lg);

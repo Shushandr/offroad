@@ -147,9 +147,9 @@ public class GraphPanel extends JPanel {
 
 		g2.setStroke(oldStroke);
 		g2.setColor(pointColor);
-		for (int i = 0; i < graphPoints.size(); i++) {
-			int x = graphPoints.get(i).x - pointWidth / 2;
-			int y = graphPoints.get(i).y - pointWidth / 2;
+		for (Point graphPoint : graphPoints) {
+			int x = graphPoint.x - pointWidth / 2;
+			int y = graphPoint.y - pointWidth / 2;
 			int ovalW = pointWidth;
 			int ovalH = pointWidth;
 			g2.fillOval(x, y, ovalW, ovalH);

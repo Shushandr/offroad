@@ -229,8 +229,8 @@ public class SelectTrackAction extends OffRoadAction  {
 		public List<TrackItem> getSelectedRows() {
 			int[] selectedRows = mTable.getSelectedRows();
 			Vector<TrackItem> res = new Vector<>();
-			for (int i = 0; i < selectedRows.length; i++) {
-				int j = mTable.convertRowIndexToModel(selectedRows[i]);
+			for (int selectedRow : selectedRows) {
+				int j = mTable.convertRowIndexToModel(selectedRow);
 				res.add(getItemAt(j));
 			}
 			return res;
@@ -364,9 +364,8 @@ public class SelectTrackAction extends OffRoadAction  {
 			}
 		}
 		mContext.getSelectedGpxHelper().clearAllGpxFileToShow();
-		for (Iterator iterator = mSourceModel.mRows.iterator(); iterator.hasNext();) {
-			TrackItem trackItem = (TrackItem) iterator.next();
-			if(trackItem.mGpxFile != null){
+		for (TrackItem trackItem : mSourceModel.mRows) {
+			if (trackItem.mGpxFile != null) {
 				mContext.getSelectedGpxHelper().selectGpxFile(trackItem.mGpxFile, true, false);
 			}
 		}

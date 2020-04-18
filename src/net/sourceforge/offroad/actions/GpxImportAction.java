@@ -51,9 +51,7 @@ public class GpxImportAction extends OffRoadAction {
 			return;
 		}
 		File[] fileList = chooser.getSelectedFiles();
-		for (int i = 0; i < fileList.length; i++) {
-			File file = fileList[i];
-			
+		for (File file : fileList) {
 			File intentUri = file;
 			String fileName = file.getName();
 	
