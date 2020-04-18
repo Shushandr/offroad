@@ -196,7 +196,7 @@ public class GraphPanel extends JPanel {
 	}
 
 	private Long getMinTime() {
-		Long minTime = Long.MAX_VALUE;
+		long minTime = Long.MAX_VALUE;
 		for (Long Time : scores.keySet()) {
 			minTime = Math.min(minTime, Time);
 		}
@@ -204,7 +204,7 @@ public class GraphPanel extends JPanel {
 	}
 	
 	private Long getMaxTime() {
-		Long maxTime = Long.MIN_VALUE;
+		long maxTime = Long.MIN_VALUE;
 		for (Long Time : scores.keySet()) {
 			maxTime = Math.max(maxTime, Time);
 		}
