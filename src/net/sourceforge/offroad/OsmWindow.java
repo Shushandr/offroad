@@ -902,11 +902,9 @@ public class OsmWindow  implements IRouteInformationListener {
 		mRegions = new OsmandRegions();
 		mResourceManager = new ResourceManager(this);
 		mResourceManager.indexingMaps(IProgress.EMPTY_PROGRESS);
-		if(System.getProperty("HIDPI")!=null){ //$NON-NLS-1$
-			log.info("Option HIDPI found");
-			scaleAllFonts(1.3f * density);
-		} else {
-			scaleAllFonts(density);
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (Exception e) {
 		}
 		startServer();
 		mRendererRegistry = new RendererRegistry(this);
