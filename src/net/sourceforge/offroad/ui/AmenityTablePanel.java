@@ -125,7 +125,7 @@ public class AmenityTablePanel extends JPanel {
 				setText(mContext.getString(R.string.search_position_undefined));
 			} else if (value instanceof Double) {
 				Double d = (Double) value;
-				setText(formatDistance.format(new Object[] { d.doubleValue() }));
+				setText(formatDistance.format(new Object[] {d}));
 			}
 			return this;
 		}

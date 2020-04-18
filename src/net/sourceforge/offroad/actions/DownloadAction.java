@@ -104,7 +104,7 @@ public class DownloadAction extends OffRoadAction {
 			super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 			if (value instanceof Double) {
 				Double d = (Double) value;
-				setText(formatMb.format(new Object[]{d.doubleValue()}));
+				setText(formatMb.format(new Object[]{d}));
 			}
 			return this;
 		}
