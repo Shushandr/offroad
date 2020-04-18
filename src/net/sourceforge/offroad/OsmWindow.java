@@ -1362,11 +1362,9 @@ public class OsmWindow  implements IRouteInformationListener {
 	
 	public void addPoint(LatLon pPoint){
 		MapPointStorage storage = new MapPointStorage(pPoint, getZoom());
-		if(mPointStorageIndex != mPointStorage.size()-1){
+		if(mPointStorageIndex < mPointStorage.size()-1){
 			// remove all subsequent:
-			for(int i=mPointStorageIndex+1; i < mPointStorage.size() ; ++i){
-				mPointStorage.remove(i);
-			}
+			mPointStorage.setSize(mPointStorageIndex + 1);
 		}
 		mPointStorage.add(storage);
 		mPointStorageIndex = mPointStorage.size()-1;
