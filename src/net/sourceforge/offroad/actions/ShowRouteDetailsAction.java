@@ -208,7 +208,7 @@ public class ShowRouteDetailsAction extends OffRoadAction implements LatLonGener
 		Map<Long, Double> elevation = new TreeMap<>();
 		long totalTime = now;
 		for (RouteHolder routeHolder : mRouteHolderList) {
-			elevation.put(new Long(totalTime), routeHolder.getElevation());
+			elevation.put(Long.valueOf(totalTime), routeHolder.getElevation());
 			totalTime += (long) routeHolder.getTime();
 		}
 		mGraphPanel.setScores(elevation);

@@ -1256,9 +1256,9 @@ public class OsmWindow  implements IRouteInformationListener {
 				polyDist = selectedPolyline.calculateLength();
 				polyArea = selectedPolyline.calculateArea();
 			}
-			Object[] messageArguments = { new Double(distance),
-					new Double(cursorPosition.getLatitude()),
-					new Double(cursorPosition.getLongitude())};
+			Object[] messageArguments = { Double.valueOf(distance),
+					Double.valueOf(cursorPosition.getLatitude()),
+					Double.valueOf(cursorPosition.getLongitude())};
 			Object[] polyArguments =  {polyDist, polyArea};
 			MessageFormat formatter = new MessageFormat(
 					getOffRoadString("offroad.string47")); //$NON-NLS-1$
