@@ -266,6 +266,7 @@ public class DownloadAction extends OffRoadAction {
 	private boolean mIsDownloadInterrupted;
 	private JButton mInterruptDownload;
 	private JButton mDownloadButton;
+	private JButton mDeleteButton;
 
 	@Override
 	public void actionPerformed(ActionEvent pE) {
@@ -351,6 +352,7 @@ public class DownloadAction extends OffRoadAction {
 			@Override
 			public void valueChanged(ListSelectionEvent pE) {
 				mDownloadButton.setEnabled(mTable.getSelectedRowCount() > 0 && mTable.getSelectedRowCount() <= MAX_NUMBER_OF_FILES);
+				mDeleteButton.setEnabled(mTable.getSelectedRowCount() > 0);
 			}
 		});
 		contentPane.add(mDownloadButton, new GridBagConstraints(0, y, 1, 1, 1.0, 1.0, GridBagConstraints.WEST,
@@ -364,7 +366,12 @@ public class DownloadAction extends OffRoadAction {
 			}
 		});
 		mInterruptDownload.setEnabled(false);
-		contentPane.add(mInterruptDownload, new GridBagConstraints(1, y++, 1, 1, 1.0, 1.0, GridBagConstraints.WEST,
+		contentPane.add(mInterruptDownload, new GridBagConstraints(1, y, 1, 1, 1.0, 1.0, GridBagConstraints.WEST,
+				GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+		mDeleteButton = new JButton(getResourceString("offroad.deleteButton"));
+		mDeleteButton.addActionListener(e -> doDelete());
+		mDeleteButton.setEnabled(false);
+		contentPane.add(mDeleteButton, new GridBagConstraints(2, y++, 1, 1, 1.0, 1.0, GridBagConstraints.WEST,
 				GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 
 		IndexFileList indexesList = DownloadOsmandIndexesHelper.getIndexesList(mContext);
@@ -547,6 +554,13 @@ public class DownloadAction extends OffRoadAction {
 		download(mSourceModel.getSelectedRows());
 	}
 
+	public void doDelete() {
+		for (final IndexItem item : mSourceModel.getSelectedRows()) {
+			mContext.getResourceManager().closeFile(item.getTargetFileName());
+			item.getTargetFile(mContext).delete();
+		}
+		mDownloadResources.updateLoadedFiles();
+	}
 
 	private final class FilterTextDocumentListener implements DocumentListener {
 		private static final int TYPE_DELAY_TIME = 500;
