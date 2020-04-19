@@ -69,7 +69,7 @@ public class OffRoadUIThread implements Runnable {
 		mListeners.remove(pListener);
 	}
 	
-	public void setNextThread(OffRoadUIThread pNextThread) {
+	public synchronized void setNextThread(OffRoadUIThread pNextThread) {
 		mNextThread = pNextThread;
 	}
 
@@ -132,11 +132,11 @@ public class OffRoadUIThread implements Runnable {
 	}
 
 	
-	public boolean hasFinished() {
+	public synchronized boolean hasFinished() {
 		return hasFinished;
 	}
-	
-	protected boolean findSuccessor(Class<? extends OffRoadUIThread> pTypeOfSuccessor){
+
+	protected synchronized boolean findSuccessor(Class<? extends OffRoadUIThread> pTypeOfSuccessor){
 		if(mNextThread==null){
 			return false;
 		}

@@ -49,6 +49,10 @@ public class GenerateLayerOverlayThread extends OffRoadUIThread {
 				int millis = 20;
 				counter += millis;
 				Thread.sleep(millis);
+				// TODO: this creates issues for other background tasks
+				// due to blocking isQueueEmpty.
+				// However removing this logic currently results in too
+				// much work being done, so leave it as-is for now
 				if(counter >=1000){
 					// we have waited a second.
 					// this is not done, unless we have for one second no other thread:
