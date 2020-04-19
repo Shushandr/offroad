@@ -44,7 +44,7 @@ public class ChooseApplicationModeAction extends OffRoadAction implements Select
 	@Override
 	public void actionPerformed(ActionEvent pE) {
 		mContext.getSettings().APPLICATION_MODE.set(mApplicationMode);
-		mContext.getDrawPanel().drawLater();
+		mContext.getDrawPanel().flushCacheAndDrawLater();
 	}
 	
 	

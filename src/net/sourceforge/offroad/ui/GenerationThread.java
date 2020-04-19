@@ -14,6 +14,7 @@ class GenerationThread extends OffRoadUIThread implements IntermediateImageListe
 	 */
 	public final RotatedTileBox mTileCopy;
 	public final RotatedTileBox mTileCopyCacheCheck;
+	public final boolean mFlushCache;
 	protected BufferedImage mNewBitmap;
 	protected RenderingResult mResult;
 
@@ -21,19 +22,29 @@ class GenerationThread extends OffRoadUIThread implements IntermediateImageListe
 		super(pOsmBitmapPanel, "Generation");
 		mTileCopy = pTileCopy.copy();
 		mTileCopyCacheCheck = pTileCopy.copy();
+		mFlushCache = false;
 	}
 
+	GenerationThread(OsmBitmapPanel pOsmBitmapPanel, RotatedTileBox pTileCopy, boolean flushCache) {
+		super(pOsmBitmapPanel, "Generation");
+		mTileCopy = pTileCopy.copy();
+		mTileCopyCacheCheck = pTileCopy.copy();
+		mFlushCache = flushCache;
+	}
 	GenerationThread(OsmBitmapPanel pOsmBitmapPanel, RotatedTileBox pTileCopy, RotatedTileBox pTileCacheCheck) {
 		super(pOsmBitmapPanel, "Generation");
 		mTileCopy = pTileCopy.copy();
 		mTileCopyCacheCheck = pTileCacheCheck.copy();
+		mFlushCache = false;
 	}
+
+	public boolean isFlush() { return mFlushCache; }
 
 	@Override
 	public void runInBackground() {
 		// Enable to visually check the background threads
 		//if (mTileCopy.equals(mTileCopyCacheCheck)) return;
-		if (mOsmBitmapPanel.isCached(mTileCopyCacheCheck)) return;
+		if (!mFlushCache && mOsmBitmapPanel.isCached(mTileCopyCacheCheck)) return;
 		// generate in background
 		mNewBitmap = mOsmBitmapPanel.createImage();
 		// render at 2x requested size to have some margin for scrolling
@@ -43,7 +54,7 @@ class GenerationThread extends OffRoadUIThread implements IntermediateImageListe
 	
 	public void runAfterThreadsBeforeHaveFinished() {
 		// in the lazy case, the bitmap may not have been generated
-		mOsmBitmapPanel.setImage(mNewBitmap, mTileCopy, mResult);
+		mOsmBitmapPanel.setImage(mNewBitmap, mTileCopy, mResult, mFlushCache);
 	}
 
 	@Override

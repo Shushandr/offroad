@@ -83,7 +83,8 @@ public class OsmBitmapPanel extends JPanel {
 					if (pThread instanceof GenerationThread && mLastThread instanceof GenerationThread) {
 						RotatedTileBox now = ((GenerationThread)pThread).mTileCopyCacheCheck;
 						RotatedTileBox prev = ((GenerationThread)mLastThread).mTileCopy;
-						if (prev.containsTileBox(now) && prev.getZoom() == now.getZoom() && prev.getRotate() == now.getRotate()) return;
+						if (!((GenerationThread)pThread).isFlush() && prev.containsTileBox(now) &&
+							prev.getZoom() == now.getZoom() && prev.getRotate() == now.getRotate()) return;
 					}
 					if(!mLastThread.hasFinished()){
 						mLastThread.setNextThread(pThread);
@@ -347,8 +348,9 @@ public class OsmBitmapPanel extends JPanel {
 	}
 
 	// called directly from runAfterThreadsBeforeHaveFinished context so they are added in order
-	void setImage(BufferedImage pImage, RotatedTileBox pGenerationTileBox, RenderingResult pResult) {
+	void setImage(BufferedImage pImage, RotatedTileBox pGenerationTileBox, RenderingResult pResult, boolean flushCache) {
 		if(pImage != null){
+			if (flushCache) mUnzoomedPicturesAction.flush();
 			mUnzoomedPicturesAction.addToCache(pGenerationTileBox, pImage, pResult);
 			log.debug("Added image to zoom " + pGenerationTileBox.getZoom());
 			// repaint in foreground
@@ -562,6 +564,13 @@ public class OsmBitmapPanel extends JPanel {
 	
 	public OsmWindow getContext() {
 		return mContext;
+	}
+
+	public void flushCacheAndDrawLater() {
+		RotatedTileBox tb = copyCurrentTileBox();
+		tb.setPixelDimensions(getWidth(), getHeight());
+		setCurrentTileBox(tb);
+		queue(new GenerationThread(this, tb, true), PoolType.MAP);
 	}
 
 	/**
@@ -817,6 +826,10 @@ public class OsmBitmapPanel extends JPanel {
 		public synchronized void refreshLru(ImageStorage i) {
 			if (mImageStoreBackground.remove(i.mTileBox) != null) mImageStoreBackground.put(i.mTileBox, i);
 			if (mImageStore.remove(i.mTileBox) != null) mImageStore.put(i.mTileBox, i);
+		}
+		public synchronized void flush() {
+			mImageStoreBackground.clear();
+			mImageStore.clear();
 		}
 	}
 
