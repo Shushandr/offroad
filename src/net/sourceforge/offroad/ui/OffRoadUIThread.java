@@ -22,6 +22,7 @@ package net.sourceforge.offroad.ui;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.Semaphore;
 
 import javax.swing.SwingUtilities;
 
@@ -50,7 +51,7 @@ public class OffRoadUIThread implements Runnable {
 
 	protected OffRoadUIThread mNextThread = null;
 	private boolean hasFinished = false;
-	protected boolean mShouldContinue = false;
+	protected Semaphore mShouldContinue = new Semaphore(0);
 	protected OsmBitmapPanel mOsmBitmapPanel;
 	private Set<OffRoadUIThreadListener> mListeners = new HashSet<>();
 	protected String mName;
@@ -73,7 +74,7 @@ public class OffRoadUIThread implements Runnable {
 	}
 
 	public void shouldContinue(){
-		mShouldContinue = true;
+		mShouldContinue.release();
 	}
 	
 	public void runInBackground() {
@@ -122,13 +123,10 @@ public class OffRoadUIThread implements Runnable {
 	}
 
 	protected void waitForThreadBeforeHaveFinished() {
-		while(!mShouldContinue){
-			// FIXME: Use notify.
-			try {
-				Thread.sleep(20);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+		try {
+			mShouldContinue.acquire();
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
 		}
 		log.debug("THREAD:" + this + " should continue.");
 	}
