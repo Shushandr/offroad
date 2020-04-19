@@ -302,8 +302,8 @@ public class TextRenderer {
 		if (sr != null) {
 			float coef = rc.getDensityValue(rc.screenDensityRatio * rc.textScale);
 			BufferedImage ico = RenderingIcons.getIcon(sr, true);
-			log.debug("Got shield icon " + sr + ":" + ico.getWidth()+"x" + ico.getHeight());
 			if (ico != null) {
+				log.debug("Got shield icon " + sr + ":" + ico.getWidth()+"x" + ico.getHeight());
 				float left = text.centerX - ico.getWidth() / 2 * coef - 0.5f;
 				float top = text.centerY - ico.getHeight() / 2 * coef - pGraphics2d.getFontMetrics().getDescent() - 0.5f;
 				if(rc.screenDensityRatio != 1f){
