@@ -127,12 +127,6 @@ public class Paint {
 			g2.setStroke(new BasicStroke(mStrokeWidth));
 		}
 		if(mTexturePaint != null){
-			if (mColor == null) {
-				// Otherwise the texture is painted over with
-				// complete white, which is pointless (and looks real bad).
-				// Set a fully transparent colour instead.
-				g2.setColor(new Color(1, 1, 1, 0));
-			}
 			g2.setPaint(mTexturePaint);
 		}
 		if(mAntialias){
