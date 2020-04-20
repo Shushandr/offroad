@@ -68,10 +68,8 @@ public class FilteredListModel extends AbstractListModel {
 					_indices.add(i);
 				}
 			}
-			fireContentsChanged(this, 0, getSize() - 1);
-		} else {
-			fireContentsChanged(this, 0, getSize() - 1);
 		}
+		fireContentsChanged(this, 0, getSize() - 1);
 	}
 
 	public int getSize() {

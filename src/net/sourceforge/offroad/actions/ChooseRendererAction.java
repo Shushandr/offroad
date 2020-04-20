@@ -48,7 +48,7 @@ public class ChooseRendererAction extends OffRoadAction implements SelectableAct
 		RendererRegistry registry = mContext.getRendererRegistry();
 		registry.setCurrentSelectedRender(registry.getRenderer(mRenderer));
 		mContext.getSettings().RENDERER.set(mRenderer);
-		mContext.getDrawPanel().drawLater();
+		mContext.getDrawPanel().flushCacheAndDrawLater();
 	}
 	
 	@Override

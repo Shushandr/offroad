@@ -36,12 +36,12 @@ public class Paint {
 	
 	public enum Style {
 		STROKE, FILL_AND_STROKE, FILL
-	};
+	}
 
 	public enum Align {
 		LEFT, CENTER, RIGHT
-	};
-	
+	}
+
 	private boolean mAntialias;
 	private Style mStrokeStyle;
 	private boolean mFilterBitmap;

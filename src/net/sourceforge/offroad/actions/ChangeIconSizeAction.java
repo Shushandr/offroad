@@ -48,7 +48,7 @@ public class ChangeIconSizeAction extends OffRoadAction implements SelectableAct
 	public void actionPerformed(ActionEvent pE) {
 		mContext.getOffroadProperties().setProperty(OsmWindow.OSMAND_ICONS_DIR_PREFIX, mIconsDirPrefix);
 		RenderingIcons.initIcons();
-		mContext.getDrawPanel().drawLater();
+		mContext.getDrawPanel().flushCacheAndDrawLater();
 	}
 
 	@Override

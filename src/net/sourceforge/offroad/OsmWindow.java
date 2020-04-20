@@ -295,7 +295,7 @@ public class OsmWindow  implements IRouteInformationListener {
 	
 	private enum SearchType {
 		AMENITY, ROUTE
-	};
+	}
 
 	private SearchType mSearchType = SearchType.AMENITY;
 
@@ -595,8 +595,7 @@ public class OsmWindow  implements IRouteInformationListener {
 		}
 		jViewMenu.add(jRenderPropertiesMenu);
 		JMenu jIconSizePropertiesMenu = new JMenu(getOffRoadString("offroad.icons_size_menu"));
-		for (int i = 0; i < sOsmandIconsPrefixes.length; i++) {
-			String prefix = sOsmandIconsPrefixes[i];
+		for (String prefix : sOsmandIconsPrefixes) {
 			JMenuItem item = new OffRoadMenuItem(new ChangeIconSizeAction(this, prefix), jIconSizePropertiesMenu);
 			jIconSizePropertiesMenu.add(item);
 		}
@@ -740,7 +739,7 @@ public class OsmWindow  implements IRouteInformationListener {
 						checkMaps();
 					}
 				});
-			};
+			}
 		});
 		mFrame.setVisible(true);
 	}
@@ -782,8 +781,7 @@ public class OsmWindow  implements IRouteInformationListener {
 	}
 	
 	private void adaptMenuMnemonics(Component[] components) {
-		for (int i = 0; i < components.length; i++) {
-			Component comp = components[i];
+		for (Component comp : components) {
 			if (comp instanceof AbstractButton) {
 				AbstractButton but = (AbstractButton) comp;
 				setMnemonic(but);
@@ -904,11 +902,9 @@ public class OsmWindow  implements IRouteInformationListener {
 		mRegions = new OsmandRegions();
 		mResourceManager = new ResourceManager(this);
 		mResourceManager.indexingMaps(IProgress.EMPTY_PROGRESS);
-		if(System.getProperty("HIDPI")!=null){ //$NON-NLS-1$
-			log.info("Option HIDPI found");
-			scaleAllFonts(1.3f * density);
-		} else {
-			scaleAllFonts(density);
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (Exception e) {
 		}
 		startServer();
 		mRendererRegistry = new RendererRegistry(this);
@@ -1036,9 +1032,7 @@ public class OsmWindow  implements IRouteInformationListener {
 
 	public static void scaleAllFonts(float pScale) {
 		log.info("Scaling fonts with scale " + pScale);
-		for (Iterator i = UIManager.getLookAndFeelDefaults().keySet()
-				.iterator(); i.hasNext();) {
-			Object next = i.next();
+		for (Object next : UIManager.getLookAndFeelDefaults().keySet()) {
 			if (next instanceof String) {
 				String key = (String) next;
 				if (key.endsWith(".font")) { //$NON-NLS-1$
@@ -1046,7 +1040,7 @@ public class OsmWindow  implements IRouteInformationListener {
 					Font biggerFont = font.deriveFont(pScale * font.getSize2D());
 					// change ui default to bigger font
 					UIManager.put(key, biggerFont);
-				}				
+				}
 			}
 		}
 	}
@@ -1256,9 +1250,9 @@ public class OsmWindow  implements IRouteInformationListener {
 				polyDist = selectedPolyline.calculateLength();
 				polyArea = selectedPolyline.calculateArea();
 			}
-			Object[] messageArguments = { new Double(distance),
-					new Double(cursorPosition.getLatitude()),
-					new Double(cursorPosition.getLongitude())};
+			Object[] messageArguments = { Double.valueOf(distance),
+					Double.valueOf(cursorPosition.getLatitude()),
+					Double.valueOf(cursorPosition.getLongitude())};
 			Object[] polyArguments =  {polyDist, polyArea};
 			MessageFormat formatter = new MessageFormat(
 					getOffRoadString("offroad.string47")); //$NON-NLS-1$
@@ -1366,11 +1360,9 @@ public class OsmWindow  implements IRouteInformationListener {
 	
 	public void addPoint(LatLon pPoint){
 		MapPointStorage storage = new MapPointStorage(pPoint, getZoom());
-		if(mPointStorageIndex != mPointStorage.size()-1){
+		if(mPointStorageIndex < mPointStorage.size()-1){
 			// remove all subsequent:
-			for(int i=mPointStorageIndex+1; i < mPointStorage.size() ; ++i){
-				mPointStorage.remove(i);
-			}
+			mPointStorage.setSize(mPointStorageIndex + 1);
 		}
 		mPointStorage.add(storage);
 		mPointStorageIndex = mPointStorage.size()-1;

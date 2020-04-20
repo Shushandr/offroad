@@ -33,18 +33,12 @@ public class RotatedTileBoxCalculationOrder {
 
 	private RotatedTileBox mTb;
 	private BoxDeltaDescription[] mOrder = new BoxDeltaDescription[]{
-			new BoxDeltaDescription(1,  0,  0),
-			new BoxDeltaDescription(0,  1,  0),
-			new BoxDeltaDescription(0, -1,  0),
-			new BoxDeltaDescription(0,  0,  1),
-			new BoxDeltaDescription(0,  0, -1),
-			new BoxDeltaDescription(4,  0,  0),
-			new BoxDeltaDescription(0,  1,  1),
-			new BoxDeltaDescription(0, -1, -1),
-			new BoxDeltaDescription(0, -1,  1),
-			new BoxDeltaDescription(0,  1, -1),
-			new BoxDeltaDescription(2,  0,  0),
-			new BoxDeltaDescription(3,  0,  0),
+		// Ensure there's extra boundaries at current position
+		// Disabled since it causes annoying flicker
+		//new BoxDeltaDescription(0,  0,  0),
+		// For zooming out/coarse view at boundary
+		new BoxDeltaDescription(1,  0,  0),
+		new BoxDeltaDescription(4,  0,  0),
 	};
 	private int mIndex = 0;
 	

@@ -260,8 +260,8 @@ public class GeoServer extends Thread {
 						log.info("Wrong argument count. Expected 2, got " + coords.length);
 						return;
 					}
-					Double lat = Double.parseDouble(coords[0]);
-					Double lon = Double.parseDouble(coords[1]);
+					double lat = Double.parseDouble(coords[0]);
+					double lon = Double.parseDouble(coords[1]);
 					mFrame.moveDirectly(new LatLon(lat, lon));
 				}
 			});

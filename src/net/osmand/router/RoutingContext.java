@@ -269,7 +269,7 @@ public class RoutingContext {
 	
 	
 
-	public RouteSegment loadRouteSegment(int x31, int y31, int memoryLimit) {
+	public RouteSegment loadRouteSegment(int x31, int y31, long memoryLimit) {
 		long tileId = getRoutingTile(x31, y31, memoryLimit, OPTION_SMART_LOAD);
 		TLongObjectHashMap<RouteDataObject> excludeDuplications = new TLongObjectHashMap<RouteDataObject>();
 		RouteSegment original = null;
@@ -452,7 +452,7 @@ public class RoutingContext {
 	}
 	
 	@SuppressWarnings("unused")
-	private long getRoutingTile(int x31, int y31, int memoryLimit, int loadOptions){
+	private long getRoutingTile(int x31, int y31, long memoryLimit, int loadOptions){
 //		long now = System.nanoTime();
 		long xloc = x31 >> (31 - config.ZOOM_TO_LOAD_TILES);
 		long yloc = y31 >> (31 - config.ZOOM_TO_LOAD_TILES);
@@ -514,11 +514,11 @@ public class RoutingContext {
 
 	
 	
-	public boolean checkIfMemoryLimitCritical(int memoryLimit) {
+	public boolean checkIfMemoryLimitCritical(long memoryLimit) {
 		return getCurrentEstimatedSize() > 0.9 * memoryLimit;
 	}
 	
-	public void unloadUnusedTiles(int memoryLimit) {
+	public void unloadUnusedTiles(long memoryLimit) {
 		float desirableSize = memoryLimit * 0.7f;
 		List<RoutingSubregionTile> list = new ArrayList<RoutingSubregionTile>(subregionTiles.size() / 2);
 		int loaded = 0;

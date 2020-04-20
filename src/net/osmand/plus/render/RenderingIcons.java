@@ -1,9 +1,7 @@
 package net.osmand.plus.render;
 
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
@@ -21,11 +19,18 @@ import net.osmand.PlatformUtil;
 import net.sourceforge.offroad.OsmWindow;
 
 public class RenderingIcons {
+	public static class ResEntry {
+		public final JarEntry jar;
+		public File file;
+		public ResEntry(JarEntry jar) { this.jar = jar; file = null; }
+		public ResEntry(File file) { jar = null; this.file = file; }
+	}
+
 	private static final Log log = PlatformUtil.getLog(RenderingIcons.class);
 
-	private static Map<String, JarEntry> shaderIcons = new LinkedHashMap<String, JarEntry>();
-	private static Map<String, JarEntry> smallIcons = new LinkedHashMap<String, JarEntry>();
-	private static Map<String, JarEntry> bigIcons = new LinkedHashMap<String, JarEntry>();
+	private static Map<String, ResEntry> shaderIcons = new LinkedHashMap<String, ResEntry>();
+	private static Map<String, ResEntry> smallIcons = new LinkedHashMap<String, ResEntry>();
+	private static Map<String, ResEntry> bigIcons = new LinkedHashMap<String, ResEntry>();
 	private static Map<String, BufferedImage> iconsBmp = new LinkedHashMap<String, BufferedImage>();
 	// private static DisplayMetrics dm;
 
@@ -38,7 +43,7 @@ public class RenderingIcons {
 	}
 
 	public static byte[] getIconRawData(String s) {
-		JarEntry resId = shaderIcons.get(s);
+		ResEntry resId = shaderIcons.get(s);
 		if (resId == null) {
 			resId = smallIcons.get(s);
 		}
@@ -74,7 +79,7 @@ public class RenderingIcons {
 	}
 
 	// public static int getBigIconResourceId(String s) {
-	// JarEntry i = bigIcons.get(s);
+	// ResEntry i = bigIcons.get(s);
 	// if (i == null) {
 	// return 0;
 	// }
@@ -82,7 +87,7 @@ public class RenderingIcons {
 	// }
 
 	public static BufferedImage getBigIcon(String s) {
-		JarEntry resId = bigIcons.get(s);
+		ResEntry resId = bigIcons.get(s);
 		if (resId != null) {
 			try {
 				return ImageIO.read(getIconStream(resId));
@@ -101,7 +106,7 @@ public class RenderingIcons {
 			s = "h_" + s;
 		}
 		if (!iconsBmp.containsKey(s)) {
-			JarEntry resId = s.startsWith("h_") ? shaderIcons.get(s.substring(2)) : smallIcons.get(s);
+			ResEntry resId = s.startsWith("h_") ? shaderIcons.get(s.substring(2)) : smallIcons.get(s);
 			if (resId != null) {
 				BufferedImage bmp;
 				try {
@@ -111,20 +116,35 @@ public class RenderingIcons {
 					e.printStackTrace();
 					iconsBmp.put(s, null);
 				}
-			} else {
-				iconsBmp.put(s, null);
+			} else if (smallIcons.isEmpty()) {
+				// fallback to loading from file system
+				OsmWindow context = OsmWindow.getInstance();
+				String osmandIconsDir = context.getOsmandIconsDir();
+				osmandIconsDir = RenderingIcons.class.getProtectionDomain().getCodeSource().getLocation().getFile() + osmandIconsDir;
+				BufferedImage bmp;
+				try {
+					if (includeShader && !new File(osmandIconsDir + s + ".png").exists()) s = "h_" + s;
+					bmp = ImageIO.read(new FileInputStream(osmandIconsDir + s + ".png"));
+					iconsBmp.put(s, bmp);
+				} catch (IOException e) {
+					e.printStackTrace();
+					iconsBmp.put(s, null);
+				}
 			}
 		}
 		return iconsBmp.get(s);
 	}
 
-	public static InputStream getIconStream(JarEntry resId) throws IOException {
+	public static InputStream getIconStream(ResEntry resId) throws IOException {
+		if (resId.jar == null) {
+			return new FileInputStream(resId.file);
+		}
 		URLConnection urlCon = sJarResource.openConnection();
 		JarFile jar = ((JarURLConnection) urlCon).getJarFile();
-		return jar.getInputStream(resId);
+		return jar.getInputStream(resId.jar);
 	}
 
-	public static JarEntry getResId(String id) {
+	public static ResEntry getResId(String id) {
 		return id.startsWith("h_") ? shaderIcons.get(id.substring(2)) : smallIcons.get(id);
 	}
 
@@ -143,6 +163,8 @@ public class RenderingIcons {
 			en = context.getClass().getClassLoader()
 					.getResources(osmandIconsDir);
 			System.out.println("icon resources present: " + en.hasMoreElements());
+			boolean found = false;
+			File resDir = null;
 			while (en.hasMoreElements()) {
 				URL resource = en.nextElement();
 				System.out.println("Trying resource " + resource);
@@ -157,17 +179,35 @@ public class RenderingIcons {
 							if (!entry.startsWith(osmandIconsDir)) {
 								continue;
 							}
+							found = true;
+							ResEntry r = new ResEntry(jarEntry);
 							sJarResource = resource;
 							String f = entry.toString().substring(osmandIconsDir.length())
 									.replaceFirst("\\.png", "");
 							if (f.startsWith("h_")) {
-								shaderIcons.put(f.substring(2), jarEntry);
+								shaderIcons.put(f.substring(2), r);
 							} else if (f.startsWith("mm_")) {
-								smallIcons.put(f.substring(3), jarEntry);
+								smallIcons.put(f.substring(3), r);
 							} else if (f.startsWith("mx_")) {
-								bigIcons.put(f.substring(3), jarEntry);
+								bigIcons.put(f.substring(3), r);
 							}
 						}
+					}
+				} else if (new File(resource.getFile()).isDirectory()) {
+					resDir = new File(resource.getFile());
+				}
+			}
+			if (!found && resDir != null) {
+				final File[] files = resDir.listFiles();
+				for (File file : files) {
+					ResEntry r = new ResEntry(file);
+					String f = file.getName().replaceFirst("\\.png", "");
+					if (f.startsWith("h_")) {
+						shaderIcons.put(f.substring(2), r);
+					} else if (f.startsWith("mm_")) {
+						smallIcons.put(f.substring(3), r);
+					} else if (f.startsWith("mx_")) {
+						bigIcons.put(f.substring(3), r);
 					}
 				}
 			}

@@ -78,7 +78,7 @@ public class SetRenderingRule extends OffRoadAction implements SelectableAction 
 			CommonPreference<Boolean> pref = getPreference();
 			pref.set(!pref.get());
 		}
-		mContext.getDrawPanel().drawLater();
+		mContext.getDrawPanel().flushCacheAndDrawLater();
 	}
 
 	private CommonPreference<Boolean> getPreference() {

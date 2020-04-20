@@ -147,9 +147,9 @@ public class GraphPanel extends JPanel {
 
 		g2.setStroke(oldStroke);
 		g2.setColor(pointColor);
-		for (int i = 0; i < graphPoints.size(); i++) {
-			int x = graphPoints.get(i).x - pointWidth / 2;
-			int y = graphPoints.get(i).y - pointWidth / 2;
+		for (Point graphPoint : graphPoints) {
+			int x = graphPoint.x - pointWidth / 2;
+			int y = graphPoint.y - pointWidth / 2;
 			int ovalW = pointWidth;
 			int ovalH = pointWidth;
 			g2.fillOval(x, y, ovalW, ovalH);
@@ -196,7 +196,7 @@ public class GraphPanel extends JPanel {
 	}
 
 	private Long getMinTime() {
-		Long minTime = Long.MAX_VALUE;
+		long minTime = Long.MAX_VALUE;
 		for (Long Time : scores.keySet()) {
 			minTime = Math.min(minTime, Time);
 		}
@@ -204,7 +204,7 @@ public class GraphPanel extends JPanel {
 	}
 	
 	private Long getMaxTime() {
-		Long maxTime = Long.MIN_VALUE;
+		long maxTime = Long.MIN_VALUE;
 		for (Long Time : scores.keySet()) {
 			maxTime = Math.max(maxTime, Time);
 		}

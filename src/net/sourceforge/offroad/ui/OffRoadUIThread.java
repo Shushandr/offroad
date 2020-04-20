@@ -22,6 +22,7 @@ package net.sourceforge.offroad.ui;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.Semaphore;
 
 import javax.swing.SwingUtilities;
 
@@ -50,7 +51,7 @@ public class OffRoadUIThread implements Runnable {
 
 	protected OffRoadUIThread mNextThread = null;
 	private boolean hasFinished = false;
-	protected boolean mShouldContinue = false;
+	protected Semaphore mShouldContinue = new Semaphore(0);
 	protected OsmBitmapPanel mOsmBitmapPanel;
 	private Set<OffRoadUIThreadListener> mListeners = new HashSet<>();
 	protected String mName;
@@ -68,17 +69,17 @@ public class OffRoadUIThread implements Runnable {
 		mListeners.remove(pListener);
 	}
 	
-	public void setNextThread(OffRoadUIThread pNextThread) {
+	public synchronized void setNextThread(OffRoadUIThread pNextThread) {
 		mNextThread = pNextThread;
 	}
 
 	public void shouldContinue(){
-		mShouldContinue = true;
+		mShouldContinue.release();
 	}
 	
 	public void runInBackground() {
 		// overwrite if needed.
-	};
+	}
 
 	/**
 	 * Is NOT executed in the ui thread!
@@ -122,23 +123,20 @@ public class OffRoadUIThread implements Runnable {
 	}
 
 	protected void waitForThreadBeforeHaveFinished() {
-		while(!mShouldContinue){
-			// FIXME: Use notify.
-			try {
-				Thread.sleep(20);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+		try {
+			mShouldContinue.acquire();
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
 		}
 		log.debug("THREAD:" + this + " should continue.");
 	}
 
 	
-	public boolean hasFinished() {
+	public synchronized boolean hasFinished() {
 		return hasFinished;
 	}
-	
-	protected boolean findSuccessor(Class<? extends OffRoadUIThread> pTypeOfSuccessor){
+
+	protected synchronized boolean findSuccessor(Class<? extends OffRoadUIThread> pTypeOfSuccessor){
 		if(mNextThread==null){
 			return false;
 		}

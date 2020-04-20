@@ -125,7 +125,7 @@ public class AmenityTablePanel extends JPanel {
 				setText(mContext.getString(R.string.search_position_undefined));
 			} else if (value instanceof Double) {
 				Double d = (Double) value;
-				setText(formatDistance.format(new Object[] { d.doubleValue() }));
+				setText(formatDistance.format(new Object[] {d}));
 			}
 			return this;
 		}
@@ -215,8 +215,8 @@ public class AmenityTablePanel extends JPanel {
 		public List<MapObject> getSelectedRows() {
 			int[] selectedRows = mTable.getSelectedRows();
 			Vector<MapObject> res = new Vector<>();
-			for (int i = 0; i < selectedRows.length; i++) {
-				int j = mTable.convertRowIndexToModel(selectedRows[i]);
+			for (int selectedRow : selectedRows) {
+				int j = mTable.convertRowIndexToModel(selectedRow);
 				res.add(getItemAt(j));
 			}
 			return res;
