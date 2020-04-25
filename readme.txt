@@ -36,6 +36,8 @@ Version History:
   on Java 9 and later native HiDPI support (testing needed!)
 * Much improved smoothness and general experience when dragging the map
 * Add button to delete downloads in download dialog
+* Generate submenus for favorite groups that contain one or more '/'.
+  This allows sorting favorites in a hierarchy instead of just flat groups.
 * Allow loading resources from files when there is no
   jar (easier development with some IDEs)
 

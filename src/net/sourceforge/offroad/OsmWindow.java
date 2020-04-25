@@ -338,6 +338,33 @@ public class OsmWindow  implements IRouteInformationListener {
 
 	private JLabel mQueueStatus; 
 	
+	private static void addFavoriteGroups(OsmWindow context, JMenu parent, List<FavoriteGroup> fgs) {
+		HashMap<String, JMenu> groupMenus = new HashMap<>();
+		for (FavoriteGroup fg : fgs) {
+			JMenu groupMenu = groupMenus.getOrDefault(fg.name, null);
+			if (groupMenu == null) {
+				String[] levels = fg.name.split("/");
+				JMenu prev = parent;
+				String path = null;
+				for (String currName : levels) {
+					path = path == null ? currName : path + "/" + currName;
+					JMenu curr = groupMenus.getOrDefault(path, null);
+					if (curr == null) {
+						curr = new JMenu(currName);
+						prev.add(curr);
+						groupMenus.put(path, curr);
+					}
+					prev = curr;
+				}
+				groupMenu = prev;
+			}
+			for (FavouritePoint fp : fg.points) {
+				JMenuItem lFavoritesItem = new JMenuItem(new ShowFavoriteAction(context, fp));
+				groupMenu.add(lFavoritesItem);
+			}
+		}
+	}
+
 	public void createAndShowUI() {
 		mDirectSearchTextField = new JTextField(getOffRoadString("offroad.DirectSearchText"));
 		mDirectSearchFuzzy = new JCheckBox(getOffRoadString("offroad.fuzzy_search"));
@@ -671,14 +698,7 @@ public class OsmWindow  implements IRouteInformationListener {
 				// Must be dynamic, as the favorites may change...
 				jFavoritesMenu.removeAll();
 				jFavoritesMenu.add(mAddFavourite);
-				for (FavoriteGroup	 fg : getFavorites().getFavoriteGroups()) {
-					JMenu groupMenu = new JMenu(fg.name);
-					for (FavouritePoint fp : fg.points) {
-						JMenuItem lFavoritesItem = new JMenuItem(new ShowFavoriteAction(OsmWindow.this, fp));
-						groupMenu.add(lFavoritesItem);
-					}
-					jFavoritesMenu.add(groupMenu);
-				}
+				addFavoriteGroups(OsmWindow.this, jFavoritesMenu, getFavorites().getFavoriteGroups());
 				jFavoritesMenu.add(mSelectTrack);
 			}
 
