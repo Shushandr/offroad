@@ -37,7 +37,7 @@ class ZoomAnimationThread extends OffRoadUIThread {
 				tb = getDestinationTileBox(originalZoom, it, zoom);
 				mOsmBitmapPanel.setCurrentTileBox(tb);
 				log.debug("Set tile box " + tb + " and now repaint.");
-				mOsmBitmapPanel.repaintAndWait(50);
+				mOsmBitmapPanel.repaintAndWait(16);
 				log.debug("Set tile box " + tb + " and now repaint. Done.");
 			}
 		} else {
@@ -46,14 +46,14 @@ class ZoomAnimationThread extends OffRoadUIThread {
 				tb = getDestinationTileBox(originalZoom, it, i);
 				mOsmBitmapPanel.setCurrentTileBox(tb);
 				log.debug("Set tile box " + tb + " and now repaint.");
-				mOsmBitmapPanel.repaintAndWait(50);
+				mOsmBitmapPanel.repaintAndWait(16);
 				log.debug("Set tile box " + tb + " and now repaint. Done.");
 			}
 		}
 		tb = getDestinationTileBox(originalZoom, it, it-1);
 		mOsmBitmapPanel.setCurrentTileBox(tb);
 		log.debug("Set tile box " + tb + " and now repaint.");
-		mOsmBitmapPanel.repaintAndWait(50);
+		mOsmBitmapPanel.repaintAndWait(16);
 		log.debug("Set tile box " + tb + " and now repaint. Done.");
 	}
 
