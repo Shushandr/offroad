@@ -33,6 +33,13 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.channels.ByteChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.util.EnumSet;
 import java.util.Random;
 
 import javax.swing.SwingUtilities;
@@ -41,6 +48,9 @@ import org.apache.commons.logging.Log;
 
 import net.osmand.PlatformUtil;
 import net.osmand.data.LatLon;
+
+import static java.nio.file.StandardOpenOption.CREATE_NEW;
+import static java.nio.file.StandardOpenOption.WRITE;
 
 /**
  * Inter-process communication.
@@ -75,52 +85,12 @@ public class GeoServer extends Thread {
 
 	private final OsmWindow mFrame;
 
-	public static boolean isUnix() {
-		return (File.separatorChar == '/');
-	}
-
-	// {{{ setPermissions() method
-	/**
-	 * Sets numeric permissions of a file. On non-Unix platforms, does nothing.
-	 * From jEdit
-	 */
-	public static void setPermissions(String path, int permissions) {
-
-		if (permissions != 0) {
-			if (isUnix()) {
-				String[] cmdarray = { "chmod", Integer.toString(permissions, 8), path };
-
-				try {
-					Process process = Runtime.getRuntime().exec(cmdarray);
-					process.getInputStream().close();
-					process.getOutputStream().close();
-					process.getErrorStream().close();
-					// Jun 9 2004 12:40 PM
-					// waitFor() hangs on some Java
-					// implementations.
-					/*
-					 * int exitCode = process.waitFor(); if(exitCode != 0)
-					 * Log.log (Log.NOTICE,FileVFS.class,
-					 * "chmod exited with code " + exitCode);
-					 */
-				}
-
-				// Feb 4 2000 5:30 PM
-				// Catch Throwable here rather than Exception.
-				// Kaffe's implementation of Runtime.exec throws
-				// java.lang.InternalError.
-				catch (Throwable t) {
-				}
-			}
-		}
-	} // }}}
-
 	// {{{ EditServer constructor
 	GeoServer(String portFile, OsmWindow pFrame) {
 		super("OffRoad server daemon [" + portFile + "]");
 		mFrame = pFrame;
 		setDaemon(true);
-		this.portFile = portFile;
+		this.portFile = Paths.get(portFile);
 
 		try {
 			// On Unix, set permissions of port file to rw-------,
@@ -128,10 +98,13 @@ public class GeoServer extends Thread {
 			// access to user home dirs, people can't see your
 			// port file (and hence send arbitriary BeanShell code
 			// your way. Nasty.)
-			if (isUnix()) {
-				new File(portFile).createNewFile();
-				setPermissions(portFile, 0600);
-			}
+			// This MUST use the newByteChannel function as to guarantee
+			// that creating the file, setting attributes and opening it
+			// is fully atomic, or there would be race conditions where
+			// an attacker can place a file with weaker permissions.
+			Files.deleteIfExists(this.portFile);
+			ByteChannel out = Files.newByteChannel(this.portFile, EnumSet.of(CREATE_NEW, WRITE),
+					PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------")));
 
 			// Bind to any port on localhost; accept 2 simultaneous
 			// connection attempts before rejecting connections
@@ -139,14 +112,9 @@ public class GeoServer extends Thread {
 			authKey = new Random().nextInt(Integer.MAX_VALUE);
 			int port = socket.getLocalPort();
 
-			FileWriter out = new FileWriter(portFile);
-
+			String data = "b\n" + port + "\n" + authKey + "\n";
 			try {
-				out.write("b\n");
-				out.write(String.valueOf(port));
-				out.write("\n");
-				out.write(String.valueOf(authKey));
-				out.write("\n");
+				out.write(ByteBuffer.wrap(data.getBytes()));
 			} finally {
 				out.close();
 			}
@@ -218,16 +186,15 @@ public class GeoServer extends Thread {
 		abort = true;
 		try {
 			socket.close();
+			Files.deleteIfExists(portFile);
 		} catch (IOException io) {
 		}
-
-		new File(portFile).delete();
 	} // }}}
 
 	// {{{ Private members
 
 	// {{{ Instance variables
-	private String portFile;
+	private Path portFile;
 	private ServerSocket socket;
 	private int authKey;
 	private boolean ok;
