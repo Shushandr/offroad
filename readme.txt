@@ -28,9 +28,8 @@ An offline map viewer based on OsmAnd.
 
 Version History:
 
-0_5:
+0_6:
 ============
-* Fixed a bug of 0.4 under windows not showing POI icons
 * Fixed bug where routing might incorrectly report "no enough memory" [sic].
 * Removed special font size fix for HiDPI screens, relying
   on Java 9 and later native HiDPI support (testing needed!)
@@ -40,6 +39,10 @@ Version History:
   This allows sorting favorites in a hierarchy instead of just flat groups.
 * Allow loading resources from files when there is no
   jar (easier development with some IDEs)
+
+0_5:
+============
+* Fixed a bug of 0.4 under windows not showing POI icons
 
 0_4:
 ============
