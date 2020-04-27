@@ -12,8 +12,8 @@ class GenerationThread extends OffRoadUIThread implements IntermediateImageListe
 	/**
 	 * 
 	 */
-	public final RotatedTileBox mTileCopy;
-	public final RotatedTileBox mTileCopyCacheCheck;
+	public RotatedTileBox mTileCopy;
+	public RotatedTileBox mTileCopyCacheCheck;
 	public final boolean mFlushCache;
 	protected BufferedImage mNewBitmap;
 	protected RenderingResult mResult;
@@ -45,6 +45,7 @@ class GenerationThread extends OffRoadUIThread implements IntermediateImageListe
 		// Enable to visually check the background threads
 		//if (mTileCopy.equals(mTileCopyCacheCheck)) return;
 		if (!mFlushCache && mOsmBitmapPanel.isCached(mTileCopyCacheCheck)) return;
+		mTileCopyCacheCheck = null; // no longer needed, free
 		// generate in background
 		mNewBitmap = mOsmBitmapPanel.createImage();
 		// render at 2x requested size to have some margin for scrolling
@@ -55,6 +56,10 @@ class GenerationThread extends OffRoadUIThread implements IntermediateImageListe
 	public void runAfterThreadsBeforeHaveFinished() {
 		// in the lazy case, the bitmap may not have been generated
 		mOsmBitmapPanel.setImage(mNewBitmap, mTileCopy, mResult, mFlushCache);
+		// drop references so they get deallocated when removed from cache.
+		mTileCopy = null;
+		mNewBitmap = null;
+		mResult = null;
 	}
 
 	@Override

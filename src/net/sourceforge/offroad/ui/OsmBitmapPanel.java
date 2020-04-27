@@ -5,6 +5,7 @@ import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.lang.ref.SoftReference;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.List;
@@ -80,13 +81,13 @@ public class OsmBitmapPanel extends JPanel {
 		public void queue(OffRoadUIThread pThread) {
 			if(mLastThread != null){
 				synchronized(mLastThread){
-					if (pThread instanceof GenerationThread && mLastThread instanceof GenerationThread) {
-						RotatedTileBox now = ((GenerationThread)pThread).mTileCopyCacheCheck;
-						RotatedTileBox prev = ((GenerationThread)mLastThread).mTileCopy;
-						if (!((GenerationThread)pThread).isFlush() && prev.containsTileBox(now) &&
-							prev.getZoom() == now.getZoom() && prev.getRotate() == now.getRotate()) return;
-					}
 					if(!mLastThread.hasFinished()){
+						if (pThread instanceof GenerationThread && mLastThread instanceof GenerationThread) {
+							RotatedTileBox now = ((GenerationThread)pThread).mTileCopyCacheCheck;
+							RotatedTileBox prev = ((GenerationThread)mLastThread).mTileCopy;
+							if (!((GenerationThread)pThread).isFlush() && prev.containsTileBox(now) &&
+								prev.getZoom() == now.getZoom() && prev.getRotate() == now.getRotate()) return;
+						}
 						mLastThread.setNextThread(pThread);
 					} else {
 						pThread.shouldContinue();
@@ -115,11 +116,22 @@ public class OsmBitmapPanel extends JPanel {
 			return true;
 		}
 	}
+	public static class DrawnImageInfo {
+		public final int imageW, imageH;
+		public final RotatedTileBox mTileBox;
+		public final RenderingResult mResult;
+		public DrawnImageInfo(ImageStorage s) {
+			imageW = s.mImage.getWidth();
+			imageH = s.mImage.getHeight();
+			mTileBox = s.mTileBox;
+			mResult = s.mResult;
+		}
+	}
 
 //	private InactivityListener mInactivityListener;
 	private CalculateUnzoomedPicturesAction mUnzoomedPicturesAction;
 	private RoundButton mCompassButton;
-	private List<ImageStorage> mEffectivelyDrawnImages = new ArrayList<>();
+	private List<DrawnImageInfo> mEffectivelyDrawnImages = new ArrayList<>();
 
 //	private int mZoomCounter;
 
@@ -229,13 +241,13 @@ public class OsmBitmapPanel extends JPanel {
 	}
 
 	
-	public List<ImageStorage> getEffectivelyDrawnImages(){
+	public List<DrawnImageInfo> getEffectivelyDrawnImages(){
 		synchronized (mEffectivelyDrawnImages) {
-			return new ArrayList<ImageStorage>(mEffectivelyDrawnImages);
+			return new ArrayList<DrawnImageInfo>(mEffectivelyDrawnImages);
 		}
 	}
 	
-	public void setEffectivelyDrawnImages(List<ImageStorage> pList){
+	public void setEffectivelyDrawnImages(List<DrawnImageInfo> pList){
 		synchronized (mEffectivelyDrawnImages) {
 			mEffectivelyDrawnImages.clear();
 			mEffectivelyDrawnImages.addAll(pList);
@@ -268,7 +280,7 @@ public class OsmBitmapPanel extends JPanel {
 	@Override
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
-		ArrayList<ImageStorage> effectivelyDrawn = new ArrayList<>();
+		ArrayList<DrawnImageInfo> effectivelyDrawn = new ArrayList<>();
 		Graphics2D gd2 = (Graphics2D) g;
 		Graphics2D g2 = createGraphics(gd2);
 		// check for cached picture of bigger size to lay under:
@@ -279,6 +291,7 @@ public class OsmBitmapPanel extends JPanel {
 		boolean imageFound=false;
 		for(int biggerZoom = OsmWindow.MIN_ZOOM; biggerZoom <= OsmWindow.MAX_ZOOM; ++biggerZoom){
 			List<ImageStorage> tblist = mUnzoomedPicturesAction.getTileBoxesForZoom(biggerZoom);
+
 			// check for each, if the current image is contained
 			for (ImageStorage tblistEntry : tblist) {
 				RotatedTileBox rtb = tblistEntry.mTileBox;
@@ -299,7 +312,7 @@ public class OsmBitmapPanel extends JPanel {
 					double y2=  ctb.getPixYFromLatLon(rtbRB.getLatitude(), rtbRB.getLongitude());
 					BufferedImage image = tblistEntry.mImage;
 					if(image != null){
-						effectivelyDrawn.add(tblistEntry);
+						effectivelyDrawn.add(new DrawnImageInfo(tblistEntry));
 						double thetaR = Math.toRadians(theta);
 						g2.rotate(thetaR, xc, yc);
 						g2.drawImage(image, (int)x1, (int)y1, (int)x2, (int)y2, 0,0, image.getWidth(), image.getHeight(), null);
@@ -746,16 +759,16 @@ public class OsmBitmapPanel extends JPanel {
 		private RotatedTileBoxCalculationOrder mTileOrder;
 		// Separate caches, so that the low-res background ones will never
 		// evict the main image.
-		private LinkedHashMap<RotatedTileBox, ImageStorage> mImageStoreBackground = new LinkedHashMap<RotatedTileBox, ImageStorage>(){
+		private LinkedHashMap<RotatedTileBox, SoftReference<ImageStorage>> mImageStoreBackground = new LinkedHashMap<RotatedTileBox, SoftReference<ImageStorage>>(){
 			@Override
-			protected boolean removeEldestEntry(Map.Entry<RotatedTileBox, ImageStorage> eldest) {
+			protected boolean removeEldestEntry(Map.Entry<RotatedTileBox, SoftReference<ImageStorage>> eldest) {
 		        return size() > 2 * mTileOrder.getSize() + 2;
 		     }
 		};
 		private LinkedHashMap<RotatedTileBox, ImageStorage> mImageStore = new LinkedHashMap<RotatedTileBox, ImageStorage>(){
 			@Override
 			protected boolean removeEldestEntry(Map.Entry<RotatedTileBox, ImageStorage> eldest) {
-		        return size() > 6;
+		        return size() > 4;
 		     }
 		};
 
@@ -773,9 +786,14 @@ public class OsmBitmapPanel extends JPanel {
 
 		public synchronized List<ImageStorage> getTileBoxesForZoom(int pZoom) {
 			ArrayList<ImageStorage> ret = new ArrayList<>();
-			for (Entry<RotatedTileBox, ImageStorage> rtb : mImageStoreBackground.entrySet()) {
+			for (Entry<RotatedTileBox, SoftReference<ImageStorage>> rtb : mImageStoreBackground.entrySet()) {
+				ImageStorage i = rtb.getValue().get();
+				if (i == null) {
+					mImageStoreBackground.remove(rtb);
+					continue;
+				}
 				if (rtb.getKey().getZoom() == pZoom) {
-					ret.add(rtb.getValue());
+					ret.add(i);
 				}
 			}
 			for (Entry<RotatedTileBox, ImageStorage> rtb : mImageStore.entrySet()) {
@@ -816,7 +834,7 @@ public class OsmBitmapPanel extends JPanel {
 		
 		private synchronized void addToBGCache(RotatedTileBox pTileBox, BufferedImage pBitmap, RenderingResult pResult){
 			log.debug("Adding  " + pTileBox + " to the cache.");
-			mImageStoreBackground.put(pTileBox, new ImageStorage(pBitmap, pTileBox, pResult));
+			mImageStoreBackground.put(pTileBox, new SoftReference<>(new ImageStorage(pBitmap, pTileBox, pResult)));
 		}
 		public synchronized void addToCache(RotatedTileBox pTileBox, BufferedImage pBitmap, RenderingResult pResult){
 			log.debug("Adding  " + pTileBox + " to the cache.");
@@ -824,7 +842,8 @@ public class OsmBitmapPanel extends JPanel {
 		}
 		// Feedback which ones were used so we avoid evicting them
 		public synchronized void refreshLru(ImageStorage i) {
-			if (mImageStoreBackground.remove(i.mTileBox) != null) mImageStoreBackground.put(i.mTileBox, i);
+			SoftReference<ImageStorage> bgi = mImageStoreBackground.remove(i.mTileBox);
+			if (bgi != null) mImageStoreBackground.put(i.mTileBox, bgi);
 			if (mImageStore.remove(i.mTileBox) != null) mImageStore.put(i.mTileBox, i);
 		}
 		public synchronized void flush() {

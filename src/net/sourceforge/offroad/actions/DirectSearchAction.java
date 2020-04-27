@@ -36,6 +36,7 @@ import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import net.sourceforge.offroad.ui.OsmBitmapPanel;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 
@@ -45,7 +46,7 @@ import net.osmand.data.RotatedTileBox;
 import net.osmand.plus.render.OsmandRenderer.TextInfo;
 import net.sourceforge.offroad.OsmWindow;
 import net.sourceforge.offroad.data.Pair;
-import net.sourceforge.offroad.ui.OsmBitmapPanel.CalculateUnzoomedPicturesAction.ImageStorage;
+import net.sourceforge.offroad.ui.OsmBitmapPanel.DrawnImageInfo;
 
 /**
  * @author foltin
@@ -53,7 +54,7 @@ import net.sourceforge.offroad.ui.OsmBitmapPanel.CalculateUnzoomedPicturesAction
  */
 public class DirectSearchAction extends OffRoadAction implements DocumentListener {
 
-	private class TextLocationComparator implements Comparator<Pair<TextInfo, ImageStorage>> {
+	private class TextLocationComparator implements Comparator<Pair<TextInfo, DrawnImageInfo>> {
 		private RotatedTileBox mTileBox;
 
 		public TextLocationComparator(RotatedTileBox pTileBox) {
@@ -61,7 +62,7 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 		}
 
 		@Override
-		public int compare(Pair<TextInfo, ImageStorage> pO1, Pair<TextInfo, ImageStorage> pO2) {
+		public int compare(Pair<TextInfo, DrawnImageInfo> pO1, Pair<TextInfo, DrawnImageInfo> pO2) {
 			// compare both locations given that they should be at least some pixels apart.
 			LatLon l1 = getLocation(pO1);
 			LatLon l2 = getLocation(pO2);
@@ -222,7 +223,7 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 	private JButton mDirectSearchBackward;
 	
 	private int mSearchIndex = -1;
-	private Pair<TextInfo,ImageStorage> mSearchHit;
+	private Pair<TextInfo,DrawnImageInfo> mSearchHit;
 
 
 	private JButton mDirectSearchClose;
@@ -255,13 +256,13 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 		mDirectSearchClose.addActionListener(event->setEnabled(false));
 	}
 
-	Entry<ImageStorage, TextInfo> getFirstHit(){
+	Entry<OsmBitmapPanel.DrawnImageInfo, TextInfo> getFirstHit(){
 		if(mProvider.isValid()){
-			List<ImageStorage> list = mContext.getDrawPanel().getEffectivelyDrawnImages();
-			for (ImageStorage imageStorage : list) {
+			List<DrawnImageInfo> list = mContext.getDrawPanel().getEffectivelyDrawnImages();
+			for (DrawnImageInfo imageStorage : list) {
 				for (TextInfo to : imageStorage.mResult.effectiveTextObjects) {
 					if(to.mText != null && mProvider.matches(to.mText)){
-						return new Pair<ImageStorage, TextInfo>(imageStorage, to);
+						return new Pair<DrawnImageInfo, TextInfo>(imageStorage, to);
 					}
 				}
 			}
@@ -269,14 +270,14 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 		return null;
 	}
 
-	TreeSet<Pair<TextInfo,ImageStorage>> getHits(){
-		TreeSet<Pair<TextInfo, ImageStorage>> res = new TreeSet<>(new TextLocationComparator(mContext.getDrawPanel().copyCurrentTileBox()));
+	TreeSet<Pair<TextInfo,DrawnImageInfo>> getHits(){
+		TreeSet<Pair<TextInfo, DrawnImageInfo>> res = new TreeSet<>(new TextLocationComparator(mContext.getDrawPanel().copyCurrentTileBox()));
 		if(mProvider.isValid()){
-			List<ImageStorage> list = mContext.getDrawPanel().getEffectivelyDrawnImages();
-			for (ImageStorage imageStorage : list) {
+			List<DrawnImageInfo> list = mContext.getDrawPanel().getEffectivelyDrawnImages();
+			for (DrawnImageInfo imageStorage : list) {
 				for (TextInfo to : imageStorage.mResult.effectiveTextObjects) {
 					if(to.mText != null && mProvider.matches(to.mText)){
-						res.add(new Pair<TextInfo, ImageStorage>(to, imageStorage));
+						res.add(new Pair<TextInfo, DrawnImageInfo>(to, imageStorage));
 					}
 				}
 			}
@@ -337,7 +338,7 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 	}
 
 	public void moveToNextHit() {
-		TreeSet<Pair<TextInfo,ImageStorage>> hits = getHits();
+		TreeSet<Pair<TextInfo, DrawnImageInfo>> hits = getHits();
 		if(mSearchIndex+1 < hits.size()){
 			mSearchIndex++;
 		}
@@ -345,19 +346,19 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 	}
 
 	public void moveToPreviousHit() {
-		TreeSet<Pair<TextInfo,ImageStorage>> hits = getHits();
+		TreeSet<Pair<TextInfo, DrawnImageInfo>> hits = getHits();
 		if(mSearchIndex-1  >= 0){
 			mSearchIndex--;
 		}
 		jumpToHit(hits);
 	}
 	
-	public Pair<TextInfo,ImageStorage> getHit(TreeSet<Pair<TextInfo,ImageStorage>> pHits) {
+	public Pair<TextInfo, DrawnImageInfo> getHit(TreeSet<Pair<TextInfo, DrawnImageInfo>> pHits) {
 		if(mSearchIndex < 0 || mSearchIndex >= pHits.size()){
 			mSearchIndex = 0;
 		}
 		int index = 0;
-		for (Pair<TextInfo, ImageStorage> hit : pHits) {
+		for (Pair<TextInfo, DrawnImageInfo> hit : pHits) {
 			if(index == mSearchIndex){
 				return hit;
 			}
@@ -367,19 +368,19 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 	}
 	
 
-	public LatLon getLocation(Pair<TextInfo, ImageStorage> hit) {
+	public LatLon getLocation(Pair<TextInfo, DrawnImageInfo> hit) {
 		PathIterator it = hit.getKey().path.getPathIterator(null);
 		if(!it.isDone()){
 			float[] coords = new float[2];
 			it.currentSegment(coords);
-			ImageStorage storage = hit.getValue();
+			DrawnImageInfo storage = hit.getValue();
 			return storage.mTileBox.getLatLonFromPixel(coords[0], coords[1]);
 		}
 		return null;
 	}
 	
-	public void jumpToHit(TreeSet<Pair<TextInfo,ImageStorage>> pHits) {
-		Pair<TextInfo, ImageStorage> hit = getHit(pHits);
+	public void jumpToHit(TreeSet<Pair<TextInfo,DrawnImageInfo>> pHits) {
+		Pair<TextInfo, DrawnImageInfo> hit = getHit(pHits);
 		mSearchHit = hit;
 		if(hit == null){
 			return;

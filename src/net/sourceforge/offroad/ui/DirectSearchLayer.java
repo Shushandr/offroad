@@ -81,9 +81,9 @@ public class DirectSearchLayer extends OsmandMapLayer implements DirectSearchRec
 	public void onDraw(Graphics2D pCanvas, RotatedTileBox pTileBox, DrawSettings pSettings) {
 		if(mProvider == null || !mProvider.isValid())
 			return;
-		List<ImageStorage> list = mView.getEffectivelyDrawnImages();
+		List<OsmBitmapPanel.DrawnImageInfo> list = mView.getEffectivelyDrawnImages();
 		int index = 0;
-		for (ImageStorage imageStorage : list) {
+		for (OsmBitmapPanel.DrawnImageInfo imageStorage : list) {
 			RotatedTileBox ctb = pTileBox.copy();
 			RotatedTileBox rtb = imageStorage.mTileBox;
 			if (ctb.getZoom() != rtb.getZoom())
@@ -105,8 +105,8 @@ public class DirectSearchLayer extends OsmandMapLayer implements DirectSearchRec
 			double thetaR = Math.toRadians(theta);
 			g2.rotate(thetaR, xc, yc);
 			AffineTransform t = new AffineTransform();
-			double sx = (x2 - x1) / imageStorage.mImage.getWidth();
-			double sy = (y2 - y1) / imageStorage.mImage.getHeight();
+			double sx = (x2 - x1) / imageStorage.imageW;
+			double sy = (y2 - y1) / imageStorage.imageH;
 			t.translate(x1, y1);
 			t.scale(sx, sy);
 			g2.transform(t);
