@@ -498,7 +498,7 @@ public class OsmBitmapPanel extends JPanel {
 		// 2x the size for some leeway for scroll/zoom.
 		// Math.max since getWidth/getHeight can return negative values
 		// when reducing the window to minimum size.
-		BufferedImage image = new BufferedImage(Math.max(32, 2*getWidth()), Math.max(32, 2*getHeight()), BufferedImage.TYPE_INT_RGB);
+		BufferedImage image = new BufferedImage(Math.max(32, 2*getWidth()), Math.max(32, 2*getHeight()), BufferedImage.TYPE_USHORT_565_RGB);
 		return image;
 	}
 
