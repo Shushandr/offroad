@@ -490,7 +490,7 @@ public class OsmWindow  implements IRouteInformationListener {
 				}
 			}
 		});
-		mComboBox.setRenderer(new PoiFilterRenderer());
+		mComboBox.setRenderer(new PoiFilterRenderer<>());
 		mToolBar.add(mComboBox, new GridBagConstraints(2, 0, 1, 1, 0, 0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 
 		mFrame = new JFrame(getOffRoadString("offroad.string4")); //$NON-NLS-1$

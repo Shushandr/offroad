@@ -220,7 +220,7 @@ public class SearchAddressAction extends OffRoadAction {
 		RegionAddressRepository mRegion;
 		JTextField mTextField;
 		DefaultListModel<T> mSourceModel;
-		FilteredListModel mFilteredSourceModel;
+		FilteredListModel<T> mFilteredSourceModel;
 		JList<T> mList;
 		ListSelectionListener mSelectionListener;
 		KeyListener mKeyListener;
@@ -228,7 +228,7 @@ public class SearchAddressAction extends OffRoadAction {
 		private MapObjectStore mNextStore;
 		private T selected;
 		private T previousSelected;
-		private FilteredListModel.Filter<T> mTextFilter;
+		private FilteredListModel<T>.Filter mTextFilter;
 		private String mName;
 
 		public abstract Collection<? extends MapObject> getSubObjects(T obj);
@@ -284,10 +284,10 @@ public class SearchAddressAction extends OffRoadAction {
 					GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
 
 			mSourceModel = new DefaultListModel<T>();
-			mFilteredSourceModel = new FilteredListModel(mSourceModel);
+			mFilteredSourceModel = new FilteredListModel<>(mSourceModel);
 			mList = new JList<T>(mFilteredSourceModel);
 			mList.setCellRenderer(new MyRenderer());
-			mTextFilter = new FilteredListModel.Filter<T>() {
+			mTextFilter = mFilteredSourceModel.new Filter() {
 				@Override
 				public boolean accept(T pElement) {
 					// FIXME: Translations!
@@ -300,7 +300,7 @@ public class SearchAddressAction extends OffRoadAction {
 				}
 			};
 			mTextField.getDocument()
-					.addDocumentListener(new FilterTextDocumentListener(this));
+					.addDocumentListener(new FilterTextDocumentListener<>(this));
 			mTextField.addKeyListener(new KeyAdapter() {
 				@Override
 				public void keyReleased(KeyEvent pE) {
@@ -425,7 +425,7 @@ public class SearchAddressAction extends OffRoadAction {
 				QuadRectExtendable rect = null;
 				if(selected != null){
 					// trick: take all subobjects and take their hull.
-					Collection<MapObject> subObjects = (Collection<MapObject>) getSubObjects(selected);
+					Collection<? extends MapObject> subObjects = getSubObjects(selected);
 					Vector<MapObject> moreObjects = new Vector<>(subObjects);
 					addBoundingObjects(selected, moreObjects);
 					rect = new QuadRectExtendable(selected.getLocation());

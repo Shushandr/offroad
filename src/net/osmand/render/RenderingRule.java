@@ -35,7 +35,7 @@ public class RenderingRule {
 	}
 	
 	public Map<String, String> getAttributes() {
-		return attributes == null ? Collections.EMPTY_MAP : attributes;
+		return attributes == null ? Collections.emptyMap() : attributes;
 	}
 
 	public void init(Map<String, String> attributes) {

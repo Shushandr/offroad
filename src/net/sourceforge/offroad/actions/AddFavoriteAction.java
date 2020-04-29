@@ -74,7 +74,7 @@ public class AddFavoriteAction extends OffRoadAction implements DocumentListener
 		}
 		mComboBox.setModel(mComboBoxModel);
 		mComboBox.setFocusable(true);
-		mComboBox.setRenderer(new FavoriteGroupRenderer());
+		mComboBox.setRenderer(new FavoriteGroupRenderer<>());
 		contentPane.add(mComboBox, new GridBagConstraints(1, y++, 2, 1, 0, 0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 10, 0, 0), 0, 0));
 		contentPane.add(new JLabel(getResourceString("offroad.favoriteNewGroup")), new GridBagConstraints(0, y, 1, 1, 1.0, 1.0,
 				GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(10, 0, 0, 0), 0, 0));

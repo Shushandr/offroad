@@ -32,7 +32,7 @@ import net.osmand.plus.FavouritesDbHelper.FavoriteGroup;
  * @author foltin
  * @date 24.04.2016
  */
-public class FavoriteGroupRenderer extends JLabel implements ListCellRenderer {
+public class FavoriteGroupRenderer<T> extends JLabel implements ListCellRenderer<T> {
 	public FavoriteGroupRenderer() {
 		setOpaque(true);
 		setHorizontalAlignment(LEFT);

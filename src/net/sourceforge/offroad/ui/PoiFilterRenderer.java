@@ -31,7 +31,7 @@ import net.osmand.plus.poi.PoiUIFilter;
  * @author foltin
  * @date 24.04.2016
  */
-public class PoiFilterRenderer extends JLabel implements ListCellRenderer {
+public class PoiFilterRenderer<T> extends JLabel implements ListCellRenderer<T> {
 	public PoiFilterRenderer() {
 		setOpaque(true);
 		setHorizontalAlignment(LEFT);

@@ -143,7 +143,7 @@ public class ResourceManager {
 	}
 
 	public List<String> indexAdditionalMaps(IProgress progress) {
-		return Collections.EMPTY_LIST;
+		return Collections.emptyList();
 	}
 
 

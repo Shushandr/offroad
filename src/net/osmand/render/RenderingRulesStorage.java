@@ -361,7 +361,7 @@ public class RenderingRulesStorage {
 			if (isCase(name) || isSwitch(name)) { 
 				RenderingRule renderingRule = (RenderingRule) stack.pop();
 				if(stack.size() == 0) {
-					registerTopLevel(renderingRule, null, Collections.EMPTY_MAP);
+					registerTopLevel(renderingRule, null, Collections.emptyMap());
 				}
 			} else if(isApply(name)){ 
 				stack.pop();

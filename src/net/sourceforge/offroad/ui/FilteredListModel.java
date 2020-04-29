@@ -14,8 +14,8 @@ import javax.swing.event.ListDataListener;
  * @author foltin
  * @date 05.04.2016
  */
-public class FilteredListModel extends AbstractListModel {
-	public abstract static class Filter<T> {
+public class FilteredListModel<T> extends AbstractListModel<T> {
+	public abstract class Filter {
 		public abstract boolean accept(T element);
 		public String getText() {
 			return mText;
@@ -26,12 +26,12 @@ public class FilteredListModel extends AbstractListModel {
 		private String mText;
 	}
 
-	private final DefaultListModel _source;
+	private final DefaultListModel<T> _source;
 	private Filter _filter;
 	private final ArrayList<Integer> _indices = new ArrayList<Integer>();
 	private ListDataListener mListener;
 
-	public FilteredListModel(DefaultListModel source) {
+	public FilteredListModel(DefaultListModel<T> source) {
 		if (source == null)
 			throw new IllegalArgumentException("Source is null");
 		_source = source;
@@ -63,7 +63,7 @@ public class FilteredListModel extends AbstractListModel {
 		if (f != null) {
 			int count = _source.getSize();
 			for (int i = 0; i < count; i++) {
-				Object element = _source.getElementAt(i);
+				T element = _source.getElementAt(i);
 				if (f.accept(element)) {
 					_indices.add(i);
 				}
@@ -76,7 +76,7 @@ public class FilteredListModel extends AbstractListModel {
 		return (_filter != null) ? _indices.size() : _source.getSize();
 	}
 
-	public Object getElementAt(int index) {
+	public T getElementAt(int index) {
 		return (_filter != null) ? _source.getElementAt(_indices.get(index)) : _source.getElementAt(index);
 	}
 
