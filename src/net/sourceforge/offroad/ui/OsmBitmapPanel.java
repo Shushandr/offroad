@@ -447,11 +447,15 @@ public class OsmBitmapPanel extends JPanel {
 			if (pType.equals(PoolType.ANIMATION)) {
 				mAnimationThreadPool.queue(pThread);
 			} else {
-				mMapThreadPool.queue(pThread);
+				RotatedTileBox overlaybox = null;
 				if (pThread instanceof GenerationThread) {
-					GenerationThread genThread = (GenerationThread) pThread;
+					// take a copy before starting the thread to avoid race conditions.
+					overlaybox = ((GenerationThread)pThread).mTileCopy.copy();
+				}
+				mMapThreadPool.queue(pThread);
+				if (overlaybox != null) {
 					GenerateLayerOverlayThread overlayThread = new GenerateLayerOverlayThread(this,
-							genThread.mTileCopy.copy());
+							overlaybox);
 					overlayThread.addListener(mCheckIdleListener);
 					// enable to show overlay threads
 					//pThread.addListener(mQueueInfoListener);
