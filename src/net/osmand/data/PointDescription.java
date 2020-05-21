@@ -210,8 +210,8 @@ public class PointDescription {
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		result = prime * result + ((type == null) ? 0 : type.hashCode());
 		result = prime * result + ((typeName == null) ? 0 : typeName.hashCode());
-		result = prime * result + ((lat == 0) ? 0 : new Double(lat).hashCode());
-		result = prime * result + ((lon == 0) ? 0 : new Double(lon).hashCode());
+		result = prime * result + ((lat == 0) ? 0 : Double.valueOf(lat).hashCode());
+		result = prime * result + ((lon == 0) ? 0 : Double.valueOf(lon).hashCode());
 		return result;
 	}
 

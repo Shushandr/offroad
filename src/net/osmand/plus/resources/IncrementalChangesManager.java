@@ -286,7 +286,7 @@ public class IncrementalChangesManager {
 	
 	private List<IncrementalUpdate> getIncrementalUpdates(String file, long timestamp) throws IOException,
 			XmlPullParserException {
-		String url = URL + "?timestamp=" + timestamp + "&file=" + URLEncoder.encode(file);
+		String url = URL + "?timestamp=" + timestamp + "&file=" + URLEncoder.encode(file, "UTF-8");
 		HttpURLConnection conn = NetworkUtils.getHttpURLConnection(url);
 		XmlPullParser parser = PlatformUtil.newXMLPullParser();
 		parser.setInput(conn.getInputStream(), "UTF-8");

@@ -13,6 +13,18 @@ import java.util.regex.Pattern;
 
 public class GeoPointParserUtil {
 
+	// Wrappers for URL en- and decoding
+	// This reduces the number of deprecation warnings to 2, and
+	// will make it easier to switch to the non-deprecated versions
+	// if desired.
+	public static String encodeURL(String u) {
+		return URLEncoder.encode(u);
+	}
+
+	public static String decodeURL(String u) {
+		return URLDecoder.decode(u);
+	}
+
 	public static void main(String[] args) {
 		final int ilat = 34, ilon = -106;
 		final double dlat = 34.99393, dlon = -106.61568;
@@ -120,7 +132,7 @@ public class GeoPointParserUtil {
 
 		// geo:34.99393,-106.61568?q=34.99393,-106.61568(Treasure+Island)
 		z = GeoParsedPoint.NO_ZOOM;
-		url = "geo:" + dlat + "," + dlon + "?q=" + dlat + "," + dlon + "(" + URLEncoder.encode(name) + ")";
+		url = "geo:" + dlat + "," + dlon + "?q=" + dlat + "," + dlon + "(" + encodeURL(name) + ")";
 		System.out.println("url: " + url);
 		actual = GeoPointParserUtil.parse(url);
 		assertGeoPoint(actual, new GeoParsedPoint(dlat, dlon, z, name));
@@ -156,7 +168,7 @@ public class GeoPointParserUtil {
 		// google calendar
 		// geo:0,0?q=760 West Genesee Street Syracuse NY 13204
 		String qstr = "760 West Genesee Street Syracuse NY 13204";
-		url = "geo:0,0?q=" + URLEncoder.encode(qstr);
+		url = "geo:0,0?q=" + encodeURL(qstr);
 		System.out.println("url: " + url);
 		actual = GeoPointParserUtil.parse(url);
 		assertGeoPoint(actual, new GeoParsedPoint(qstr));
@@ -171,7 +183,7 @@ public class GeoPointParserUtil {
 
 		// geo:0,0?z=11&q=1600+Amphitheatre+Parkway,+CA
 		qstr = "1600 Amphitheatre Parkway, CA";
-		url = "geo:0,0?q=" + URLEncoder.encode(qstr);
+		url = "geo:0,0?q=" + encodeURL(qstr);
 		System.out.println("url: " + url);
 		actual = GeoPointParserUtil.parse(url);
 		assertGeoPoint(actual, new GeoParsedPoint(qstr));
@@ -179,7 +191,7 @@ public class GeoPointParserUtil {
 
 		// geo:0,0?z=11&q=1600+Amphitheatre+Parkway,+CA
 		qstr = "1600 Amphitheatre Parkway, CA";
-		url = "geo:0,0?z=11&q=" + URLEncoder.encode(qstr);
+		url = "geo:0,0?z=11&q=" + encodeURL(qstr);
 		System.out.println("url: " + url);
 		actual = GeoPointParserUtil.parse(url);
 		assertGeoPoint(actual, new GeoParsedPoint(qstr));
@@ -523,28 +535,28 @@ public class GeoPointParserUtil {
 
 		// http://www.google.com/maps/place/760+West+Genesee+Street+Syracuse+NY+13204
 		qstr = "760 West Genesee Street Syracuse NY 13204";
-		url = "http://www.google.com/maps/place/" + URLEncoder.encode(qstr);
+		url = "http://www.google.com/maps/place/" + encodeURL(qstr);
 		System.out.println("url: " + url);
 		actual = GeoPointParserUtil.parse(url);
 		assertGeoPoint(actual, new GeoParsedPoint(qstr));
 
 		// http://maps.google.com/maps?q=760+West+Genesee+Street+Syracuse+NY+13204
 		qstr = "760 West Genesee Street Syracuse NY 13204";
-		url = "http://www.google.com/maps?q=" + URLEncoder.encode(qstr);
+		url = "http://www.google.com/maps?q=" + encodeURL(qstr);
 		System.out.println("url: " + url);
 		actual = GeoPointParserUtil.parse(url);
 		assertGeoPoint(actual, new GeoParsedPoint(qstr));
 
 		// http://maps.google.com/maps?daddr=760+West+Genesee+Street+Syracuse+NY+13204
 		qstr = "760 West Genesee Street Syracuse NY 13204";
-		url = "http://www.google.com/maps?daddr=" + URLEncoder.encode(qstr);
+		url = "http://www.google.com/maps?daddr=" + encodeURL(qstr);
 		System.out.println("url: " + url);
 		actual = GeoPointParserUtil.parse(url);
 		assertGeoPoint(actual, new GeoParsedPoint(qstr));
 
 		// http://www.google.com/maps/dir/Current+Location/760+West+Genesee+Street+Syracuse+NY+13204
 		qstr = "760 West Genesee Street Syracuse NY 13204";
-		url = "http://www.google.com/maps/dir/Current+Location/" + URLEncoder.encode(qstr);
+		url = "http://www.google.com/maps/dir/Current+Location/" + encodeURL(qstr);
 		System.out.println("url: " + url);
 		actual = GeoPointParserUtil.parse(url);
 		assertGeoPoint(actual, new GeoParsedPoint(qstr));
@@ -815,7 +827,7 @@ public class GeoPointParserUtil {
 				if (keyValue.length == 1)
 					map.put(keyValue[0], "");
 				else if (keyValue.length > 1)
-					map.put(keyValue[0], URLDecoder.decode(keyValue[1]));
+					map.put(keyValue[0], decodeURL(keyValue[1]));
 			}
 		}
 		return map;
@@ -1161,7 +1173,7 @@ public class GeoPointParserUtil {
 			final Pattern namePattern = Pattern.compile("[\\+\\s]*\\((.*)\\)[\\+\\s]*$");
 			final Matcher nameMatcher = namePattern.matcher(schemeSpecific);
 			if (nameMatcher.find()) {
-				name = URLDecoder.decode(nameMatcher.group(1));
+				name = decodeURL(nameMatcher.group(1));
 				if (name != null) {
 					schemeSpecific = schemeSpecific.substring(0, nameMatcher.start());
 				}
@@ -1204,7 +1216,7 @@ public class GeoPointParserUtil {
 				if ("z".equals(paramName) && paramValue != null) {
 					zoom = Integer.parseInt(paramValue);
 				} else if ("q".equals(paramName) && paramValue != null) {
-					searchRequest = URLDecoder.decode(paramValue);
+					searchRequest = decodeURL(paramValue);
 				}
 			}
 
@@ -1273,7 +1285,7 @@ public class GeoPointParserUtil {
 			}
 			return new GeoParsedPoint(lat, lon, zoom);
 		}
-		return new GeoParsedPoint(URLDecoder.decode(opath));
+		return new GeoParsedPoint(decodeURL(opath));
 	}
 
 	private static String[] silentSplit(String vl, String split) {
@@ -1437,10 +1449,10 @@ public class GeoPointParserUtil {
 				if (zoom != NO_ZOOM)
 					map.put("z", String.valueOf(zoom));
 				if (query != null)
-					map.put("q", URLEncoder.encode(query));
+					map.put("q", encodeURL(query));
 				if (label != null)
 					if (query == null)
-						map.put("q", latlon + "(" + URLEncoder.encode(label) + ")");
+						map.put("q", latlon + "(" + encodeURL(label) + ")");
 				if (map.size() > 0)
 					uriString += "?";
 				int i = 0;
@@ -1458,7 +1470,7 @@ public class GeoPointParserUtil {
 					uriString += "?";
 					if (zoom != NO_ZOOM)
 						uriString += "z=" + zoom + "&";
-					uriString += "q=" + URLEncoder.encode(query);
+					uriString += "q=" + encodeURL(query);
 				}
 				return uriString;
 			}
