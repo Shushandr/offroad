@@ -82,7 +82,7 @@
         - icu4j-49_1.jar - ICU license (http://source.icu-project.org/repos/icu/icu/trunk/license.html)
         - json-20090211.jar - BSD alike (http://www.json.org/license.html)
         - junidecode-0.1.jar - BSD-4-Clause-UC (http://sourceforge.net/projects/junidecode/)
-        - kxml2-2.3.0.jar - BSD license (http://www.kxml.org/)
+        - kxml2-2.4.2.jar - BSD license (http://www.kxml.org/)
         - tuprolog.jar - LGPL (http://apice.unibo.it/xwiki/bin/view/Tuprolog/)
         - OpenMap framework - Apache License (https://code.google.com/p/android-openmap-framework/)
 

@@ -31,7 +31,7 @@ Files: dist/LICENSE /usr/share/offroad/LICENSE
  dist/lib/gnu-trove-osmand.jar /usr/share/offroad/lib/gnu-trove-osmand.jar
  dist/lib/json-20090211.jar /usr/share/offroad/lib/json-20090211.jar
  dist/lib/junidecode-0.1.jar /usr/share/offroad/lib/junidecode-0.1.jar
- dist/lib/kxml2-2.3.0.jar /usr/share/offroad/lib/kxml2-2.3.0.jar
+ dist/lib/kxml2-2.4.2.jar /usr/share/offroad/lib/kxml2-2.4.2.jar
  dist/lib/Resources.jar /usr/share/offroad/lib/Resources.jar
  dist/lib/sqlite-jdbc-3.8.11.2.jar /usr/share/offroad/lib/sqlite-jdbc-3.8.11.2.jar
 Description: An offline map viewer for the Desktop based on OsmAnd.
