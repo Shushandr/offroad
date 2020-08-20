@@ -993,7 +993,7 @@ public class OsmWindow  implements IRouteInformationListener {
 		log.info("Trying to load resources " + is); //$NON-NLS-1$
 		Resources resourceStrings;
 		try {
-			JAXBContext jc = JAXBContext.newInstance(ResourceTest.class.getPackage().getName());
+			JAXBContext jc = JAXBContext.newInstance(Resources.class);
 			Unmarshaller u = jc.createUnmarshaller();
 			resourceStrings = (Resources) u.unmarshal(is);
 		} catch (JAXBException e) {

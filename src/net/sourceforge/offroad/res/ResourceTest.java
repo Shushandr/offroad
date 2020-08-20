@@ -67,7 +67,7 @@ public class ResourceTest {
 		res.setName("bla");
 		res.setValue("inhaltäöO");
 		test.getString().add(res);
-		JAXBContext jc = JAXBContext.newInstance(ResourceTest.class.getPackage().getName());
+		JAXBContext jc = JAXBContext.newInstance(Resources.class);
 		Unmarshaller u = jc.createUnmarshaller();
 		Resources element = (Resources) u.unmarshal(new File("/home/foltin/programming/java/osmand/Osmand/OsmAnd/res/values-es/strings.xml"));
 		Marshaller m = jc.createMarshaller();
