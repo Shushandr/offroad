@@ -24,8 +24,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
 
-import javax.swing.SwingUtilities;
-
 import org.apache.commons.logging.Log;
 
 import net.osmand.PlatformUtil;

@@ -37,8 +37,8 @@ public class RotatedTileBoxCalculationOrder {
 		// Disabled since it causes annoying flicker
 		//new BoxDeltaDescription(0,  0,  0),
 		// For zooming out/coarse view at boundary
-		new BoxDeltaDescription(1,  0,  0),
-		new BoxDeltaDescription(4,  0,  0),
+            new BoxDeltaDescription(1, 0, 0),
+            new BoxDeltaDescription(4, 0, 0),
 	};
 	private int mIndex = 0;
 	
@@ -74,7 +74,7 @@ public class RotatedTileBoxCalculationOrder {
 		return tb;
 	}
 	
-	private class BoxDeltaDescription {
+	private static class BoxDeltaDescription {
 		int zoomDelta;
 		int xDelta;
 		int yDelta;

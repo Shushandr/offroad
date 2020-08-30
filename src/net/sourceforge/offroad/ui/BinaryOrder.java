@@ -87,7 +87,7 @@ public class BinaryOrder {
 	}
 
 	public synchronized void alreadyDone(int pZoom) {
-		for (Iterator it = mOrder.iterator(); it.hasNext();) {
+		for (Iterator<Integer> it = mOrder.iterator(); it.hasNext();) {
 			Integer zoom = (Integer) it.next();
 			if(zoom == pZoom){
 				it.remove();

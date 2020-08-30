@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.TreeMap;
 import java.util.TreeSet;
 
 import javax.swing.JButton;
@@ -79,7 +78,7 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 		}
 	}
 
-	public class NullProvider implements ISearchProvider {
+	public static class NullProvider implements ISearchProvider {
 
 		@Override
 		public String getSearchString() {
@@ -262,7 +261,7 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 			for (DrawnImageInfo imageStorage : list) {
 				for (TextInfo to : imageStorage.mResult.effectiveTextObjects) {
 					if(to.mText != null && mProvider.matches(to.mText)){
-						return new Pair<DrawnImageInfo, TextInfo>(imageStorage, to);
+						return new Pair<>(imageStorage, to);
 					}
 				}
 			}
@@ -277,7 +276,7 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 			for (DrawnImageInfo imageStorage : list) {
 				for (TextInfo to : imageStorage.mResult.effectiveTextObjects) {
 					if(to.mText != null && mProvider.matches(to.mText)){
-						res.add(new Pair<TextInfo, DrawnImageInfo>(to, imageStorage));
+						res.add(new Pair<>(to, imageStorage));
 					}
 				}
 			}
@@ -393,7 +392,6 @@ public class DirectSearchAction extends OffRoadAction implements DocumentListene
 			mContext.moveAnimated(dest, ctb, destination);
 			mContext.setCursorPosition(destination);
 		}
-		return;
 	}
 	
 	public void setEnabled(boolean pEnabled){

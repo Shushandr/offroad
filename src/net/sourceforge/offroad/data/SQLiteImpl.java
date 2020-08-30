@@ -44,7 +44,7 @@ public class SQLiteImpl implements SQLiteAPI {
 	private OsmWindow mContext;
 
 	
-	public class SQLiteCursorWrapper implements SQLiteCursor {
+	public static class SQLiteCursorWrapper implements SQLiteCursor {
 
 		private ResultSet mResult;
 
@@ -283,8 +283,7 @@ public class SQLiteImpl implements SQLiteAPI {
 	}
 
 	protected String getDatabaseFileName(String pName) {
-		String file = mContext.getAppPathName(pName)+".db";
-		return file;
+		return mContext.getAppPathName(pName)+".db";
 	}
 
 	/*

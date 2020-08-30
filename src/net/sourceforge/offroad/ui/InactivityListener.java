@@ -1,7 +1,6 @@
 package net.sourceforge.offroad.ui;
 
 import java.awt.AWTEvent;
-import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.event.AWTEventListener;
 import java.awt.event.ActionEvent;

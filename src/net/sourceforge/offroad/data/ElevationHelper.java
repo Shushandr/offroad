@@ -26,13 +26,10 @@ import java.util.Vector;
 
 import org.apache.commons.logging.Log;
 
-import gnu.trove.list.array.TIntArrayList;
 import net.osmand.PlatformUtil;
 import net.osmand.ResultMatcher;
 import net.osmand.binary.BinaryMapDataObject;
 import net.osmand.binary.BinaryMapIndexReader;
-import net.osmand.binary.BinaryMapIndexReader.MapIndex;
-import net.osmand.binary.BinaryMapIndexReader.SearchFilter;
 import net.osmand.binary.BinaryMapIndexReader.SearchRequest;
 import net.osmand.binary.BinaryMapIndexReader.TagValuePair;
 import net.osmand.data.LatLon;
@@ -99,7 +96,7 @@ public class ElevationHelper {
 			ResultMatcher<BinaryMapDataObject> resultMatcher = new ResultMatcher<BinaryMapDataObject>() {
 
 				long lastPublishTime = System.currentTimeMillis();
-				
+
 				@Override
 				public boolean publish(BinaryMapDataObject pObject) {
 					for (int j = 1; j < pObject.getPointsLength(); j++) {
@@ -108,7 +105,7 @@ public class ElevationHelper {
 						double toLat = MapUtils.get31LatitudeY(pObject.getPoint31YTile(j));
 						double toLon = MapUtils.get31LongitudeX(pObject.getPoint31XTile(j));
 						for (WptPtDistStruct distStruct : allDistances) {
-							if(distStruct.distance <= 5d){
+							if (distStruct.distance <= 5d) {
 								continue;
 							}
 							double dist = MapUtils.getOrthogonalDistance(distStruct.mPoint.getLatitude(),
@@ -124,7 +121,7 @@ public class ElevationHelper {
 
 				@Override
 				public boolean isCancelled() {
-					if(System.currentTimeMillis()-lastPublishTime > 1000){
+					if (System.currentTimeMillis() - lastPublishTime > 1000) {
 						lastPublishTime = System.currentTimeMillis();
 						updateElevationsInList(allDistances);
 						pInput.updateGraphPanel();
@@ -134,19 +131,15 @@ public class ElevationHelper {
 
 			};
 			final SearchRequest<BinaryMapDataObject> req = BinaryMapIndexReader.buildSearchRequest(lb, rb, tb, bb,
-					OsmWindow.MAX_ZOOM, new SearchFilter() {
-
-						@Override
-						public boolean accept(TIntArrayList types, MapIndex pIndex) {
-							for (int j = 0; j < types.size(); j++) {
-								int type = types.get(j);
-								TagValuePair dType = pIndex.decodeType(type);
-								if (dType != null && dType.tag.equals("contour") && dType.value.equals("elevation")){
-									return true;
-								}
+					OsmWindow.MAX_ZOOM, (types, pIndex) -> {
+						for (int j = 0; j < types.size(); j++) {
+							int type = types.get(j);
+							TagValuePair dType = pIndex.decodeType(type);
+							if (dType != null && dType.tag.equals("contour") && dType.value.equals("elevation")){
+								return true;
 							}
-							return false;
 						}
+						return false;
 					}, resultMatcher);
 			try {
 				reader.searchMapIndex(req);
@@ -169,8 +162,7 @@ public class ElevationHelper {
 	public int getElevation(BinaryMapDataObject obj) {
 		if(obj != null && !obj.getObjectNames().isEmpty()){
 			String lengthString = obj.getOrderedObjectNames().values().iterator().next();
-			int elev = Integer.parseInt(lengthString);
-			return elev;
+			return Integer.parseInt(lengthString);
 		}
 		throw new IllegalArgumentException("obj " + obj.getName() + " has no name :-( :" + obj);
 	}

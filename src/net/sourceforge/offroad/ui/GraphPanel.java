@@ -228,7 +228,7 @@ public class GraphPanel extends JPanel {
 		int maxScore = 10;
 		long time = System.currentTimeMillis();
 		for (int i = 0; i < maxDataPoints; i++) {
-			scores.put(time, (double) random.nextDouble() * maxScore);
+			scores.put(time, random.nextDouble() * maxScore);
 			time += random.nextDouble() * 1000*60;
 		}
 		GraphPanel mainPanel = new GraphPanel(scores);
@@ -243,11 +243,7 @@ public class GraphPanel extends JPanel {
 	}
 
 	public static void main(String[] args) {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				createAndShowGui();
-			}
-		});
+		SwingUtilities.invokeLater(GraphPanel::createAndShowGui);
 	}
 
 	public Color getBackgroundColor() {

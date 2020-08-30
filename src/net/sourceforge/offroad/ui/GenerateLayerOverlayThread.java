@@ -22,12 +22,8 @@ package net.sourceforge.offroad.ui;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-import java.util.List;
 
-import net.osmand.data.QuadPoint;
 import net.osmand.data.RotatedTileBox;
-import net.osmand.plus.views.OsmandMapLayer;
-import net.osmand.plus.views.OsmandMapLayer.DrawSettings;
 
 /**
  * @author foltin

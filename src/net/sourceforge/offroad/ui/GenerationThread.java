@@ -2,8 +2,6 @@ package net.sourceforge.offroad.ui;
 
 import java.awt.image.BufferedImage;
 
-import javax.swing.SwingUtilities;
-
 import net.osmand.data.RotatedTileBox;
 import net.osmand.plus.render.OsmandRenderer.RenderingResult;
 import net.sourceforge.offroad.ui.OsmBitmapPanel.IntermediateImageListener;

@@ -24,7 +24,6 @@ import java.util.List;
 
 import javax.swing.SwingUtilities;
 
-import net.osmand.data.Amenity;
 import net.osmand.data.LatLon;
 import net.osmand.data.MapObject;
 
@@ -52,13 +51,7 @@ public class AmenityTableUpdateThread extends OffRoadUIThread {
 	
 	@Override
 	public void runAfterThreadsBeforeHaveFinished() throws InvocationTargetException, InterruptedException {
-		SwingUtilities.invokeAndWait(new Runnable() {
-			
-			@Override
-			public void run() {
-				mAmenityTable.setSearchResult(mSearchResult);
-			}
-		});
+		SwingUtilities.invokeAndWait(() -> mAmenityTable.setSearchResult(mSearchResult));
 	}
 
 }

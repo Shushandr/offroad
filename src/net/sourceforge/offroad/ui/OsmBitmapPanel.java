@@ -61,8 +61,8 @@ public class OsmBitmapPanel extends JPanel {
 	private LatLon mCursorPosition = null;
 	private int mCursorLength = 20;
 	private BasicStroke mStroke;
-	private List<OsmandMapLayer> layers = new ArrayList<OsmandMapLayer>();
-	private Map<OsmandMapLayer, Float> zOrders = new HashMap<OsmandMapLayer, Float>();
+	private List<OsmandMapLayer> layers = new ArrayList<>();
+	private Map<OsmandMapLayer, Float> zOrders = new HashMap<>();
 	private POIMapLayer mPoiLayer;
 	public enum PoolType {
 		ANIMATION,
@@ -243,7 +243,7 @@ public class OsmBitmapPanel extends JPanel {
 	
 	public List<DrawnImageInfo> getEffectivelyDrawnImages(){
 		synchronized (mEffectivelyDrawnImages) {
-			return new ArrayList<DrawnImageInfo>(mEffectivelyDrawnImages);
+			return new ArrayList<>(mEffectivelyDrawnImages);
 		}
 	}
 	
@@ -367,12 +367,7 @@ public class OsmBitmapPanel extends JPanel {
 			mUnzoomedPicturesAction.addToCache(pGenerationTileBox, pImage, pResult);
 			log.debug("Added image to zoom " + pGenerationTileBox.getZoom());
 			// repaint in foreground
-			SwingUtilities.invokeLater(new Runnable() {
-				@Override
-				public void run() {
-					repaint();
-				}
-			});
+			SwingUtilities.invokeLater(this::repaint);
 		}
 	}
 
@@ -515,8 +510,7 @@ public class OsmBitmapPanel extends JPanel {
 		// 2x the size for some leeway for scroll/zoom.
 		// Math.max since getWidth/getHeight can return negative values
 		// when reducing the window to minimum size.
-		BufferedImage image = new BufferedImage(Math.max(32, 2*getWidth()), Math.max(32, 2*getHeight()), BufferedImage.TYPE_USHORT_565_RGB);
-		return image;
+		return new BufferedImage(Math.max(32, 2*getWidth()), Math.max(32, 2*getHeight()), BufferedImage.TYPE_USHORT_565_RGB);
 	}
 
 	public void dragImage(Point pTranslate) {
@@ -718,13 +712,7 @@ public class OsmBitmapPanel extends JPanel {
 
 	void repaintAndWait(int pWaitMillies) {
 		try {
-			SwingUtilities.invokeAndWait(new Runnable() {
-
-				@Override
-				public void run() {
-					repaint();
-				}
-			});
+			SwingUtilities.invokeAndWait(this::repaint);
 			Thread.sleep(pWaitMillies);
 		} catch (InvocationTargetException | InterruptedException e) {
 			e.printStackTrace();
@@ -763,17 +751,17 @@ public class OsmBitmapPanel extends JPanel {
 		private RotatedTileBoxCalculationOrder mTileOrder;
 		// Separate caches, so that the low-res background ones will never
 		// evict the main image.
-		private LinkedHashMap<RotatedTileBox, SoftReference<ImageStorage>> mImageStoreBackground = new LinkedHashMap<RotatedTileBox, SoftReference<ImageStorage>>(){
+		private LinkedHashMap<RotatedTileBox, SoftReference<ImageStorage>> mImageStoreBackground = new LinkedHashMap<RotatedTileBox, SoftReference<ImageStorage>>() {
 			@Override
 			protected boolean removeEldestEntry(Map.Entry<RotatedTileBox, SoftReference<ImageStorage>> eldest) {
-		        return size() > 2 * mTileOrder.getSize() + 2;
-		     }
+				return size() > 2 * mTileOrder.getSize() + 2;
+			}
 		};
-		private LinkedHashMap<RotatedTileBox, ImageStorage> mImageStore = new LinkedHashMap<RotatedTileBox, ImageStorage>(){
+		private LinkedHashMap<RotatedTileBox, ImageStorage> mImageStore = new LinkedHashMap<RotatedTileBox, ImageStorage>() {
 			@Override
 			protected boolean removeEldestEntry(Map.Entry<RotatedTileBox, ImageStorage> eldest) {
-		        return size() > 4;
-		     }
+				return size() > 4;
+			}
 		};
 
 		public CalculateUnzoomedPicturesAction() {
@@ -793,7 +781,7 @@ public class OsmBitmapPanel extends JPanel {
 			for (Entry<RotatedTileBox, SoftReference<ImageStorage>> rtb : mImageStoreBackground.entrySet()) {
 				ImageStorage i = rtb.getValue().get();
 				if (i == null) {
-					mImageStoreBackground.remove(rtb);
+					mImageStoreBackground.remove(rtb.getKey());
 					continue;
 				}
 				if (rtb.getKey().getZoom() == pZoom) {

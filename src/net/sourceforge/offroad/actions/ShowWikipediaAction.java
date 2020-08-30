@@ -26,7 +26,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
@@ -34,7 +33,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import javax.swing.JButton;
-import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
@@ -97,11 +95,7 @@ public class ShowWikipediaAction extends OffRoadAction {
 		contentPane.add(articleLabel, new GridBagConstraints(0, y++, 4, 1, 1.0, 0.0,
 				GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
 		JButton okButton = new JButton(mContext.getString(R.string.shared_string_ok));
-		okButton.addActionListener(new ActionListener(){
-			@Override
-			public void actionPerformed(ActionEvent pE) {
-				disposeDialog();
-			}});
+		okButton.addActionListener(pE1 -> disposeDialog());
 		contentPane.add(okButton, new GridBagConstraints(3, y++, 1, 1, 1.0, 0.0, GridBagConstraints.EAST,
 				GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
 		mDialog.getRootPane().setDefaultButton(okButton);

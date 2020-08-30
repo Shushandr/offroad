@@ -43,12 +43,12 @@ public class ComponentLocationStorage {
 
 	
 	public static String marshall(ComponentLocationStorage pStorage){
-		Class[] classes = getClasses();
+		Class<?>[] classes = getClasses();
 		return OsmWindow.marshall(pStorage, classes);
 	}
 
-	static Class[] getClasses() {
-		return new Class[] { ComponentLocationStorage.class, OsmWindowLocationStorage.class };
+	static Class<?>[] getClasses() {
+		return new Class<?>[] { ComponentLocationStorage.class, OsmWindowLocationStorage.class };
 	}
 
 	public static ComponentLocationStorage unmarshall(String pInput) {
@@ -119,17 +119,14 @@ public class ComponentLocationStorage {
 		storage.setY((dialog.getY()));
 		storage.setWidth((dialog.getWidth()));
 		storage.setHeight((dialog.getHeight()));
-		String marshalled = marshall(storage);
-		String result = marshalled;
-		return result;
+		return marshall(storage);
 	}
 
 	public static ComponentLocationStorage decorateDialog(OsmWindow controller,
 			Window dialog, String window_preference_storage_property) {
 		String marshalled = controller.getOffroadProperties()
 				.getProperty(window_preference_storage_property);
-		ComponentLocationStorage result = decorateDialog(marshalled, dialog);
-		return result;
+		return decorateDialog(marshalled, dialog);
 	}
 
 	public static ComponentLocationStorage decorateDialog(String marshalled,
@@ -137,7 +134,7 @@ public class ComponentLocationStorage {
 		// String unmarshalled = controller.getProperty(
 		// propertyName);
 		if (marshalled != null) {
-			ComponentLocationStorage storage = (ComponentLocationStorage) unmarshall(marshalled);
+			ComponentLocationStorage storage = unmarshall(marshalled);
 			if (storage != null) {
 				// Check that location is on current screen.
 				Dimension screenSize;

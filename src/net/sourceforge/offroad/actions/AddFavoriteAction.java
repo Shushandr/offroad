@@ -67,8 +67,8 @@ public class AddFavoriteAction extends OffRoadAction implements DocumentListener
 				GridBagConstraints.HORIZONTAL, new Insets(0, 10, 0, 0), 0, 0));
 		contentPane.add(new JLabel(getResourceString("offroad.favoriteGroup")), new GridBagConstraints(0, y, 1, 1, 1.0, 1.0,
 				GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
-		mComboBox = new JComboBox<FavoriteGroup>();
-		mComboBoxModel = new DefaultComboBoxModel<FavoriteGroup>();
+		mComboBox = new JComboBox<>();
+		mComboBoxModel = new DefaultComboBoxModel<>();
 		for (FavoriteGroup filter : mContext.getFavorites().getFavoriteGroups()) {
 			mComboBoxModel.addElement(filter);
 		}
@@ -137,11 +137,9 @@ public class AddFavoriteAction extends OffRoadAction implements DocumentListener
 				public void onMapMarkerChanged(final MapMarker pMapMarker) {
 					// FIXME: I don't know, if this is the right map-marker...
 					MapMarkerChangedListener inst = this;
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							helper.removeListener(inst);
-							mNameTextField.setText(pMapMarker.getPointDescription(mContext).getName());
-						}
+					SwingUtilities.invokeLater(() -> {
+						helper.removeListener(inst);
+						mNameTextField.setText(pMapMarker.getPointDescription(mContext).getName());
 					});
 				}
 			});
@@ -205,11 +203,7 @@ public class AddFavoriteAction extends OffRoadAction implements DocumentListener
 	}
 
 	private void validate() {
-		if(mNameTextField.getText().length()>0 && (!mNewGroupCheckBox.isSelected() || mGroupNameTextField.getText().length()>0)){
-			mOkButton.setEnabled(true);
-		} else {
-			mOkButton.setEnabled(false);
-		}
+		mOkButton.setEnabled(mNameTextField.getText().length() > 0 && (!mNewGroupCheckBox.isSelected() || mGroupNameTextField.getText().length() > 0));
 	}
 
 	@Override

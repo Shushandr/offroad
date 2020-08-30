@@ -24,7 +24,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -54,8 +53,6 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
@@ -70,7 +67,6 @@ import net.osmand.IndexConstants;
 import net.osmand.PlatformUtil;
 import net.osmand.plus.download.DownloadActivityType;
 import net.osmand.plus.download.DownloadFileHelper;
-import net.osmand.plus.download.DownloadFileHelper.DownloadFileShowWarning;
 import net.osmand.plus.download.DownloadOsmandIndexesHelper;
 import net.osmand.plus.download.DownloadOsmandIndexesHelper.IndexFileList;
 import net.osmand.plus.download.DownloadResources;
@@ -97,7 +93,7 @@ public class DownloadAction extends OffRoadAction {
     public static final MessageFormat formatGb = new MessageFormat("{0, number,#.##} GB", Locale.US);
     public static final MessageFormat formatMb = new MessageFormat("{0, number,##.#} MB", Locale.US);
 
-	public class ArchiveSizeTableCellRenderer extends DefaultTableCellRenderer {
+	public static class ArchiveSizeTableCellRenderer extends DefaultTableCellRenderer {
 		@Override
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
 				int row, int column) {
@@ -110,7 +106,7 @@ public class DownloadAction extends OffRoadAction {
 		}
 	}
 
-	public class RemoteDateTableCellRenderer extends DefaultTableCellRenderer {
+	public static class RemoteDateTableCellRenderer extends DefaultTableCellRenderer {
 		@Override
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
 				int row, int column) {
@@ -147,10 +143,10 @@ public class DownloadAction extends OffRoadAction {
 	public static class DownloadTableColumn {
 		private IndexItemToColumn mMapping;
 		String mName;
-		Class mClass;
+		Class<?> mClass;
 		private TableCellRenderer mRenderer;
 
-		public DownloadTableColumn(String pName, Class pClass, IndexItemToColumn pMapping,
+		public DownloadTableColumn(String pName, Class<?> pClass, IndexItemToColumn pMapping,
 				TableCellRenderer pRenderer) {
 			super();
 			mName = pName;
@@ -165,15 +161,15 @@ public class DownloadAction extends OffRoadAction {
 		private Vector<IndexItem> mRows = new Vector<>();
 
 		public DownloadTableModel() {
-			mColumns.addElement(new DownloadTableColumn("offroad.download_present", DownloadStatus.class, item -> getDownloadStatus(item),
+			mColumns.addElement(new DownloadTableColumn("offroad.download_present", DownloadStatus.class, DownloadAction.this::getDownloadStatus,
 					new DownloadedTableCellRenderer()));
-			mColumns.addElement(new DownloadTableColumn("offroad.download_name", String.class, item -> item.getBasename(),
+			mColumns.addElement(new DownloadTableColumn("offroad.download_name", String.class, IndexItem::getBasename,
 					new DefaultTableCellRenderer()));
-			mColumns.addElement(new DownloadTableColumn("offroad.download_type", DownloadActivityType.class, item -> item.getType(),
+			mColumns.addElement(new DownloadTableColumn("offroad.download_type", DownloadActivityType.class, IndexItem::getType,
 					new TypeTableCellRenderer()));
-			mColumns.addElement(new DownloadTableColumn("offroad.download_size", Double.class, item -> item.getArchiveSizeMB(),
+			mColumns.addElement(new DownloadTableColumn("offroad.download_size", Double.class, IndexItem::getArchiveSizeMB,
 					new ArchiveSizeTableCellRenderer()));
-			mColumns.addElement(new DownloadTableColumn("offroad.download_remotedate", Long.class, item -> item.getTimestamp(),
+			mColumns.addElement(new DownloadTableColumn("offroad.download_remotedate", Long.class, IndexItem::getTimestamp,
 					new RemoteDateTableCellRenderer()));
 			for (DownloadTableColumn column : mColumns) {
 				mTable.setDefaultRenderer(column.mClass, column.mRenderer);
@@ -291,7 +287,7 @@ public class DownloadAction extends OffRoadAction {
 		mSourceModel = new DownloadTableModel();
 		mTable.setModel(mSourceModel);
 		mTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-		mSorter = new TableRowSorter<DownloadTableModel>(mSourceModel);
+		mSorter = new TableRowSorter<>(mSourceModel);
 		mTable.setRowSorter(mSorter);
 
 		mTextField.getDocument().addDocumentListener(new FilterTextDocumentListener());
@@ -347,24 +343,14 @@ public class DownloadAction extends OffRoadAction {
 		mDownloadButton = new JButton(getResourceString("offroad.downloadButton"));
 		mDownloadButton.addActionListener(e -> doDownload());
 		mDownloadButton.setEnabled(false);
-		mTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-			
-			@Override
-			public void valueChanged(ListSelectionEvent pE) {
-				mDownloadButton.setEnabled(mTable.getSelectedRowCount() > 0 && mTable.getSelectedRowCount() <= MAX_NUMBER_OF_FILES);
-				mDeleteButton.setEnabled(mTable.getSelectedRowCount() > 0);
-			}
+		mTable.getSelectionModel().addListSelectionListener(pE12 -> {
+			mDownloadButton.setEnabled(mTable.getSelectedRowCount() > 0 && mTable.getSelectedRowCount() <= MAX_NUMBER_OF_FILES);
+			mDeleteButton.setEnabled(mTable.getSelectedRowCount() > 0);
 		});
 		contentPane.add(mDownloadButton, new GridBagConstraints(0, y, 1, 1, 1.0, 1.0, GridBagConstraints.WEST,
 				GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 		mInterruptDownload = new JButton(getResourceString("offroad.interruptDownload"));
-		mInterruptDownload.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent pE) {
-				mIsDownloadInterrupted = true;
-			}
-		});
+		mInterruptDownload.addActionListener(pE1 -> mIsDownloadInterrupted = true);
 		mInterruptDownload.setEnabled(false);
 		contentPane.add(mInterruptDownload, new GridBagConstraints(1, y, 1, 1, 1.0, 1.0, GridBagConstraints.WEST,
 				GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
@@ -415,98 +401,66 @@ public class DownloadAction extends OffRoadAction {
 		mInterruptDownload.setEnabled(true);
 		final DownloadFileHelper helper = new DownloadFileHelper(mContext);
 		final Vector<File> toReIndex = new Vector<>();
-		mDownloadThread = new Thread(new Runnable() {
-			public void run() {
-				for (final IndexItem item : pList) {
-					System.out.println("Starting download for " + item);
-					final IProgress progress = new IProgress() {
-
-						@Override
-						public void startTask(final String pTaskName, final int pWork) {
-							SwingUtilities.invokeLater(new Runnable() {
-								public void run() {
-									mProgressStatus.setText(pTaskName);
-									mProgressBar.setMaximum(pWork);
-								}
-							});
-						}
-
-						@Override
-						public void startWork(int pWork) {
-							SwingUtilities.invokeLater(new Runnable() {
-								public void run() {
-									mProgressBar.setValue(0);
-								}
-							});
-						}
-
-						@Override
-						public void progress(int pDeltaWork) {
-						}
-
-						@Override
-						public void remaining(int pRemainingWork) {
-							SwingUtilities.invokeLater(new Runnable() {
-								public void run() {
-									mProgressBar.setValue(mProgressBar.getMaximum() - pRemainingWork);
-								}
-							});
-						}
-
-						@Override
-						public void finishTask() {
-							SwingUtilities.invokeLater(new Runnable() {
-								public void run() {
-									mProgressBar.setValue(mProgressBar.getMaximum());
-									if (mIsDownloadInterrupted) {
-										mProgressStatus.setText(getResourceString("offroad.downloadInterrupted"));
-									} else {
-										mProgressStatus.setText(getResourceString("offroad.downloadDone"));
-									}
-								}
-							});
-						}
-
-						@Override
-						public boolean isIndeterminate() {
-							return false;
-						}
-
-						@Override
-						public boolean isInterrupted() {
-							return mIsDownloadInterrupted;
-						}
-					};
-					try {
-						helper.downloadFile(item.createDownloadEntry(mContext), progress, toReIndex,
-								new DownloadFileShowWarning() {
-
-									@Override
-									public void showWarning(String pWarning) {
-										System.err.println("DOWNLOAD WARNING: " + pWarning);
-
-									}
-								}, false);
-						String result = reindexFiles(toReIndex);
-						SwingUtilities.invokeLater(new Runnable() {
-							public void run() {
-								mProgressStatus.setText(result);
-							}
-						});
-						mDownloadResources.updateLoadedFiles();
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-				}
-				SwingUtilities.invokeLater(new Runnable(){
+		mDownloadThread = new Thread(() -> {
+			for (final IndexItem item : pList) {
+				System.out.println("Starting download for " + item);
+				final IProgress progress = new IProgress() {
 
 					@Override
-					public void run() {
-						mInterruptDownload.setEnabled(false);
+					public void startTask(final String pTaskName, final int pWork) {
+						SwingUtilities.invokeLater(() -> {
+							mProgressStatus.setText(pTaskName);
+							mProgressBar.setMaximum(pWork);
+						});
 					}
-					
-				});
+
+					@Override
+					public void startWork(int pWork) {
+						SwingUtilities.invokeLater(() -> mProgressBar.setValue(0));
+					}
+
+					@Override
+					public void progress(int pDeltaWork) {
+					}
+
+					@Override
+					public void remaining(int pRemainingWork) {
+						SwingUtilities.invokeLater(() -> mProgressBar.setValue(mProgressBar.getMaximum() - pRemainingWork));
+					}
+
+					@Override
+					public void finishTask() {
+						SwingUtilities.invokeLater(() -> {
+							mProgressBar.setValue(mProgressBar.getMaximum());
+							if (mIsDownloadInterrupted) {
+								mProgressStatus.setText(getResourceString("offroad.downloadInterrupted"));
+							} else {
+								mProgressStatus.setText(getResourceString("offroad.downloadDone"));
+							}
+						});
+					}
+
+					@Override
+					public boolean isIndeterminate() {
+						return false;
+					}
+
+					@Override
+					public boolean isInterrupted() {
+						return mIsDownloadInterrupted;
+					}
+				};
+				try {
+					helper.downloadFile(item.createDownloadEntry(mContext), progress, toReIndex,
+							pWarning -> System.err.println("DOWNLOAD WARNING: " + pWarning), false);
+					String result = reindexFiles(toReIndex);
+					SwingUtilities.invokeLater(() -> mProgressStatus.setText(result));
+					mDownloadResources.updateLoadedFiles();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			}
+			SwingUtilities.invokeLater(() -> mInterruptDownload.setEnabled(false));
 		});
 		mDownloadThread.start();
 	}
@@ -521,7 +475,7 @@ public class DownloadAction extends OffRoadAction {
 	                    vectorMapsToReindex = true;
 	            }
 	    }
-	    List<String> warnings = new ArrayList<String>();
+	    List<String> warnings = new ArrayList<>();
 	    manager.indexVoiceFiles(IProgress.EMPTY_PROGRESS);
 	    if (vectorMapsToReindex) {
 	            warnings = manager.indexingMaps(IProgress.EMPTY_PROGRESS);
@@ -606,29 +560,25 @@ public class DownloadAction extends OffRoadAction {
 			 * @throws BadLocationException
 			 */
 			private String getText(Document document) throws BadLocationException {
-				String text = document.getText(0, document.getLength());
-				return text;
+				return document.getText(0, document.getLength());
 			}
 
 			public void run() {
-				SwingUtilities.invokeLater(new Runnable() {
-
-					public void run() {
+				SwingUtilities.invokeLater(() -> {
+					try {
+						List<IndexItem> selectedValuesList = mSourceModel.getSelectedRows();
+						Document document = event.getDocument();
+						final String text = getText(document);
+						RowFilter<DownloadTableModel, Object> rf = null;
+						// If current expression doesn't parse, don't
+						// update.
 						try {
-							List<IndexItem> selectedValuesList = mSourceModel.getSelectedRows();
-							Document document = event.getDocument();
-							final String text = getText(document);
-							RowFilter<DownloadTableModel, Object> rf = null;
-							// If current expression doesn't parse, don't
-							// update.
-							try {
-								rf = RowFilter.regexFilter("(?i)" + text, 1);
-							} catch (java.util.regex.PatternSyntaxException e) {
-								return;
-							}
-							mSorter.setRowFilter(rf);
-						} catch (BadLocationException e) {
+							rf = RowFilter.regexFilter("(?i)" + text, 1);
+						} catch (java.util.regex.PatternSyntaxException e) {
+							return;
 						}
+						mSorter.setRowFilter(rf);
+					} catch (BadLocationException e) {
 					}
 				});
 			}

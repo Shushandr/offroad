@@ -38,7 +38,7 @@ public class RegionAsMapObject extends MapObject {
 		setRegion(pRegion);
 		name = getRegion().getName();//.replace('_', ' ');
 		enName = getRegion().getLang();
-		names = new HashMap<String, String>();
+		names = new HashMap<>();
 		names.put(getRegion().getLang(), name);
 		location = getRegion().getEstimatedRegionCenter();
 		fileOffset = 0;

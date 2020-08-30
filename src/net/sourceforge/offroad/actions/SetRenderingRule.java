@@ -82,15 +82,13 @@ public class SetRenderingRule extends OffRoadAction implements SelectableAction 
 	}
 
 	private CommonPreference<Boolean> getPreference() {
-		CommonPreference<Boolean> pref = mContext.getSettings()
+		return mContext.getSettings()
 				.getCustomRenderBooleanProperty(mCustomProp.getAttrName());
-		return pref;
 	}
 
 	private CommonPreference<String> getStringPreference() {
-		CommonPreference<String> pref = mContext.getSettings()
+		return mContext.getSettings()
 				.getCustomRenderProperty(mCustomProp.getAttrName());
-		return pref;
 	}
 
 	@Override

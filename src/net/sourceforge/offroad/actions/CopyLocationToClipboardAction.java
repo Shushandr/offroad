@@ -24,8 +24,6 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 
-import javax.swing.Icon;
-
 import net.osmand.data.LatLon;
 import net.sourceforge.offroad.OsmWindow;
 

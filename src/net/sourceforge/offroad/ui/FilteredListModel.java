@@ -1,7 +1,6 @@
 package net.sourceforge.offroad.ui;
 
 import java.util.ArrayList;
-import java.util.Collection;
 
 import javax.swing.AbstractListModel;
 import javax.swing.DefaultListModel;
@@ -28,7 +27,7 @@ public class FilteredListModel<T> extends AbstractListModel<T> {
 
 	private final DefaultListModel<T> _source;
 	private Filter _filter;
-	private final ArrayList<Integer> _indices = new ArrayList<Integer>();
+	private final ArrayList<Integer> _indices = new ArrayList<>();
 	private ListDataListener mListener;
 
 	public FilteredListModel(DefaultListModel<T> source) {

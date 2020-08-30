@@ -28,7 +28,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -220,17 +219,15 @@ public class GeoServer extends Thread {
 			final String script = in.readUTF();
 			log.info(script);
 
-			SwingUtilities.invokeLater(new Runnable() {
-				public void run() {
-					String[] coords = script.split(":");
-					if (coords.length != 2) {
-						log.info("Wrong argument count. Expected 2, got " + coords.length);
-						return;
-					}
-					double lat = Double.parseDouble(coords[0]);
-					double lon = Double.parseDouble(coords[1]);
-					mFrame.moveDirectly(new LatLon(lat, lon));
+			SwingUtilities.invokeLater(() -> {
+				String[] coords = script.split(":");
+				if (coords.length != 2) {
+					log.info("Wrong argument count. Expected 2, got " + coords.length);
+					return;
 				}
+				double lat = Double.parseDouble(coords[0]);
+				double lon = Double.parseDouble(coords[1]);
+				mFrame.moveDirectly(new LatLon(lat, lon));
 			});
 			in.close();
 			client.close();

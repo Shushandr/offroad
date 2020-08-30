@@ -33,7 +33,6 @@ import net.osmand.plus.views.OsmandMapLayer;
 import net.sourceforge.offroad.R;
 import net.sourceforge.offroad.actions.DirectSearchAction.DirectSearchReceiver;
 import net.sourceforge.offroad.actions.DirectSearchAction.ISearchProvider;
-import net.sourceforge.offroad.ui.OsmBitmapPanel.CalculateUnzoomedPicturesAction.ImageStorage;
 import net.sourceforge.offroad.ui.Paint.Style;
 
 /**

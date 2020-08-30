@@ -19,7 +19,6 @@
 
 package net.sourceforge.offroad.actions;
 
-import java.awt.Point;
 import java.awt.event.ActionEvent;
 
 import net.osmand.data.LatLon;

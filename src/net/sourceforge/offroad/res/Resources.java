@@ -78,7 +78,7 @@ public class Resources {
      */
     public List<Resources.String> getString() {
         if (string == null) {
-            string = new ArrayList<Resources.String>();
+            string = new ArrayList<>();
         }
         return this.string;
     }

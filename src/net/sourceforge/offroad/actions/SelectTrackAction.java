@@ -32,7 +32,6 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.text.DateFormat;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -126,7 +125,7 @@ public class SelectTrackAction extends OffRoadAction  {
 		super(pContext, pTitle, null);
 	}
 
-	public class GpxDateTableCellRenderer extends DefaultTableCellRenderer {
+	public static class GpxDateTableCellRenderer extends DefaultTableCellRenderer {
 		@Override
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
 				int row, int column) {
@@ -139,7 +138,7 @@ public class SelectTrackAction extends OffRoadAction  {
 		}
 	}
 
-	public class SelectedTableCellRenderer extends DefaultTableCellRenderer {
+	public static class SelectedTableCellRenderer extends DefaultTableCellRenderer {
 		@Override
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
 				int row, int column) {
@@ -177,15 +176,15 @@ public class SelectTrackAction extends OffRoadAction  {
 		private Vector<TrackItem> mRows = new Vector<>();
 
 		public TrackTableModel() {
-			mColumns.addElement(new TrackTableColumn("selected", Boolean.class, item -> item.isSelected(),
+			mColumns.addElement(new TrackTableColumn("selected", Boolean.class, TrackItem::isSelected,
 					new SelectedTableCellRenderer()));
-			mColumns.addElement(new TrackTableColumn("name", String.class, item -> item.getFile(),
+			mColumns.addElement(new TrackTableColumn("name", String.class, TrackItem::getFile,
 					new DefaultTableCellRenderer()));
-			mColumns.addElement(new TrackTableColumn("author", String.class, item -> item.getAuthor(),
+			mColumns.addElement(new TrackTableColumn("author", String.class, TrackItem::getAuthor,
 					new DefaultTableCellRenderer()));
-			mColumns.addElement(new TrackTableColumn("date", Date.class, item -> item.getDate(),
+			mColumns.addElement(new TrackTableColumn("date", Date.class, TrackItem::getDate,
 					new GpxDateTableCellRenderer()));
-			mColumns.addElement(new TrackTableColumn("distance", String.class, item -> item.getTotalDistance(),
+			mColumns.addElement(new TrackTableColumn("distance", String.class, TrackItem::getTotalDistance,
 					new DefaultTableCellRenderer()));
 			for (TrackTableColumn column : mColumns) {
 				mTable.setDefaultRenderer(column.mClass, column.mRenderer);
@@ -273,7 +272,7 @@ public class SelectTrackAction extends OffRoadAction  {
 		mSourceModel = new TrackTableModel();
 		mTable.setModel(mSourceModel);
 		mTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-		mSorter = new TableRowSorter<TrackTableModel>(mSourceModel);
+		mSorter = new TableRowSorter<>(mSourceModel);
 		mTable.setRowSorter(mSorter);
 
 		mTextField.getDocument().addDocumentListener(new FilterTextDocumentListener());
@@ -353,14 +352,11 @@ public class SelectTrackAction extends OffRoadAction  {
 			log.info("Select ("+select + ") of item " + trackItem);
 			if(select){
 				if(trackItem.mGpxFile == null){
-					GPXFile gpxFile = GPXUtilities.loadGPXFile(mContext, trackItem.mFile);
-					trackItem.mGpxFile = gpxFile;
+					trackItem.mGpxFile = GPXUtilities.loadGPXFile(mContext, trackItem.mFile);
 				}
 			} else {
 				// deselect:
-				if(trackItem.mGpxFile != null){
-					trackItem.mGpxFile = null;
-				}
+				trackItem.mGpxFile = null;
 			}
 		}
 		mContext.getSelectedGpxHelper().clearAllGpxFileToShow();
@@ -429,28 +425,24 @@ public class SelectTrackAction extends OffRoadAction  {
 			 * @throws BadLocationException
 			 */
 			private String getText(Document document) throws BadLocationException {
-				String text = document.getText(0, document.getLength());
-				return text;
+				return document.getText(0, document.getLength());
 			}
 
 			public void run() {
-				SwingUtilities.invokeLater(new Runnable() {
-
-					public void run() {
+				SwingUtilities.invokeLater(() -> {
+					try {
+						Document document = event.getDocument();
+						final String text = getText(document);
+						RowFilter<TrackTableModel, Object> rf = null;
+						// If current expression doesn't parse, don't
+						// update.
 						try {
-							Document document = event.getDocument();
-							final String text = getText(document);
-							RowFilter<TrackTableModel, Object> rf = null;
-							// If current expression doesn't parse, don't
-							// update.
-							try {
-								rf = RowFilter.regexFilter("(?i)" + text, 1);
-							} catch (java.util.regex.PatternSyntaxException e) {
-								return;
-							}
-							mSorter.setRowFilter(rf);
-						} catch (BadLocationException e) {
+							rf = RowFilter.regexFilter("(?i)" + text, 1);
+						} catch (java.util.regex.PatternSyntaxException e) {
+							return;
 						}
+						mSorter.setRowFilter(rf);
+					} catch (BadLocationException e) {
 					}
 				});
 			}

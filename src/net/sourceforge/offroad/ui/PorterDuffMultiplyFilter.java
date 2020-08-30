@@ -60,8 +60,8 @@ public class PorterDuffMultiplyFilter implements Composite {
 						// pixels are stored as INT_ARGB
 						if((srcPixels[x] & 0xFFFFFF) != 0) {
 							// if there is a pixel, take the color of the arrow:
-							dstPixels[x] = ((int) (getColor().getAlpha()) & 0xFF) << 24 | ((int) (getColor().getRed()) & 0xFF) << 16
-									| ((int) (getColor().getGreen()) & 0xFF) << 8 | (int) (getColor().getBlue()) & 0xFF;
+							dstPixels[x] = (getColor().getAlpha() & 0xFF) << 24 | (getColor().getRed() & 0xFF) << 16
+									| (getColor().getGreen() & 0xFF) << 8 | getColor().getBlue() & 0xFF;
 						} else {
 							// don't change
 						}

@@ -19,21 +19,14 @@
 
 package net.sourceforge.offroad.ui;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
 import java.util.List;
 import java.util.Vector;
 
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
-import net.osmand.data.MapObject;
-import net.osmand.data.PointDescription;
 import net.osmand.data.RotatedTileBox;
 import net.osmand.plus.views.OsmandMapLayer;
 import net.sourceforge.offroad.OsmWindow;
@@ -62,7 +55,7 @@ public class OffRoadPopupMenuListener implements PopupMenuListener {
 		for (OsmandMapLayer layer : layers) {
 			if (layer instanceof IContextMenuProvider) {
 				IContextMenuProvider provider = (IContextMenuProvider) layer;
-				List<Object> res = new Vector<Object>();
+				List<Object> res = new Vector<>();
 				provider.collectObjectsFromPoint(getDrawPanel().getMousePosition(), tileBox, res);
 				for (Object am : res) {
 					// ask controller, which actions are possible for the given object:

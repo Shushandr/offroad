@@ -147,7 +147,7 @@ final class OffRoadSettings implements SettingsAPI {
 	public Object getPreferenceObject(String pKey) {
 		if(!mPreferencesHash.containsKey(pKey)){
 			System.out.println("Create prefs for " +pKey);
-			mPreferencesHash.put((String) pKey, new Properties());
+			mPreferencesHash.put(pKey, new Properties());
 		}
 		return mPreferencesHash.get(pKey);
 	}
@@ -204,7 +204,7 @@ final class OffRoadSettings implements SettingsAPI {
 	
 	public static void copyProperties(Properties src_prop, Properties dest_prop)
 	  {
-	      for (Enumeration propertyNames = src_prop.propertyNames();
+	      for (Enumeration<?> propertyNames = src_prop.propertyNames();
 	           propertyNames.hasMoreElements(); )
 	      {
 	          Object key = propertyNames.nextElement();

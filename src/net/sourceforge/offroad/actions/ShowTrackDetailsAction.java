@@ -27,7 +27,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
@@ -109,7 +108,7 @@ public class ShowTrackDetailsAction extends OffRoadAction implements LatLonGener
         });
 		contentPane.add(new JScrollPane(mContentDisplay), new GridBagConstraints(0, y++, 4, 1, 4.0, 1.0, GridBagConstraints.WEST,
 				GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
-		mGraphPanel = new GraphPanel(new TreeMap<Long, Double>() );
+		mGraphPanel = new GraphPanel(new TreeMap<>() );
 		updateGraphPanel();
 		contentPane.add(mGraphPanel, new GridBagConstraints(0, y++, 4, 1, 4.0, 10.0, GridBagConstraints.WEST,
 				GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
@@ -118,43 +117,32 @@ public class ShowTrackDetailsAction extends OffRoadAction implements LatLonGener
 		JButton adjustElevationButton = new JButton(mContext.getOffRoadString("offroad.adjust_elevation"));
 		JButton cancelElevationButton = new JButton(mContext.getOffRoadString("offroad.cancel_elevation"));
 		cancelElevationButton.setEnabled(false);
-		adjustElevationButton.addActionListener(new ActionListener(){
-			@Override
-			public void actionPerformed(ActionEvent pE) {
-				new Thread(new Runnable() {
-
-					public void run() {
-						mContext.setWaitingCursor(true);
-						mGraphPanel.setBackgroundColor(Color.LIGHT_GRAY);
-						mGraphPanel.setDrawText(mContext.getOffRoadString("offroad.Calculating"));
-						mAdjustmentCancelled = false;
-						adjustElevationButton.setEnabled(false);
-						cancelElevationButton.setEnabled(true);
-						try {
-							mElevationHelper.adjustElevations(ShowTrackDetailsAction.this, mContext.getRenderer().getMetaInfoFiles());
-						} finally {
-							adjustElevationButton.setEnabled(true);
-							cancelElevationButton.setEnabled(false);
-							mContext.setWaitingCursor(false);
-							updateAnalysis();
-							updateGraphPanel();
-							mGraphPanel.setDrawText(null);
-							mGraphPanel.setBackgroundColor(Color.WHITE);
-						}
-					}
-				}).start();
-			}});
+		adjustElevationButton.addActionListener(pE12 -> new Thread(() -> {
+			mContext.setWaitingCursor(true);
+			mGraphPanel.setBackgroundColor(Color.LIGHT_GRAY);
+			mGraphPanel.setDrawText(mContext.getOffRoadString("offroad.Calculating"));
+			mAdjustmentCancelled = false;
+			adjustElevationButton.setEnabled(false);
+			cancelElevationButton.setEnabled(true);
+			try {
+				mElevationHelper.adjustElevations(ShowTrackDetailsAction.this, mContext.getRenderer().getMetaInfoFiles());
+			} finally {
+				adjustElevationButton.setEnabled(true);
+				cancelElevationButton.setEnabled(false);
+				mContext.setWaitingCursor(false);
+				updateAnalysis();
+				updateGraphPanel();
+				mGraphPanel.setDrawText(null);
+				mGraphPanel.setBackgroundColor(Color.WHITE);
+			}
+		}).start());
 		cancelElevationButton.addActionListener(l -> mAdjustmentCancelled=true);
 		contentPane.add(adjustElevationButton, new GridBagConstraints(0, y, 1, 1, 1.0, 0.0, GridBagConstraints.WEST,
 				GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
 		contentPane.add(cancelElevationButton, new GridBagConstraints(1, y++, 1, 1, 1.0, 0.0, GridBagConstraints.WEST,
 				GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
 		JButton okButton = new JButton(mContext.getString(R.string.shared_string_ok));
-		okButton.addActionListener(new ActionListener(){
-			@Override
-			public void actionPerformed(ActionEvent pE) {
-				disposeDialog();
-			}});
+		okButton.addActionListener(pE1 -> disposeDialog());
 		contentPane.add(okButton, new GridBagConstraints(3, y++, 1, 1, 1.0, 0.0, GridBagConstraints.EAST,
 				GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
 		mDialog.getRootPane().setDefaultButton(okButton);

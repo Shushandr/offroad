@@ -21,9 +21,7 @@ package net.sourceforge.offroad.actions;
 
 import java.awt.event.ActionEvent;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
@@ -68,7 +66,7 @@ public class ExportTracksAction extends OffRoadAction {
 		if(selectedGPXFiles.isEmpty()){
 			return "<html><title>no tracks selected</title></html>";
 		}
-		Map<SelectedGpxFile, String> localList = new HashMap<SelectedGpxFile, String>();
+		Map<SelectedGpxFile, String> localList = new HashMap<>();
 		String firstPath = null;
 		for (SelectedGpxFile selectedGpxFile : selectedGPXFiles) {
 			GPXFile gpxFile = selectedGpxFile.getGpxFile();

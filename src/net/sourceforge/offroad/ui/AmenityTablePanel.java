@@ -51,7 +51,6 @@ import net.osmand.PlatformUtil;
 import net.osmand.data.Amenity;
 import net.osmand.data.LatLon;
 import net.osmand.data.MapObject;
-import net.osmand.osm.PoiType;
 import net.osmand.plus.poi.PoiUIFilter;
 import net.sourceforge.offroad.OsmWindow;
 import net.sourceforge.offroad.R;
@@ -89,7 +88,7 @@ public class AmenityTablePanel extends JPanel {
 		
 	}
 	
-	public class ImageTableCellRenderer extends DefaultTableCellRenderer {
+	public static class ImageTableCellRenderer extends DefaultTableCellRenderer {
 
 		@Override
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
@@ -138,10 +137,10 @@ public class AmenityTablePanel extends JPanel {
 	public static class AmenityTableColumn {
 		private AmenityToColumn mMapping;
 		String mName;
-		Class mClass;
+		Class<?> mClass;
 		private TableCellRenderer mRenderer;
 
-		public AmenityTableColumn(String pName, Class pClass, AmenityToColumn pMapping, TableCellRenderer pRenderer) {
+		public AmenityTableColumn(String pName, Class<?> pClass, AmenityToColumn pMapping, TableCellRenderer pRenderer) {
 			super();
 			mName = pName;
 			mClass = pClass;
@@ -258,19 +257,16 @@ public class AmenityTablePanel extends JPanel {
 		mSourceModel = new AmenityTableModel();
 		mTable.setModel(mSourceModel);
 		mTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		mSorter = new TableRowSorter<AmenityTableModel>(mSourceModel);
+		mSorter = new TableRowSorter<>(mSourceModel);
 		// FIXME: The knowledge of the index is not preferable:
-		mSorter.setComparator(ICON_COLUMN_INDEX, new Comparator<ImageHolder>(){
-
-			@Override
-			public int compare(ImageHolder pO1, ImageHolder pO2) {
-				try {
-					return pO1.getPoiIconKeyName().compareTo(pO2.getPoiIconKeyName());
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				return 0;
-			}});
+		mSorter.setComparator(ICON_COLUMN_INDEX, (Comparator<ImageHolder>) (pO1, pO2) -> {
+			try {
+				return pO1.getPoiIconKeyName().compareTo(pO2.getPoiIconKeyName());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return 0;
+		});
 
 		mTable.setRowSorter(mSorter);
 

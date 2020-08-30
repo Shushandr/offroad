@@ -20,17 +20,13 @@
 package net.sourceforge.offroad.actions;
 
 import java.awt.event.ActionEvent;
-import java.util.ArrayList;
 
 import javax.swing.Action;
 
-import net.osmand.Location;
-import net.osmand.data.LatLon;
 import net.osmand.plus.ApplicationMode;
 import net.osmand.plus.TargetPointsHelper;
 import net.osmand.plus.routing.RoutingHelper.RouteCalculationProgressCallback;
 import net.sourceforge.offroad.OsmWindow;
-import net.sourceforge.offroad.R;
 
 /**
  * @author foltin
@@ -43,7 +39,7 @@ public class RouteAction extends OffRoadAction implements RouteCalculationProgre
 	public RouteAction(OsmWindow pCtx, ApplicationMode pMode) {
 		super(pCtx);
 		mMode = pMode;
-		this.putValue(Action.NAME, mContext.getOffRoadString("offroad.route", new Object[]{pMode.toHumanStringCtx()}));
+		this.putValue(Action.NAME, mContext.getOffRoadString("offroad.route", pMode.toHumanStringCtx()));
 	}
 	
 	/* (non-Javadoc)

@@ -33,7 +33,6 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.text.MessageFormat;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
@@ -153,7 +152,6 @@ import net.sourceforge.offroad.actions.NavigationRotationAction;
 import net.sourceforge.offroad.actions.OffRoadAction.OffRoadMenuItem;
 import net.sourceforge.offroad.actions.PoiFilterAction;
 import net.sourceforge.offroad.actions.PointNavigationAction;
-import net.sourceforge.offroad.actions.PointNavigationAction.HelperAction;
 import net.sourceforge.offroad.actions.RemovePointFromPolylineAction;
 import net.sourceforge.offroad.actions.RemovePolylineAction;
 import net.sourceforge.offroad.actions.RouteAction;
@@ -173,7 +171,6 @@ import net.sourceforge.offroad.data.SQLiteImpl;
 import net.sourceforge.offroad.data.persistence.ComponentLocationStorage;
 import net.sourceforge.offroad.data.persistence.OsmWindowLocationStorage;
 import net.sourceforge.offroad.res.OffRoadResources;
-import net.sourceforge.offroad.res.ResourceTest;
 import net.sourceforge.offroad.res.Resources;
 import net.sourceforge.offroad.ui.AmenityTablePanel;
 import net.sourceforge.offroad.ui.AmenityTableUpdateThread;
@@ -193,10 +190,10 @@ import net.sourceforge.offroad.ui.PoiFilterRenderer;
  * @date 26.03.2016
  */
 public class OsmWindow  implements IRouteInformationListener {
-	public class MapPointStorage {
+	public static class MapPointStorage {
 
-		private LatLon mPoint;
-		private int mZoom;
+		private final LatLon mPoint;
+		private final int mZoom;
 
 		public MapPointStorage(LatLon pPoint, int pZoom) {
 			mPoint = pPoint;
@@ -374,14 +371,10 @@ public class OsmWindow  implements IRouteInformationListener {
 		mDirectSearchForward = new JButton(new ImageIcon(readImageInternally("down.png")));
 		mDirectSearchAction = new DirectSearchAction(this, mDirectSearchTextField, mDirectSearchFuzzy,
 				mDirectSearchBackward, mDirectSearchForward, mDirectSearchClose);
-		mDirectSearchClose.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent pE) {
-				mStatusBar.remove(mDirectSearchPanel);
-				mDirectSearchVisible = false;
-				mFrame.revalidate();
-			}
+		mDirectSearchClose.addActionListener(pE -> {
+			mStatusBar.remove(mDirectSearchPanel);
+			mDirectSearchVisible = false;
+			mFrame.revalidate();
 		});
 		mDrawPanel = new OsmBitmapPanel(this);
 		mAdapter = new OsmBitmapPanelMouseAdapter(mDrawPanel);
@@ -432,12 +425,7 @@ public class OsmWindow  implements IRouteInformationListener {
 		mSearchTextField.getInputMap().put(KeyStroke.getKeyStroke("control RIGHT"), "none");
 		mSearchTextField.setText(getSettings().SELECTED_POI_FILTER_STRING_FOR_MAP.get());
 		mAmenityTable = new AmenityTablePanel(this);
-		getSearchTextField().addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent pE) {
-				setPoiFilter(getCurrentPoiUIFilter(), getSearchTextField().getText());
-			}
-		});
+		getSearchTextField().addActionListener(pE -> setPoiFilter(getCurrentPoiUIFilter(), getSearchTextField().getText()));
 		getSearchTextField().addKeyListener(new KeyListener() {
 			
 			@Override
@@ -459,19 +447,19 @@ public class OsmWindow  implements IRouteInformationListener {
 						mComboBox.setSelectedIndex(mComboBox.getSelectedIndex()-1);
 					}
 					pE.consume();
-					return;
+					break;
 				case KeyEvent.VK_DOWN:
 					if(mComboBox.getSelectedIndex()<mComboBox.getItemCount()-1){
 						mComboBox.setSelectedIndex(mComboBox.getSelectedIndex()+1);
 					}
 					pE.consume();
-					return;
+					break;
 				}
 		}
 		});
 		mToolBar.add(getSearchTextField(), new GridBagConstraints(1, 0, 1, 1, 3, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(10, 0, 10, 0), 0, 0));
-		mComboBox = new JComboBox<PoiUIFilter>();
-		mComboBoxModel = new DefaultComboBoxModel<PoiUIFilter>();
+		mComboBox = new JComboBox<>();
+		mComboBoxModel = new DefaultComboBoxModel<>();
 		mCurrentPoiFilter = mPoiFilters.getSearchByNamePOIFilter();
 		mComboBoxModel.addElement(mPoiFilters.getSearchByNamePOIFilter());
 		mComboBoxModel.addElement(mPoiFilters.getNominatimAddressFilter());
@@ -481,13 +469,9 @@ public class OsmWindow  implements IRouteInformationListener {
 		}
 		mComboBox.setModel(mComboBoxModel);
 		mComboBox.setFocusable(false);
-		mComboBox.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent pE) {
-				if(mComboBox.getSelectedIndex() >= 0){
-					mCurrentPoiFilter = mComboBoxModel.getElementAt(mComboBox.getSelectedIndex());
-				}
+		mComboBox.addActionListener(pE -> {
+			if(mComboBox.getSelectedIndex() >= 0){
+				mCurrentPoiFilter = mComboBoxModel.getElementAt(mComboBox.getSelectedIndex());
 			}
 		});
 		mComboBox.setRenderer(new PoiFilterRenderer<>());
@@ -512,16 +496,12 @@ public class OsmWindow  implements IRouteInformationListener {
 		JMenuBar menubar = new JMenuBar();
 		JMenu jFileMenu = new JMenu(getOffRoadString("offroad.string5")); //$NON-NLS-1$
 		JMenuItem saveItem = new JMenuItem(getOffRoadString("offroad.string6")); //$NON-NLS-1$
-		saveItem.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent pE) {
-				JFileChooser chooser = new JFileChooser();
-				int showSaveDialog = chooser.showSaveDialog(mFrame);
-				if(showSaveDialog == JFileChooser.APPROVE_OPTION){
-					// TODO: Ask for overwrite.
-					mDrawPanel.saveImage(chooser.getSelectedFile());
-				}
+		saveItem.addActionListener(pE -> {
+			JFileChooser chooser = new JFileChooser();
+			int showSaveDialog = chooser.showSaveDialog(mFrame);
+			if(showSaveDialog == JFileChooser.APPROVE_OPTION){
+				// TODO: Ask for overwrite.
+				mDrawPanel.saveImage(chooser.getSelectedFile());
 			}
 		});
 		jFileMenu.add(saveItem);
@@ -540,13 +520,9 @@ public class OsmWindow  implements IRouteInformationListener {
 		jSearchMenu.add(findItem);
 		
 		JMenuItem gotoSearchFieldItem = new JMenuItem(getOffRoadString("offroad.gotoSearchField")); //$NON-NLS-1$
-		gotoSearchFieldItem.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent pE) {
-				getSearchTextField().selectAll();
-				getSearchTextField().requestFocus();
-			}
+		gotoSearchFieldItem.addActionListener(pE -> {
+			getSearchTextField().selectAll();
+			getSearchTextField().requestFocus();
 		});
 		gotoSearchFieldItem.setAccelerator(KeyStroke.getKeyStroke("control K")); //$NON-NLS-1$
 		jSearchMenu.add(gotoSearchFieldItem);
@@ -634,18 +610,16 @@ public class OsmWindow  implements IRouteInformationListener {
 		addToMenu(jNavigationMenu, null, new RouteAction(this, ApplicationMode.BICYCLE), "F2");
 		addToMenu(jNavigationMenu, null, new RouteAction(this, ApplicationMode.PEDESTRIAN), "F3");
 		jNavigationMenu.add(new JSeparator());
-		addToMenu(jNavigationMenu, "offroad.go_source", new ShowTargetPointAction(this, t->t.getPointToStart()), "control HOME");
-		addToMenu(jNavigationMenu, "offroad.go_dest", new ShowTargetPointAction(this, t->t.getPointToNavigate()), "control END");
+		addToMenu(jNavigationMenu, "offroad.go_source", new ShowTargetPointAction(this, TargetPointsHelper::getPointToStart), "control HOME");
+		addToMenu(jNavigationMenu, "offroad.go_dest", new ShowTargetPointAction(this, TargetPointsHelper::getPointToNavigate), "control END");
 		jNavigationMenu.add(new JSeparator());
 		jNavigationMenu.add(new JMenuItem(new ClearRouteAction(this)));
 		PointNavigationAction clearIntermediatePointsAction = new PointNavigationAction(this, "offroad.clear_intermediate_points",
-				new HelperAction(){
-			@Override
-			public void act(TargetPointsHelper pHelper, LatLon pPosition) {
-				while(!pHelper.getIntermediatePoints().isEmpty()){
-					pHelper.removeWayPoint(false, 0);
-				}
-			}});
+				(pHelper, pPosition) -> {
+					while(!pHelper.getIntermediatePoints().isEmpty()){
+						pHelper.removeWayPoint(false, 0);
+					}
+				});
 		PointNavigationAction clearAllPointsAction = new PointNavigationAction(this, "offroad.clear_all_points",
 				(helper, pos) -> helper.removeAllWayPoints(false, false));
 		jNavigationMenu.add(clearIntermediatePointsAction);
@@ -754,11 +728,7 @@ public class OsmWindow  implements IRouteInformationListener {
 		mFrame.addComponentListener(new ComponentAdapter() {
 			public void componentShown(ComponentEvent e) {
 				mFrame.removeComponentListener(this);
-				SwingUtilities.invokeLater(new Runnable() {
-					public void run() {
-						checkMaps();
-					}
-				});
+				SwingUtilities.invokeLater(OsmWindow.this::checkMaps);
 			}
 		});
 		mFrame.setVisible(true);
@@ -788,13 +758,9 @@ public class OsmWindow  implements IRouteInformationListener {
 					getOffroadProperties().setProperty(VECTOR_INDEXES_CHECK, "false");
 					return;
 				}
-				SwingUtilities.invokeLater(new Runnable() {
-
-					@Override
-					public void run() {
-						DownloadAction downloadAction = new DownloadAction(getInstance(), WorldRegion.WORLD_BASEMAP);
-						downloadAction.actionPerformed(null);
-					}
+				SwingUtilities.invokeLater(() -> {
+					DownloadAction downloadAction = new DownloadAction(getInstance(), WorldRegion.WORLD_BASEMAP);
+					downloadAction.actionPerformed(null);
 				});
 			}
 		}
@@ -880,16 +846,12 @@ public class OsmWindow  implements IRouteInformationListener {
 		return mDrawPanel;
 	}
 
-	public static void main(String[] args) throws XmlPullParserException, IOException {
+	public static void main(String[] args) {
 		final OsmWindow win = OsmWindow.getInstance();
 		VersionInfo version = win.getVersion();
 		log.info("Version: " + version.version + ", hash=" + version.hash);
 		win.init();
-		java.awt.EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				win.createAndShowUI();
-			}
-		});
+		java.awt.EventQueue.invokeLater(win::createAndShowUI);
 
 	}
 
@@ -913,7 +875,7 @@ public class OsmWindow  implements IRouteInformationListener {
 		mStrings = new R.string();
 	}
 
-	private void init() throws XmlPullParserException, IOException {
+	private void init() {
 		Dimension size = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
 		widthPixels = size.width;
 		heightPixels = size.height;
@@ -1139,8 +1101,7 @@ public class OsmWindow  implements IRouteInformationListener {
 	}
 
 	public static String getAppPathName(String pIndex) {
-		String pathname = System.getProperty("user.home") + File.separator  + ".OffRoad" + File.separator + pIndex; //$NON-NLS-1$ //$NON-NLS-2$
-		return pathname;
+		return System.getProperty("user.home") + File.separator  + ".OffRoad" + File.separator + pIndex; //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	public OsmandSettings getSettings() {
@@ -1270,9 +1231,9 @@ public class OsmWindow  implements IRouteInformationListener {
 				polyDist = selectedPolyline.calculateLength();
 				polyArea = selectedPolyline.calculateArea();
 			}
-			Object[] messageArguments = { Double.valueOf(distance),
-					Double.valueOf(cursorPosition.getLatitude()),
-					Double.valueOf(cursorPosition.getLongitude())};
+			Object[] messageArguments = {distance,
+					cursorPosition.getLatitude(),
+					cursorPosition.getLongitude()};
 			Object[] polyArguments =  {polyDist, polyArea};
 			MessageFormat formatter = new MessageFormat(
 					getOffRoadString("offroad.string47")); //$NON-NLS-1$
@@ -1452,13 +1413,7 @@ public class OsmWindow  implements IRouteInformationListener {
 
 	
 	public void runInUIThread(Runnable pRunnable, int pDelay) {
-		Timer timer = new Timer(pDelay, new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent pE) {
-				pRunnable.run();
-			}
-		});
+		Timer timer = new Timer(pDelay, pE -> pRunnable.run());
 		timer.setRepeats(false);
 		timer.start();
 	}
@@ -1483,8 +1438,7 @@ public class OsmWindow  implements IRouteInformationListener {
 
 	public String getCountry() {
 		Locale locale = Locale.getDefault();
-		String ct = locale.getCountry().toLowerCase();
-		return ct;
+		return locale.getCountry().toLowerCase();
 	}
 
 	public PoiFiltersHelper getPoiFilters() {
@@ -1513,8 +1467,7 @@ public class OsmWindow  implements IRouteInformationListener {
 		} else {
 			destination = lastMouseEvent.getPoint();
 		}
-		LatLon destLatLon = mDrawPanel.copyCurrentTileBox().getLatLonFromPixel(destination.x, destination.y);
-		return destLatLon;
+		return mDrawPanel.copyCurrentTileBox().getLatLonFromPixel(destination.x, destination.y);
 	}
 
 	public PoiUIFilter getCurrentPoiUIFilter() {
@@ -1697,7 +1650,7 @@ public class OsmWindow  implements IRouteInformationListener {
 		RouteCalculationResult route = getRoutingHelper().getRoute();
 		List<RouteDirectionInfo> currentRoute = route.getRouteDirections();
 		List<Location> locations = route.getImmutableAllLocations();
-		List<MapObject> routeResult = new Vector<MapObject>();
+		List<MapObject> routeResult = new Vector<>();
 		for (RouteDirectionInfo directionInfo : currentRoute) {
 			routeResult.add(new LocationAsMapObject(locations.get(directionInfo.routePointOffset), directionInfo.getDescriptionRoutePart(),
 					route.getDistanceToPoint(directionInfo.routePointOffset)));
@@ -1715,7 +1668,7 @@ public class OsmWindow  implements IRouteInformationListener {
 	@Override
 	public void newRouteIsCalculated(boolean pNewRoute, ValueHolder<Boolean> pShowToast) {
 		float dist = getRoutingHelper().getRoute().getWholeDistance()/1000f;
-		setStatus(getOffRoadString("offroad.routing_finished", new Object[]{dist}));
+		setStatus(getOffRoadString("offroad.routing_finished", dist));
 		setRouteCalculated();
 		getDrawPanel().drawLater();
 	}
@@ -1758,22 +1711,18 @@ public class OsmWindow  implements IRouteInformationListener {
 	}
 
 	public List<JMenuItem> getContextActionsForObject(IContextMenuProvider pProvider, Object pAm) {
-		List<JMenuItem> result = new Vector<JMenuItem>();
+		List<JMenuItem> result = new Vector<>();
 		if (pAm instanceof Amenity) {
 			Amenity am = (Amenity) pAm;
 			JMenuItem item = createJMenuItemForObject(pProvider, pAm);
-			item.addActionListener(new ActionListener() {
-
-				@Override
-				public void actionPerformed(ActionEvent pE) {
-					if (am.getType().isWiki()) {
-						POIMapLayer.showWikipediaDialog(OsmWindow.this, OsmWindow.this, am);
-					} else {
-						String locationName = PointDescription.getLocationName(OsmWindow.this,
-								am.getLocation().getLatitude(), am.getLocation().getLongitude(), true);
-						POIMapLayer.showDescriptionDialog(OsmWindow.this, getInstance(),
-								am.getAdditionalInfo().toString(), am.getName(getLanguage()));
-					}
+			item.addActionListener(pE -> {
+				if (am.getType().isWiki()) {
+					POIMapLayer.showWikipediaDialog(OsmWindow.this, OsmWindow.this, am);
+				} else {
+					String locationName = PointDescription.getLocationName(OsmWindow.this,
+							am.getLocation().getLatitude(), am.getLocation().getLongitude(), true);
+					POIMapLayer.showDescriptionDialog(OsmWindow.this, getInstance(),
+							am.getAdditionalInfo().toString(), am.getName(getLanguage()));
 				}
 			});
 			result.add(item);
@@ -1795,20 +1744,18 @@ public class OsmWindow  implements IRouteInformationListener {
 		if (pAm instanceof TargetPoint) {
 			TargetPoint targetPoint = (TargetPoint) pAm;
 			PointNavigationAction removePointAction = new PointNavigationAction(this, "offroad.remove_navigation_point",
-					new HelperAction(){
-				@Override
-				public void act(TargetPointsHelper pHelper, LatLon pPosition) {
-					if(targetPoint == pHelper.getPointToStart()){
-						pHelper.clearStartPoint(false);
-					} 
-					if(targetPoint == pHelper.getPointToNavigate()){
-						pHelper.clearPointToNavigate(false);
-					} 
-					int index = pHelper.getIntermediatePoints().indexOf(targetPoint);
-					if(index >= 0){
-						pHelper.removeWayPoint(false, index);
-					}
-				}});
+					(pHelper, pPosition) -> {
+						if(targetPoint == pHelper.getPointToStart()){
+							pHelper.clearStartPoint(false);
+						}
+						if(targetPoint == pHelper.getPointToNavigate()){
+							pHelper.clearPointToNavigate(false);
+						}
+						int index = pHelper.getIntermediatePoints().indexOf(targetPoint);
+						if(index >= 0){
+							pHelper.removeWayPoint(false, index);
+						}
+					});
 
 			JMenuItem item = new JMenuItem(removePointAction);
 			result.add(item);
@@ -1850,7 +1797,7 @@ public class OsmWindow  implements IRouteInformationListener {
 		return getOffroadProperties().getProperty(OSMAND_ICONS_DIR_PREFIX, OSMAND_ICONS_DIR_DEFAULT_PREFIX);
 	}
 
-	public void openDocument(URL url) throws Exception {
+	public void openDocument(URL url) {
 		Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
 		if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
 			try {
@@ -1867,7 +1814,7 @@ public class OsmWindow  implements IRouteInformationListener {
 		return mDrawPanel.getPolylineLayer();
 	}
 	
-	public static String marshall(Object pStorage, Class[] pClasses){
+	public static String marshall(Object pStorage, Class<?>[] pClasses){
 		try {
 			JAXBContext jaxbContext = JAXBContext.newInstance(pClasses, null);
 			Marshaller m = jaxbContext.createMarshaller();
@@ -1880,7 +1827,7 @@ public class OsmWindow  implements IRouteInformationListener {
 		return null;
 	}
 
-	public static Object unmarshall(String pInput, Class[] pClasses){
+	public static Object unmarshall(String pInput, Class<?>[] pClasses){
 		try {
 			JAXBContext jaxbContext = JAXBContext.newInstance(pClasses, null);
 			Unmarshaller m = jaxbContext.createUnmarshaller();

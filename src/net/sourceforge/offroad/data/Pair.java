@@ -50,9 +50,9 @@ public class Pair<L, R> implements Entry<L,R>{
 
 	@Override
 	public boolean equals(Object o) {
-		if (!(o instanceof Pair))
+		if (!(o instanceof Pair<?, ?>))
 			return false;
-		Pair pairo = (Pair) o;
+		Pair<?, ?> pairo = (Pair<?, ?>)o;
 		return this.left.equals(pairo.getLeft()) && this.right.equals(pairo.getRight());
 	}
 

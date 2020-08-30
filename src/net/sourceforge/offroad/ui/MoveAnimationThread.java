@@ -27,16 +27,16 @@ class MoveAnimationThread extends OffRoadUIThread {
 			float accumulatedY = 0f;
 			for (int i = 0; i < it-1; ++i) {
 				float delta = v0 * i + a*i*i;
-				RotatedTileBox tb = mOsmBitmapPanel.moveTileBox(-accumulatedX + mDeltaX*delta/it, -accumulatedY + mDeltaY*delta/it);
+				mOsmBitmapPanel.moveTileBox(-accumulatedX + mDeltaX*delta/it, -accumulatedY + mDeltaY*delta/it);
 				accumulatedX = mDeltaX*delta/it;
 				accumulatedY = mDeltaY*delta/it;
 				mOsmBitmapPanel.repaintAndWait(50);
 			}
-			RotatedTileBox tb = mOsmBitmapPanel.moveTileBox(-accumulatedX + mDeltaX, -accumulatedY + mDeltaY);
+			mOsmBitmapPanel.moveTileBox(-accumulatedX + mDeltaX, -accumulatedY + mDeltaY);
 		} else {
 			it = 10;
 			for (int i = 0; i < it; ++i) {
-				RotatedTileBox tb = mOsmBitmapPanel.moveTileBox(mDeltaX/it, mDeltaY/it);
+				mOsmBitmapPanel.moveTileBox(mDeltaX/it, mDeltaY/it);
 				mOsmBitmapPanel.repaintAndWait(50);
 			}
 		}
