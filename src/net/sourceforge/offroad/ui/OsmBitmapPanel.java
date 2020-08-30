@@ -128,7 +128,6 @@ public class OsmBitmapPanel extends JPanel {
 		}
 	}
 
-//	private InactivityListener mInactivityListener;
 	private CalculateUnzoomedPicturesAction mUnzoomedPicturesAction;
 	private RoundButton mCompassButton;
 	private List<DrawnImageInfo> mEffectivelyDrawnImages = new ArrayList<>();
@@ -230,17 +229,6 @@ public class OsmBitmapPanel extends JPanel {
 		mCompassButton.setBounds(100, 100, size, size);
 	}
 
-	public void init() {
-		// Does not seem so useful, instead trigger when we do nothing else
-		// in the queues
-/*
-		mInactivityListener = new InactivityListener(mContext.getWindow(), mUnzoomedPicturesAction);
-		mInactivityListener.setIntervalInMillis(1000);
-		mInactivityListener.start();
-*/
-	}
-
-	
 	public List<DrawnImageInfo> getEffectivelyDrawnImages(){
 		synchronized (mEffectivelyDrawnImages) {
 			return new ArrayList<>(mEffectivelyDrawnImages);
@@ -437,7 +425,6 @@ public class OsmBitmapPanel extends JPanel {
 			//pThread.addListener(mQueueInfoListener);
 			mBackgroundThreadPool.queue(pThread);
 		} else {
-			//pThread.addListener(mInactivityListener);
 			pThread.addListener(mQueueInfoListener);
 			if (pType.equals(PoolType.ANIMATION)) {
 				mAnimationThreadPool.queue(pThread);

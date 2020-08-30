@@ -33,13 +33,11 @@ import net.osmand.data.MapObject;
  */
 public class AmenityTableUpdateThread extends OffRoadUIThread {
 
-	private LatLon mLocation;
 	private List<MapObject> mSearchResult;
 	private AmenityTablePanel mAmenityTable;
 
-	public AmenityTableUpdateThread(OsmBitmapPanel pOsmBitmapPanel, LatLon pLocation, AmenityTablePanel pAmenityTable) {
+	public AmenityTableUpdateThread(OsmBitmapPanel pOsmBitmapPanel, AmenityTablePanel pAmenityTable) {
 		super(pOsmBitmapPanel, "AmenityTableUpdate");
-		mLocation = pLocation;
 		mAmenityTable = pAmenityTable;
 	}
 

@@ -708,7 +708,6 @@ public class OsmWindow  implements IRouteInformationListener {
 		mDrawPanel.setComponentPopupMenu(popupMenu);
 		popupMenu.addPopupMenuListener(new OffRoadPopupMenuListener(this, popupMenu));
 		mFrame.setJMenuBar(menubar);
-		mDrawPanel.init();
 		mFrame.pack();
 		OsmWindowLocationStorage storage = (OsmWindowLocationStorage) ComponentLocationStorage.decorateDialog(this, mFrame, getClass().getName());
 		if (storage!= null) {
@@ -1400,15 +1399,15 @@ public class OsmWindow  implements IRouteInformationListener {
 	public void setCursorPosition(LatLon pLoc) {
 		mDrawPanel.setCursor(pLoc);
 		addPoint(pLoc);
-		queueAmenityTableUpdate(pLoc);
+		queueAmenityTableUpdate();
 		for (CursorPositionListener listener : mCursorPositionListeners) {
 			listener.cursorPositionChanged(pLoc);
 		}
 	}
 
-	private void queueAmenityTableUpdate(LatLon pLoc) {
+	private void queueAmenityTableUpdate() {
 		// queue update of the amenity table.
-		getDrawPanel().queue(new AmenityTableUpdateThread(getDrawPanel(), pLoc, mAmenityTable), OsmBitmapPanel.PoolType.BACKGROUND);
+		getDrawPanel().queue(new AmenityTableUpdateThread(getDrawPanel(), mAmenityTable), OsmBitmapPanel.PoolType.BACKGROUND);
 	}
 
 	
@@ -1661,7 +1660,7 @@ public class OsmWindow  implements IRouteInformationListener {
 
 	private void setSearchType(SearchType pSearchType) {
 		mSearchType = pSearchType;
-		queueAmenityTableUpdate(null);
+		queueAmenityTableUpdate();
 	}
 	
 	

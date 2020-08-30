@@ -37,7 +37,6 @@ public class AddFavoriteAction extends OffRoadAction implements DocumentListener
 	private JColorChooser mGroupColorChooser;
 	private FavouritePoint mUpdatePoint;
 	private JButton mOkButton;
-	private int mInitialSelectedIndex = -1;
 
 	public AddFavoriteAction(OsmWindow pContext, String pName, Icon pIcon, FavouritePoint pUpdatePoint) {
 		super(pContext, pName, pIcon);
@@ -119,7 +118,6 @@ public class AddFavoriteAction extends OffRoadAction implements DocumentListener
 				if(fg.name != null && fg.name.equals(mUpdatePoint.getCategory())){
 					if(fg.color == mUpdatePoint.getColor()){
 						mComboBox.setSelectedIndex(i);
-						mInitialSelectedIndex  = i;
 						break;
 					}
 				}

@@ -83,10 +83,6 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 		mRotateTimer.setRepeats(false);
 	}
 
-	public ZoomPerformer getZoomPerformer() {
-		return mZoomPerformer;
-	}
-	
 	public boolean isPopup(MouseEvent e) {
 		return e.isPopupTrigger();
 	}
@@ -212,10 +208,6 @@ public class OsmBitmapPanelMouseAdapter extends MouseAdapter implements Componen
 
 	public void setMouseEvent(MouseEvent pMouseEvent) {
 		mMouseEvent = pMouseEvent;
-	}
-
-	public Timer getZoomTimer() {
-		return mZoomTimer;
 	}
 
 	public void addWheelEvent(int pI, RotatedTileBox pCurrentTileBox) {
