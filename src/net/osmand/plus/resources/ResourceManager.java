@@ -48,8 +48,7 @@ import net.sourceforge.offroad.R;
 public class ResourceManager {
 
 	public static final String VECTOR_MAP = "#vector_map"; //$NON-NLS-1$
-	private static final String INDEXES_CACHE = "ind.cache";
-	
+
 	
 	private static final Log log = PlatformUtil.getLog(ResourceManager.class);
 	
@@ -254,7 +253,7 @@ public class ResourceManager {
 		List<String> warnings = new ArrayList<String>();
 		renderer.clearAllResources();
 		CachedOsmandIndexes cachedOsmandIndexes = new CachedOsmandIndexes();
-		File indCache = context.getAppPath(INDEXES_CACHE);
+		File indCache = context.getAppPath(IndexConstants.MAPS_INDEXES_CACHE);
 		if (indCache.exists()) {
 			try {
 				cachedOsmandIndexes.readFromFile(indCache, CachedOsmandIndexes.VERSION);
