@@ -89,7 +89,6 @@ public class TextStroke implements Stroke {
 		float lastX = 0, lastY = 0;
 		float thisX = 0, thisY = 0;
 		int type = 0;
-		float next = 0;
 		int currentChar = 0;
 		int length = glyphVector.getNumGlyphs();
 
@@ -97,8 +96,12 @@ public class TextStroke implements Stroke {
 			return result;
 		}
 
-		float factor = stretchToFit ? measurePathLength(shape) / (float) glyphVector.getLogicalBounds().getWidth()
+		float pathLength = measurePathLength(shape);
+		float vecWidth = (float)glyphVector.getVisualBounds().getWidth();
+		float factor = stretchToFit ? pathLength / vecWidth
 				: 1.0f;
+		float next = stretchToFit ? 0.0f : (pathLength - vecWidth) / 2.0f;
+		double center = glyphVector.getVisualBounds().getHeight() / 2.0;
 		float nextAdvance = 0;
 
 		while (currentChar < length && !it.isDone()) {
@@ -109,7 +112,7 @@ public class TextStroke implements Stroke {
 				moveY = lastY = points[1];
 				result.moveTo(moveX, moveY);
 				nextAdvance = glyphVector.getGlyphMetrics(currentChar).getAdvance() * 0.5f;
-				next = nextAdvance;
+				next = nextAdvance + (currentChar > 0 ? 0 : next);
 				break;
 
 			case PathIterator.SEG_CLOSE:
@@ -130,15 +133,15 @@ public class TextStroke implements Stroke {
 						Shape glyph = glyphVector.getGlyphOutline(currentChar);
 						Point2D p = glyphVector.getGlyphPosition(currentChar);
 						float px = (float) p.getX();
-						float py = (float) p.getY();
+						float py = (float) (p.getY() + center);
 						float x = lastX + next * dx * r;
 						float y = lastY + next * dy * r;
 						float advance = nextAdvance;
 						nextAdvance = currentChar < length - 1
 								? glyphVector.getGlyphMetrics(currentChar + 1).getAdvance() * 0.5f : 0;
-						transform.setToTranslation(x, y+mVOffset); // 
+						transform.setToTranslation(x, y);
 						transform.rotate(angle);
-						transform.translate(-px - advance, -py);
+						transform.translate(-px - advance, -py + mVOffset);
 						result.append(transform.createTransformedShape(glyph), false);
 						next += (advance + nextAdvance) * factor;
 						currentChar++;
