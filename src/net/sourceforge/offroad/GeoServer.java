@@ -35,10 +35,15 @@ import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
 import java.nio.file.Files;
+import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.AclEntry;
+import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Random;
 
 import javax.swing.SwingUtilities;
@@ -50,6 +55,20 @@ import net.osmand.data.LatLon;
 
 import static java.nio.file.StandardOpenOption.CREATE_NEW;
 import static java.nio.file.StandardOpenOption.WRITE;
+import static java.nio.file.attribute.AclEntryPermission.READ_ACL;
+import static java.nio.file.attribute.AclEntryPermission.READ_ATTRIBUTES;
+import static java.nio.file.attribute.AclEntryPermission.READ_DATA;
+import static java.nio.file.attribute.AclEntryPermission.READ_NAMED_ATTRS;
+import static java.nio.file.attribute.AclEntryPermission.WRITE_ACL;
+import static java.nio.file.attribute.AclEntryPermission.WRITE_ATTRIBUTES;
+import static java.nio.file.attribute.AclEntryPermission.WRITE_DATA;
+import static java.nio.file.attribute.AclEntryPermission.WRITE_NAMED_ATTRS;
+import static java.nio.file.attribute.AclEntryPermission.WRITE_OWNER;
+import static java.nio.file.attribute.AclEntryPermission.APPEND_DATA;
+import static java.nio.file.attribute.AclEntryPermission.EXECUTE;
+import static java.nio.file.attribute.AclEntryPermission.DELETE;
+import static java.nio.file.attribute.AclEntryPermission.SYNCHRONIZE;
+import static java.nio.file.attribute.AclEntryType.ALLOW;
 
 /**
  * Inter-process communication.
@@ -84,6 +103,13 @@ public class GeoServer extends Thread {
 
 	private final OsmWindow mFrame;
 
+	static class AclFileAttribute implements FileAttribute<List<AclEntry>> {
+		final AclEntry e;
+		public AclFileAttribute(AclEntry e) { this.e = e; }
+		public String name() { return "acl:acl"; }
+		public List<AclEntry> value() { return Collections.singletonList(e); }
+	}
+
 	// {{{ EditServer constructor
 	GeoServer(String portFile, OsmWindow pFrame) {
 		super("OffRoad server daemon [" + portFile + "]");
@@ -102,8 +128,17 @@ public class GeoServer extends Thread {
 			// is fully atomic, or there would be race conditions where
 			// an attacker can place a file with weaker permissions.
 			Files.deleteIfExists(this.portFile);
-			ByteChannel out = Files.newByteChannel(this.portFile, EnumSet.of(CREATE_NEW, WRITE),
-					PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------")));
+			ByteChannel out;
+    			try {
+				out = Files.newByteChannel(this.portFile, EnumSet.of(CREATE_NEW, WRITE),
+						PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------")));
+			} catch (UnsupportedOperationException e) {
+				AclEntry.Builder builder = AclEntry.newBuilder();
+				builder.setPrincipal(FileSystems.getDefault().getUserPrincipalLookupService().lookupPrincipalByName(System.getProperty("user.name")));
+				builder.setPermissions(EnumSet.of(READ_DATA, READ_ACL, READ_ATTRIBUTES, READ_NAMED_ATTRS, WRITE_ACL, WRITE_ATTRIBUTES, WRITE_DATA, WRITE_NAMED_ATTRS, WRITE_OWNER, APPEND_DATA, EXECUTE, DELETE, SYNCHRONIZE));
+				builder.setType(ALLOW);
+				out = Files.newByteChannel(this.portFile, EnumSet.of(CREATE_NEW, WRITE), new AclFileAttribute(builder.build()));
+			}
 
 			// Bind to any port on localhost; accept 2 simultaneous
 			// connection attempts before rejecting connections
@@ -122,7 +157,7 @@ public class GeoServer extends Thread {
 
 			log.info("OffRoad server started on port " + socket.getLocalPort());
 			log.info("Authorization key is " + authKey);
-		} catch (IOException io) {
+		} catch (Exception io) {
 			/*
 			 * on some Windows versions, connections to localhost fail if the
 			 * network is not running. To avoid confusing newbies with weird
@@ -208,6 +243,8 @@ public class GeoServer extends Thread {
 			log.info(client + ": wrong" + " authorization key (got " + key + ", expected " + authKey + ")");
 			in.close();
 			client.close();
+			// shut down the server or brute-forcing the authKey would be possible
+			stopServer();
 
 			return false;
 		} else {
