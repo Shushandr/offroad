@@ -39,6 +39,8 @@ Version History:
   This allows sorting favorites in a hierarchy instead of just flat groups.
 * Allow loading resources from files when there is no
   jar (easier development with some IDEs)
+* Improve positioning of text, for example street names are now on the
+  street instead of slightly off in various directions.
 
 0_5:
 ============
