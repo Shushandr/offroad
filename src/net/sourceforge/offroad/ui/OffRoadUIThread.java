@@ -88,6 +88,10 @@ public class OffRoadUIThread implements Runnable {
 		// overwrite if needed.
 	}
 
+	public void freeResources() {
+		// overwrite if needed.
+	}
+
 	@Override
 	public void run() {
 		try {
@@ -114,6 +118,7 @@ public class OffRoadUIThread implements Runnable {
 				mNextThread.shouldContinue();
 			}
 			hasFinished = true;
+			freeResources();
 		}
 		for (OffRoadUIThreadListener listener : mListeners) {
 			listener.threadFinished(this);

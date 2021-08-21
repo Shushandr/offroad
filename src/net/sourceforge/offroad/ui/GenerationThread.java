@@ -54,6 +54,10 @@ class GenerationThread extends OffRoadUIThread implements IntermediateImageListe
 	public void runAfterThreadsBeforeHaveFinished() {
 		// in the lazy case, the bitmap may not have been generated
 		mOsmBitmapPanel.setImage(mNewBitmap, mTileCopy, mResult, mFlushCache);
+	}
+
+	@Override
+	public void freeResources() {
 		// drop references so they get deallocated when removed from cache.
 		mTileCopy = null;
 		mNewBitmap = null;

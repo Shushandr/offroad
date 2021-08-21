@@ -67,15 +67,17 @@ public class NominatimPoiFilter extends PoiUIFilter {
 			NOMINATIM_API = "https://nominatim.openstreetmap.org/search/";
 //			NOMINATIM_API = "http://nominatim.openstreetmap.org/search/";
 		currentSearchResult = new ArrayList<Amenity>();
+		String filter = getFilterByName();
+		if (filter == null) return currentSearchResult;
 		String viewbox = "viewboxlbrt="+((float) leftLongitude)+","+((float) bottomLatitude)+","+((float) rightLongitude)+","+((float) topLatitude);
 		try {
 			lastError = "";
 			String urlq ;
 			if(addressQuery) {
 				urlq = NOMINATIM_API + "?format=xml&addressdetails=0&accept-language="+ Locale.getDefault().getLanguage() 
-						+ "&q=" + URLEncoder.encode(getFilterByName(), "UTF-8");
+						+ "&q=" + URLEncoder.encode(filter, "UTF-8");
 			} else {
-				urlq = NOMINATIM_API + URLEncoder.encode(getFilterByName(), "UTF-8") + "?format=xml&addressdetails=1&limit=" + LIMIT
+				urlq = NOMINATIM_API + URLEncoder.encode(filter, "UTF-8") + "?format=xml&addressdetails=1&limit=" + LIMIT
 						+ "&bounded=1&" + viewbox;	
 			}
 			log.info(urlq);
