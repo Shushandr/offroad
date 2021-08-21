@@ -965,7 +965,7 @@ public class OsmWindow  implements IRouteInformationListener {
 			JAXBContext jc = JAXBContext.newInstance(Resources.class);
 			Unmarshaller u = jc.createUnmarshaller();
 			resourceStrings = (Resources) u.unmarshal(is);
-		} catch (JAXBException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			resourceStrings = new Resources();
 		}
@@ -1060,10 +1060,10 @@ public class OsmWindow  implements IRouteInformationListener {
 	public InputStream getResource(String pIndex){
 		if(pIndex != null){
 			String name = pIndex;
-			InputStream is = this.getClass().getResourceAsStream(name);
+			InputStream is = OsmWindow.class.getResourceAsStream(name);
 			if(is == null){
 				name = "/" + pIndex; //$NON-NLS-1$
-				is = this.getClass().getResourceAsStream(name);
+				is = OsmWindow.class.getResourceAsStream(name);
 				if(is == null){
 					System.err.println("ERROR: Resource not found: "  + pIndex); //$NON-NLS-1$
 					printClassPath();
@@ -1080,17 +1080,10 @@ public class OsmWindow  implements IRouteInformationListener {
 		BufferedImage bmp = null;
 		if (obj instanceof Amenity) {
 			Amenity o = (Amenity) obj;
-			String id = null;
 			PoiType st = o.getType().getPoiTypeByKeyName(o.getSubType());
 			if (st != null) {
-				if (RenderingIcons.containsSmallIcon(st.getIconKeyName())) {
-					id = st.getIconKeyName();
-				} else if (RenderingIcons.containsSmallIcon(st.getOsmTag() + "_" + st.getOsmValue())) {
-					id = st.getOsmTag() + "_" + st.getOsmValue();
-				}
-			}
-			if (id != null) {
-				bmp = RenderingIcons.getIcon(id, false);
+				bmp = RenderingIcons.getIcon(st.getIconKeyName(), false);
+				if (bmp == null) bmp = RenderingIcons.getIcon(st.getOsmTag() + "_" + st.getOsmValue(), false);
 			}
 		}
 		return bmp;
