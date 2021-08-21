@@ -98,6 +98,7 @@ hash=${hash}
 		<jar jarfile="${OffRoad.jar}"
 		     manifest="${temp.manifest.file}"
 			update="true">
+			<metainf dir="META-INF" />
 			<fileset dir="${build}">
 			</fileset>
 			<fileset dir="${src}">

@@ -1,0 +1,93 @@
+[
+  {
+    "name": "java.lang.String"
+  },
+  {
+    "name": "java.lang.Thread"
+  },
+  {
+    "name": "org.apache.commons.logging.LogFactory",
+    "methods": [
+      { "name": "<init>", "parameterTypes": [] }
+    ]
+  },
+  {
+    "name": "org.apache.commons.logging.impl.LogFactoryImpl",
+    "methods": [
+      { "name": "<init>", "parameterTypes": [] }
+    ]
+  },
+  {
+    "name": "org.apache.commons.logging.impl.SimpleLog",
+    "methods": [
+      { "name": "<init>", "parameterTypes": ["java.lang.String"] }
+    ]
+  },
+  {
+    "name": "com.sun.xml.bind.v2.ContextFactory",
+    "methods": [
+      { "name": "createContext", "parameterTypes": ["java.lang.String", "java.lang.ClassLoader", "java.util.Map"] },
+      { "name": "createContext", "parameterTypes": ["java.lang.Class[]", "java.util.Map"] }
+    ]
+  },
+  {
+    "name": "com.sun.xml.bind.v2.model.nav.ReflectionNavigator",
+    "methods": [
+      { "name": "getInstance", "parameterTypes": [] }
+    ]
+  },
+  {
+    "name": "javax.xml.bind.annotation.XmlType",
+    "methods": [
+      { "name": "factoryClass", "parameterTypes": [] }
+    ]
+  },
+  {
+    "name": "com.sun.xml.bind.v2.runtime.property.SingleElementLeafProperty",
+    "allPublicConstructors" : true
+  },
+  {
+    "name": "com.sun.xml.bind.v2.runtime.property.ArrayElementLeafProperty",
+    "allPublicConstructors" : true
+  },
+  {
+    "name": "com.sun.xml.bind.v2.runtime.property.SingleElementNodeProperty",
+    "allPublicConstructors" : true
+  },
+  {
+    "name": "com.sun.xml.bind.v2.runtime.property.SingleReferenceNodeProperty",
+    "allPublicConstructors" : true
+  },
+  {
+    "name": "com.sun.xml.bind.v2.runtime.property.SingleMapNodeProperty",
+    "allPublicConstructors" : true
+  },
+  {
+    "name": "com.sun.xml.bind.v2.runtime.property.ArrayElementNodeProperty",
+    "allPublicConstructors" : true
+  },
+  {
+    "name": "com.sun.xml.bind.v2.runtime.property.ArrayReferenceNodeProperty",
+    "allPublicConstructors" : true
+  },
+  {
+    "name": "java.util.ArrayList",
+    "methods": [
+      { "name": "<init>", "parameterTypes": [] }
+    ]
+  },
+  {
+    "name": "net.sourceforge.offroad.res.Resources",
+    "methods": [
+      { "name": "<init>", "parameterTypes": [] }
+    ],
+    "fields": [ { "name": "string" } ]
+  },
+  {
+    "name": "net.sourceforge.offroad.res.Resources$String",
+    "methods": [
+      { "name": "<init>", "parameterTypes": [] }
+    ],
+    "fields": [ { "name": "value" } ]
+  }
+]

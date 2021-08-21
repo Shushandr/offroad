@@ -1,0 +1,34 @@
+[
+  {
+    "name": "org.sqlite.Function"
+  },
+  {
+    "name": "org.sqlite.Function$Aggregate"
+  },
+  {
+    "name": "org.sqlite.Function$Window"
+  },
+  {
+    "name": "org.sqlite.core.DB$ProgressObserver"
+  },
+  {
+    "name": "org.sqlite.ProgressHandler"
+  },
+  {
+    "name": "java.lang.String",
+    "allDeclaredConstructors" : true
+  },
+  {
+    "name": "java.lang.Thread",
+    "methods": [
+      { "name": "yield" }
+    ]
+  },
+  {
+    "name": "java.lang.System",
+    "methods": [
+      { "name": "setProperty", "parameterTypes": ["java.lang.String", "java.lang.String"] },
+      { "name": "load", "parameterTypes": ["java.lang.String"] }
+    ]
+  }
+]

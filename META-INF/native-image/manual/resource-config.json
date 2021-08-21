@@ -1,0 +1,9 @@
+{
+  "resources":{
+  "includes":[
+    {"pattern":".*/res/values.*"},
+    {"pattern":".*/drawable-hdpi/.*"},
+    {"pattern":".*/net/osmand/.*"},
+    {"pattern":".*/rendering_styles/.*"}
+  ]}
+}

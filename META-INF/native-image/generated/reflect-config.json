@@ -1,0 +1,413 @@
+[
+{
+  "name":"byte[]"
+},
+{
+  "name":"com.sun.org.apache.xerces.internal.jaxp.SAXParserFactoryImpl",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.sun.xml.bind.v2.ContextFactory",
+  "methods":[{"name":"createContext","parameterTypes":["java.lang.Class[]","java.util.Map"] }]
+},
+{
+  "name":"com.sun.xml.bind.v2.model.nav.ReflectionNavigator",
+  "methods":[{"name":"getInstance","parameterTypes":[] }]
+},
+{
+  "name":"com.sun.xml.bind.v2.runtime.property.ArrayElementLeafProperty",
+  "allPublicConstructors":true
+},
+{
+  "name":"com.sun.xml.bind.v2.runtime.property.ArrayElementNodeProperty",
+  "allPublicConstructors":true
+},
+{
+  "name":"com.sun.xml.bind.v2.runtime.property.ArrayReferenceNodeProperty",
+  "allPublicConstructors":true
+},
+{
+  "name":"com.sun.xml.bind.v2.runtime.property.SingleElementLeafProperty",
+  "allPublicConstructors":true
+},
+{
+  "name":"com.sun.xml.bind.v2.runtime.property.SingleElementNodeProperty",
+  "allPublicConstructors":true
+},
+{
+  "name":"com.sun.xml.bind.v2.runtime.property.SingleMapNodeProperty",
+  "allPublicConstructors":true
+},
+{
+  "name":"com.sun.xml.bind.v2.runtime.property.SingleReferenceNodeProperty",
+  "allPublicConstructors":true
+},
+{
+  "name":"com.sun.xml.bind.v2.runtime.reflect.Accessor"
+},
+{
+  "name":"java.awt.SequencedEvent"
+},
+{
+  "name":"java.awt.event.KeyEvent",
+  "fields":[
+    {"name":"VK_A"}, 
+    {"name":"VK_BACK_SLASH"}, 
+    {"name":"VK_BACK_SPACE"}, 
+    {"name":"VK_C"}, 
+    {"name":"VK_CONTEXT_MENU"}, 
+    {"name":"VK_COPY"}, 
+    {"name":"VK_CUT"}, 
+    {"name":"VK_D"}, 
+    {"name":"VK_DELETE"}, 
+    {"name":"VK_DOWN"}, 
+    {"name":"VK_END"}, 
+    {"name":"VK_ENTER"}, 
+    {"name":"VK_ESCAPE"}, 
+    {"name":"VK_F"}, 
+    {"name":"VK_F1"}, 
+    {"name":"VK_F10"}, 
+    {"name":"VK_F11"}, 
+    {"name":"VK_F2"}, 
+    {"name":"VK_F3"}, 
+    {"name":"VK_F6"}, 
+    {"name":"VK_F8"}, 
+    {"name":"VK_G"}, 
+    {"name":"VK_H"}, 
+    {"name":"VK_HOME"}, 
+    {"name":"VK_INSERT"}, 
+    {"name":"VK_K"}, 
+    {"name":"VK_KP_DOWN"}, 
+    {"name":"VK_KP_LEFT"}, 
+    {"name":"VK_KP_RIGHT"}, 
+    {"name":"VK_KP_UP"}, 
+    {"name":"VK_LEFT"}, 
+    {"name":"VK_MINUS"}, 
+    {"name":"VK_O"}, 
+    {"name":"VK_PAGE_DOWN"}, 
+    {"name":"VK_PAGE_UP"}, 
+    {"name":"VK_PASTE"}, 
+    {"name":"VK_PLUS"}, 
+    {"name":"VK_Q"}, 
+    {"name":"VK_RIGHT"}, 
+    {"name":"VK_SLASH"}, 
+    {"name":"VK_SPACE"}, 
+    {"name":"VK_T"}, 
+    {"name":"VK_TAB"}, 
+    {"name":"VK_UP"}, 
+    {"name":"VK_V"}, 
+    {"name":"VK_X"}
+  ]
+},
+{
+  "name":"java.awt.event.MouseMotionListener[]"
+},
+{
+  "name":"java.lang.ClassLoader",
+  "methods":[
+    {"name":"defineClass","parameterTypes":["java.lang.String","byte[]","int","int"] }, 
+    {"name":"findLoadedClass","parameterTypes":["java.lang.String"] }, 
+    {"name":"resolveClass","parameterTypes":["java.lang.Class"] }
+  ]
+},
+{
+  "name":"java.lang.Object",
+  "allDeclaredMethods":true
+},
+{
+  "name":"java.lang.String"
+},
+{
+  "name":"java.lang.String[]"
+},
+{
+  "name":"java.lang.Thread",
+  "methods":[{"name":"getContextClassLoader","parameterTypes":[] }]
+},
+{
+  "name":"java.security.MessageDigestSpi"
+},
+{
+  "name":"java.security.SecureRandomParameters"
+},
+{
+  "name":"java.security.interfaces.RSAPrivateKey"
+},
+{
+  "name":"java.security.interfaces.RSAPublicKey"
+},
+{
+  "name":"java.util.ArrayList",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"java.util.Date"
+},
+{
+  "name":"javax.imageio.spi.ImageReaderSpi"
+},
+{
+  "name":"javax.imageio.spi.ImageReaderWriterSpi",
+  "methods":[
+    {"name":"getFileSuffixes","parameterTypes":[] }, 
+    {"name":"getFormatNames","parameterTypes":[] }, 
+    {"name":"getMIMETypes","parameterTypes":[] }
+  ]
+},
+{
+  "name":"javax.imageio.spi.ImageWriterSpi"
+},
+{
+  "name":"javax.security.auth.x500.X500Principal",
+  "fields":[{"name":"thisX500Name"}],
+  "methods":[{"name":"<init>","parameterTypes":["sun.security.x509.X500Name"] }]
+},
+{
+  "name":"javax.swing.plaf.basic.BasicCheckBoxMenuItemUI",
+  "methods":[{"name":"createUI","parameterTypes":["javax.swing.JComponent"] }]
+},
+{
+  "name":"javax.swing.plaf.basic.BasicListUI",
+  "methods":[{"name":"createUI","parameterTypes":["javax.swing.JComponent"] }]
+},
+{
+  "name":"javax.swing.plaf.basic.BasicMenuItemUI",
+  "methods":[{"name":"createUI","parameterTypes":["javax.swing.JComponent"] }]
+},
+{
+  "name":"javax.swing.plaf.basic.BasicMenuUI",
+  "methods":[{"name":"createUI","parameterTypes":["javax.swing.JComponent"] }]
+},
+{
+  "name":"javax.swing.plaf.basic.BasicPanelUI",
+  "methods":[{"name":"createUI","parameterTypes":["javax.swing.JComponent"] }]
+},
+{
+  "name":"javax.swing.plaf.basic.BasicPopupMenuUI",
+  "methods":[{"name":"createUI","parameterTypes":["javax.swing.JComponent"] }]
+},
+{
+  "name":"javax.swing.plaf.basic.BasicTableHeaderUI",
+  "methods":[{"name":"createUI","parameterTypes":["javax.swing.JComponent"] }]
+},
+{
+  "name":"javax.swing.plaf.basic.BasicTableUI",
+  "methods":[{"name":"createUI","parameterTypes":["javax.swing.JComponent"] }]
+},
+{
+  "name":"javax.swing.plaf.basic.BasicViewportUI",
+  "methods":[{"name":"createUI","parameterTypes":["javax.swing.JComponent"] }]
+},
+{
+  "name":"javax.swing.plaf.metal.MetalButtonUI",
+  "methods":[{"name":"createUI","parameterTypes":["javax.swing.JComponent"] }]
+},
+{
+  "name":"javax.swing.plaf.metal.MetalCheckBoxUI",
+  "methods":[{"name":"createUI","parameterTypes":["javax.swing.JComponent"] }]
+},
+{
+  "name":"javax.swing.plaf.metal.MetalComboBoxUI",
+  "methods":[{"name":"createUI","parameterTypes":["javax.swing.JComponent"] }]
+},
+{
+  "name":"javax.swing.plaf.metal.MetalLabelUI",
+  "methods":[{"name":"createUI","parameterTypes":["javax.swing.JComponent"] }]
+},
+{
+  "name":"javax.swing.plaf.metal.MetalMenuBarUI",
+  "methods":[{"name":"createUI","parameterTypes":["javax.swing.JComponent"] }]
+},
+{
+  "name":"javax.swing.plaf.metal.MetalProgressBarUI",
+  "methods":[{"name":"createUI","parameterTypes":["javax.swing.JComponent"] }]
+},
+{
+  "name":"javax.swing.plaf.metal.MetalRootPaneUI",
+  "methods":[{"name":"createUI","parameterTypes":["javax.swing.JComponent"] }]
+},
+{
+  "name":"javax.swing.plaf.metal.MetalScrollBarUI",
+  "methods":[{"name":"createUI","parameterTypes":["javax.swing.JComponent"] }]
+},
+{
+  "name":"javax.swing.plaf.metal.MetalScrollPaneUI",
+  "methods":[{"name":"createUI","parameterTypes":["javax.swing.JComponent"] }]
+},
+{
+  "name":"javax.swing.plaf.metal.MetalSeparatorUI",
+  "methods":[{"name":"createUI","parameterTypes":["javax.swing.JComponent"] }]
+},
+{
+  "name":"javax.swing.plaf.metal.MetalSplitPaneUI",
+  "methods":[{"name":"createUI","parameterTypes":["javax.swing.JComponent"] }]
+},
+{
+  "name":"javax.swing.plaf.metal.MetalTextFieldUI",
+  "methods":[{"name":"createUI","parameterTypes":["javax.swing.JComponent"] }]
+},
+{
+  "name":"javax.swing.plaf.metal.MetalToolBarUI",
+  "methods":[{"name":"createUI","parameterTypes":["javax.swing.JComponent"] }]
+},
+{
+  "name":"javax.xml.bind.annotation.XmlAccessorType"
+},
+{
+  "name":"javax.xml.bind.annotation.XmlElement",
+  "methods":[{"name":"type","parameterTypes":[] }]
+},
+{
+  "name":"javax.xml.bind.annotation.XmlType",
+  "methods":[{"name":"factoryClass","parameterTypes":[] }]
+},
+{
+  "name":"net.osmand.data.LatLon",
+  "allDeclaredFields":true,
+  "allDeclaredMethods":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"net.osmand.plus.views.DrawPolylineLayer$Polyline",
+  "allDeclaredFields":true,
+  "allDeclaredMethods":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"net.osmand.plus.views.DrawPolylineLayer$Polylines",
+  "allDeclaredFields":true,
+  "allDeclaredMethods":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"net.sourceforge.offroad.data.persistence.ComponentLocationStorage",
+  "allDeclaredFields":true,
+  "allDeclaredMethods":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"net.sourceforge.offroad.data.persistence.OsmWindowLocationStorage",
+  "allDeclaredFields":true,
+  "allDeclaredMethods":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"net.sourceforge.offroad.res.Resources",
+  "allDeclaredFields":true,
+  "allDeclaredMethods":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"net.sourceforge.offroad.res.Resources$String",
+  "allDeclaredFields":true,
+  "allDeclaredMethods":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"org.apache.commons.logging.LogFactory"
+},
+{
+  "name":"org.apache.commons.logging.impl.Jdk14Logger",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.String"] }]
+},
+{
+  "name":"org.apache.commons.logging.impl.LogFactoryImpl",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"org.apache.commons.logging.impl.WeakHashtable",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"org.sqlite.JDBC"
+},
+{
+  "name":"sun.awt.X11.XToolkit",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.awt.X11FontManager",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.awt.X11GraphicsEnvironment",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.java2d.marlin.DMarlinRenderingEngine",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.pkcs.SignerInfo[]"
+},
+{
+  "name":"sun.security.provider.MD5",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.provider.NativePRNG",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.provider.SHA",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.provider.X509Factory",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.rsa.RSAKeyFactory$Legacy",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.rsa.RSASignature$MD5withRSA",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.util.ObjectIdentifier"
+},
+{
+  "name":"sun.security.x509.AuthorityInfoAccessExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.AuthorityKeyIdentifierExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.BasicConstraintsExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.CRLDistributionPointsExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.CertificateExtensions"
+},
+{
+  "name":"sun.security.x509.CertificatePoliciesExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.ExtendedKeyUsageExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.KeyUsageExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.NetscapeCertTypeExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.SubjectAlternativeNameExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.SubjectKeyIdentifierExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+}
+]
