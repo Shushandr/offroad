@@ -2,7 +2,7 @@ package net.osmand.data;
 
 import java.io.Serializable;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import net.osmand.util.MapUtils;
 
