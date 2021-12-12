@@ -24,7 +24,6 @@ import java.util.List;
 
 import javax.swing.SwingUtilities;
 
-import net.osmand.data.LatLon;
 import net.osmand.data.MapObject;
 
 /**

@@ -30,6 +30,7 @@ Version History:
 
 0_6:
 ============
+* Compatible with Java 17.
 * Requires Java 11 or later now.
 * Fixed bug where routing might incorrectly report "no enough memory" [sic].
 * Removed special font size fix for HiDPI screens, relying

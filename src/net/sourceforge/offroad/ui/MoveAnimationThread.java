@@ -1,7 +1,5 @@
 package net.sourceforge.offroad.ui;
 
-import net.osmand.data.RotatedTileBox;
-
 class MoveAnimationThread extends OffRoadUIThread {
 	/**
 	 * 
