@@ -1834,6 +1834,12 @@ public class OsmWindow  implements IRouteInformationListener {
 			return m.unmarshal(new StringReader(pInput));
 		} catch (JAXBException ex) {
 			ex.printStackTrace();
+		} catch (NullPointerException ex) {
+			// Seems to happen when loading the .OffRoad config
+			// from a pre-JAXB version, error is
+			// java.lang.NullPointerException: Cannot invoke "java.lang.reflect.Method.invoke(Object, Object[])" because "com.sun.xml.bind.v2.runtime.reflect.opt.Injector.defineClass" is null
+			// See issue 20.
+			ex.printStackTrace();
 		}
 		return null;
 	}
