@@ -278,7 +278,7 @@ public class DownloadAction extends OffRoadAction {
 		contentPane.add(new JLabel(getResourceString("filter")), new GridBagConstraints(0, y, 1, 1, 1.0, 1.0,
 				GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 		mTextField = new JTextField();
-		contentPane.add(mTextField, new GridBagConstraints(1, y++, 1, 1, 4.0, 1.0, GridBagConstraints.WEST,
+		contentPane.add(mTextField, new GridBagConstraints(1, y++, 2, 1, 4.0, 1.0, GridBagConstraints.WEST,
 				GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
 
 		mTable = new JTable();
@@ -329,7 +329,7 @@ public class DownloadAction extends OffRoadAction {
 			}
 		};
 		mTable.addMouseListener(mMouseListener);
-		contentPane.add(new JScrollPane(mTable), new GridBagConstraints(0, y++, 2, 1, 1.0, 4.0, GridBagConstraints.WEST,
+		contentPane.add(new JScrollPane(mTable), new GridBagConstraints(0, y++, 3, 1, 1.0, 4.0, GridBagConstraints.WEST,
 				GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 
 		mProgressStatus = new JLabel("!");
@@ -338,7 +338,7 @@ public class DownloadAction extends OffRoadAction {
 
 		mProgressBar = new JProgressBar();
 		mProgressBar.setStringPainted(true);
-		contentPane.add(mProgressBar, new GridBagConstraints(1, y++, 1, 1, 1.0, 1.0, GridBagConstraints.WEST,
+		contentPane.add(mProgressBar, new GridBagConstraints(1, y++, 2, 1, 1.0, 1.0, GridBagConstraints.WEST,
 				GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 		mDownloadButton = new JButton(getResourceString("offroad.downloadButton"));
 		mDownloadButton.addActionListener(e -> doDownload());
